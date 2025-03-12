@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Jeremy Poop",
+    "slug": "jeremy-poop",
+    "version": "1.0.0",
+    "scheme": "jeremy-poop",
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "The app needs access to your location to drop a log."
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "pk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY203OTJicnhlMDBzczJrczljYTh2NTliYSJ9.pD2qbNDwsJyjWcZde4GhXw"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.westmorelandcreative.jeremy-poop"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.westmorelandcreative.jeremypoop"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8a15e91f-e529-459a-acf4-7a4dba7f2377"
+      }
+    },
+    "owner": "rawestmoreland"
+  }
+}
