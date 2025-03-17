@@ -55,7 +55,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
   const startSesh = async () => {
     try {
       await startSeshMutation.mutateAsync({
-        is_public: false,
+        is_public: true,
         location: {
           coordinates: {
             lat: userLocation.lat,

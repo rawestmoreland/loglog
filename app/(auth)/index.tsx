@@ -8,9 +8,7 @@ import { AlertRef } from '~/components/nativewindui/Alert/types';
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 
-const LOGO_SOURCE = {
-  uri: 'https://nativewindui.com/_next/image?url=/_next/static/media/logo.28276aeb.png&w=2048&q=75',
-};
+const LOGO_SOURCE = require('~/assets/logs.png');
 
 const GOOGLE_SOURCE = {
   uri: 'https://www.pngall.com/wp-content/uploads/13/Google-Logo.png',
@@ -42,7 +40,7 @@ export default function AuthIndexScreen() {
               <Text>Sign up free</Text>
             </Button>
           </Link>
-          <Button
+          {/* <Button
             variant="secondary"
             className="ios:border-foreground/60"
             size={Platform.select({ ios: 'lg', default: 'md' })}
@@ -59,8 +57,8 @@ export default function AuthIndexScreen() {
               resizeMode="contain"
             />
             <Text className="ios:text-foreground">Continue with Google</Text>
-          </Button>
-          {Platform.OS === 'ios' && (
+          </Button> */}
+          {/* {Platform.OS === 'ios' && (
             <Button
               variant="secondary"
               className="ios:border-foreground/60"
@@ -75,7 +73,7 @@ export default function AuthIndexScreen() {
               <Text className="ios:text-foreground absolute left-4 text-[22px]"></Text>
               <Text className="ios:text-foreground">Continue with Apple</Text>
             </Button>
-          )}
+          )} */}
           <Link href="/(auth)/(login)" asChild>
             <Button variant="plain" size={Platform.select({ ios: 'lg', default: 'md' })}>
               <Text className="text-primary">Log in</Text>

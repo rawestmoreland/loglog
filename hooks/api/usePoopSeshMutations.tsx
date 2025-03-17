@@ -51,6 +51,7 @@ export function useUpdatePoopSesh() {
     },
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['active-poop-sesh'] });
+      queryClient.invalidateQueries({ queryKey: ['poop-sesh-history'] });
     },
   });
 }

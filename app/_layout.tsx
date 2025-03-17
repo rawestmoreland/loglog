@@ -32,7 +32,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     MapboxGL.setAccessToken(
-      'pk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY203OTJicnhlMDBzczJrczljYTh2NTliYSJ9.pD2qbNDwsJyjWcZde4GhXw'
+      'sk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY204YXByd3cyMTYycjJuczd2bm45ZWp2cCJ9.GSFFjqjMGoAMqxQxE_6aEw'
     );
   }, []);
 

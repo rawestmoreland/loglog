@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Jeremy Poop",
+    "name": "LogLog",
     "slug": "jeremy-poop",
-    "version": "1.0.0",
-    "scheme": "jeremy-poop",
+    "version": "0.0.1",
+    "scheme": "loglog",
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -20,7 +20,7 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "pk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY203OTJicnhlMDBzczJrczljYTh2NTliYSJ9.pD2qbNDwsJyjWcZde4GhXw"
+          "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY204YXByd3cyMTYycjJuczd2bm45ZWp2cCJ9.GSFFjqjMGoAMqxQxE_6aEw"
         }
       ]
     ],
@@ -29,7 +29,7 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logs.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",
@@ -39,14 +39,23 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.westmorelandcreative.jeremy-poop"
+      "bundleIdentifier": "com.westmorelandcreative.dropspot",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.westmorelandcreative.jeremypoop"
+      "package": "com.westmorelandcreative.dropspot",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "extra": {
       "router": {
@@ -56,6 +65,12 @@
         "projectId": "8a15e91f-e529-459a-acf4-7a4dba7f2377"
       }
     },
-    "owner": "rawestmoreland"
+    "owner": "rawestmoreland",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8a15e91f-e529-459a-acf4-7a4dba7f2377"
+    }
   }
 }

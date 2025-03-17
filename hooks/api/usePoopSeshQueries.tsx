@@ -39,7 +39,7 @@ export function useMyPoopSeshHistory() {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['poop-sesh-history', user?.id],
+    queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
       // Get public and user's private sesh
       const filter = `user = '${user?.id}'`;
@@ -57,7 +57,7 @@ export function usePublicPoopSeshHistory() {
   const { pb } = usePocketBase();
 
   return useQuery({
-    queryKey: ['public-poop-sesh-history'],
+    queryKey: ['poop-sesh-history', { public: true }],
     queryFn: async (): Promise<PoopSesh[]> => {
       const sesh = await pb?.collection('poop_seshes').getFullList<PoopSesh>(100, {
         filter: 'is_public = true',
