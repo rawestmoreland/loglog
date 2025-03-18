@@ -8,6 +8,7 @@ import { useLocation } from './locationContext';
 import { useStartPoopSesh, useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { useActivePoopSesh } from '~/hooks/api/usePoopSeshQueries';
 import { PoopSesh } from '~/lib/types';
+import { Alert } from 'react-native';
 
 export const SeshContext = createContext<{
   activeSesh: PoopSesh | null | undefined;
@@ -16,6 +17,7 @@ export const SeshContext = createContext<{
   endSesh: () => Promise<void>;
   poopForm: any;
   updateActiveSesh: (payload: Partial<PoopSesh>) => Promise<void>;
+  isSeshPending: boolean;
 }>({
   activeSesh: {
     is_public: false,
@@ -32,6 +34,7 @@ export const SeshContext = createContext<{
   endSesh: () => Promise.resolve(),
   poopForm: {},
   updateActiveSesh: () => Promise.resolve(),
+  isSeshPending: false,
 });
 
 export const SeshContextProvider = ({ children }: { children: React.ReactNode }) => {
@@ -66,20 +69,23 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
       });
     } catch (error) {
       console.error(error);
+      Alert.alert('We had trouble starting the poop sesh');
     }
   };
 
   const updateActiveSesh = async (payload: Partial<PoopSesh>) => {
     if (!activeSesh) return;
 
-    console.log(payload);
-
-    await updateSeshMutation.mutateAsync({
-      poopSesh: {
-        ...activeSesh,
-        ...payload,
-      },
-    });
+    try {
+      await updateSeshMutation.mutateAsync({
+        poopSesh: {
+          ...activeSesh,
+          ...payload,
+        },
+      });
+    } catch (error) {
+      Alert.alert('We had trouble updating the poop sesh');
+    }
   };
 
   const endSesh = async () => {
@@ -95,6 +101,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
       });
     } catch (error) {
       console.error(error);
+      Alert.alert('We had trouble ending the poop sesh');
     }
   };
 
@@ -107,6 +114,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         endSesh,
         poopForm,
         updateActiveSesh,
+        isSeshPending: startSeshMutation.isPending || updateSeshMutation.isPending,
       }}>
       {children}
     </SeshContext.Provider>

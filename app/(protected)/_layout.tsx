@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { ActivityIndicator, Keyboard, View } from 'react-native';
+import { ActivityIndicator, Alert, Keyboard, View } from 'react-native';
 
 import { Timer } from '~/components/Timer';
 import { Button } from '~/components/nativewindui/Button';
@@ -45,8 +45,15 @@ export default function TabLayout() {
     };
   }, []);
 
-  const { startSesh, activeSesh, endSesh, isLoadingActiveSesh, poopForm, updateActiveSesh } =
-    useSesh();
+  const {
+    startSesh,
+    activeSesh,
+    endSesh,
+    isLoadingActiveSesh,
+    poopForm,
+    updateActiveSesh,
+    isSeshPending,
+  } = useSesh();
 
   const handleStartSesh = async () => {
     // Can't do two poops at once
@@ -86,6 +93,7 @@ export default function TabLayout() {
             </View>
           ) : activeSesh ? (
             <DuringSeshView
+              isLoading={isSeshPending}
               handleEndSesh={handleEndSesh}
               poopForm={poopForm}
               activeSesh={activeSesh}
@@ -95,10 +103,13 @@ export default function TabLayout() {
             <View className="relative flex-1 px-8">
               <View>
                 <Button
+                  disabled={isSeshPending}
                   style={{ backgroundColor: COLORS.light.primary }}
                   variant="primary"
                   onPress={handleStartSesh}>
-                  <Text style={{ color: COLORS.light.foreground }}>Drop a Log</Text>
+                  <Text style={{ color: COLORS.light.foreground }}>
+                    {isSeshPending ? 'Hold on...' : 'Drop a Log'}
+                  </Text>
                 </Button>
               </View>
             </View>
@@ -137,11 +148,13 @@ function PublicToggle({
 }
 
 function DuringSeshView({
+  isLoading,
   handleEndSesh,
   poopForm,
   activeSesh,
   updateActiveSesh,
 }: {
+  isLoading: boolean;
   handleEndSesh: () => Promise<void>;
   poopForm: any;
   activeSesh: PoopSesh;
@@ -176,8 +189,13 @@ function DuringSeshView({
             />
           )}
         />
-        <Button style={{ backgroundColor: colors.primary }} onPress={handleEndSesh}>
-          <Text style={{ color: COLORS.light.foreground }}>Pinch it Off</Text>
+        <Button
+          style={{ backgroundColor: colors.primary }}
+          onPress={handleEndSesh}
+          disabled={isLoading}>
+          <Text style={{ color: COLORS.light.foreground }}>
+            {isLoading ? 'Hold on...' : 'Pinch it Off'}
+          </Text>
         </Button>
       </View>
     </View>
