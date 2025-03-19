@@ -4,11 +4,6 @@
     "slug": "jeremy-poop",
     "version": "0.0.1",
     "scheme": "loglog",
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [

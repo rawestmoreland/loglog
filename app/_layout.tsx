@@ -1,5 +1,6 @@
 import '../global.css';
 import 'expo-dev-client';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
@@ -51,19 +52,21 @@ export default function RootLayout() {
               <SeshContextProvider>
                 <PaperProvider>
                   <Portal>
-                    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                      <GestureHandlerRootView style={{ flex: 1 }}>
-                        <BottomSheetModalProvider>
-                          <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                            <Stack screenOptions={SCREEN_OPTIONS}>
-                              <Stack.Screen name="(auth)" />
-                              <Stack.Screen name="(protected)" />
-                            </Stack>
-                            <PortalHost />
-                          </NavThemeProvider>
-                        </BottomSheetModalProvider>
-                      </GestureHandlerRootView>
-                    </KeyboardProvider>
+                    <ActionSheetProvider>
+                      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+                        <GestureHandlerRootView style={{ flex: 1 }}>
+                          <BottomSheetModalProvider>
+                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                              <Stack screenOptions={SCREEN_OPTIONS}>
+                                <Stack.Screen name="(auth)" />
+                                <Stack.Screen name="(protected)" />
+                              </Stack>
+                              <PortalHost />
+                            </NavThemeProvider>
+                          </BottomSheetModalProvider>
+                        </GestureHandlerRootView>
+                      </KeyboardProvider>
+                    </ActionSheetProvider>
                   </Portal>
                 </PaperProvider>
               </SeshContextProvider>

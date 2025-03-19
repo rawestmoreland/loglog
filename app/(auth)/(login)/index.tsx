@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router, Stack } from 'expo-router';
 import * as React from 'react';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Image, Platform, View } from 'react-native';
+import { Alert, Image, Platform, View } from 'react-native';
 import {
   KeyboardAwareScrollView,
   KeyboardController,
@@ -38,6 +38,8 @@ export default function LoginScreen() {
 
   const [focusedTextField, setFocusedTextField] = React.useState<'email' | 'password' | null>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const { signIn, signOut } = useContext(AuthContext);
 
   useEffect(() => {
@@ -49,7 +51,21 @@ export default function LoginScreen() {
       return;
     }
 
-    await signIn(data);
+    setIsLoading(true);
+
+    try {
+      await signIn(data);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Failed to authenticate.') {
+          Alert.alert('Incorrect username or password.');
+        } else {
+          Alert.alert('There was an issue while signing in. Pleaase try again.');
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -136,7 +152,7 @@ export default function LoginScreen() {
               </FormSection>
               <View className="flex-row">
                 <Link asChild href="/(auth)/(login)/forgot-password">
-                  <Button size="sm" variant="plain" className="px-0.5">
+                  <Button disabled={isLoading} size="sm" variant="plain" className="px-0.5">
                     <Text className="text-sm text-primary">Forgot password?</Text>
                   </Button>
                 </Link>
@@ -153,15 +169,16 @@ export default function LoginScreen() {
         {Platform.OS === 'ios' ? (
           <View className=" px-12 py-4">
             <Button
-              disabled={!form.formState.isValid}
+              disabled={!form.formState.isValid || isLoading}
               size="lg"
               onPress={form.handleSubmit(handleLogin)}>
-              <Text>Continue</Text>
+              <Text>{isLoading ? 'Signing in...' : 'Continue'}</Text>
             </Button>
           </View>
         ) : (
           <View className="flex-row justify-between py-4 pl-6 pr-8">
             <Button
+              disabled={isLoading}
               variant="plain"
               className="px-2"
               onPress={() => {
@@ -170,6 +187,7 @@ export default function LoginScreen() {
               <Text className="px-0.5 text-sm text-primary">Create Account</Text>
             </Button>
             <Button
+              disabled={isLoading}
               onPress={() => {
                 if (focusedTextField === 'email') {
                   KeyboardController.setFocusTo('next');
@@ -185,6 +203,7 @@ export default function LoginScreen() {
       </KeyboardStickyView>
       {Platform.OS === 'ios' && (
         <Button
+          disabled={isLoading}
           variant="plain"
           onPress={() => {
             router.replace('/(auth)/(create-account)');

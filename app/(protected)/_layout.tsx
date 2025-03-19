@@ -1,9 +1,11 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Stack } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { router, Stack, usePathname } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { ActivityIndicator, Alert, Keyboard, View } from 'react-native';
+import { ActivityIndicator, Keyboard, View } from 'react-native';
+import { Icon } from 'react-native-paper';
 
 import { Timer } from '~/components/Timer';
 import { Button } from '~/components/nativewindui/Button';
@@ -11,6 +13,7 @@ import { Sheet } from '~/components/nativewindui/Sheet';
 import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
 import { Toggle } from '~/components/nativewindui/Toggle';
+import { useAuth } from '~/context/authContext';
 import { useSesh } from '~/context/seshContext';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
@@ -20,7 +23,13 @@ import { COLORS } from '~/theme/colors';
 export default function TabLayout() {
   const { colors } = useColorScheme();
 
+  const { user } = useAuth();
+
+  const pathname = usePathname();
+
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  const isOnHomeScreen = pathname === '/';
 
   useEffect(() => {
     bottomSheetModalRef.current?.present();
@@ -30,12 +39,16 @@ export default function TabLayout() {
     // Set up keyboard listeners
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
       // When keyboard appears, snap to the desired index
-      bottomSheetModalRef.current?.snapToIndex(1);
+      if (activeSesh) {
+        bottomSheetModalRef.current?.snapToIndex(1);
+      }
     });
 
     // Optional: handle keyboard hiding
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      bottomSheetModalRef.current?.snapToIndex(0);
+      if (activeSesh) {
+        bottomSheetModalRef.current?.snapToIndex(0);
+      }
     });
 
     // Cleanup listeners on component unmount
@@ -85,35 +98,57 @@ export default function TabLayout() {
         ref={bottomSheetModalRef}
         enablePanDownToClose={false}
         backdropComponent={() => <View className="absolute inset-0 bg-transparent" />}
-        snapPoints={activeSesh ? ['40%', '80%'] : ['10%']}>
+        snapPoints={activeSesh ? ['40%', '80%'] : !isOnHomeScreen ? ['10%'] : ['17%']}>
         <BottomSheetView className="flex-1">
-          {isLoadingActiveSesh ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-          ) : activeSesh ? (
-            <DuringSeshView
-              isLoading={isSeshPending}
-              handleEndSesh={handleEndSesh}
-              poopForm={poopForm}
-              activeSesh={activeSesh}
-              updateActiveSesh={updateActiveSesh}
-            />
-          ) : (
-            <View className="relative flex-1 px-8">
-              <View>
+          <View className="flex-1 gap-2">
+            <View className="flex-row items-center justify-between gap-2 px-8">
+              <Text className="font-semibold">{user?.codeName}</Text>
+              {isOnHomeScreen ? (
                 <Button
-                  disabled={isSeshPending}
-                  style={{ backgroundColor: COLORS.light.primary }}
-                  variant="primary"
-                  onPress={handleStartSesh}>
-                  <Text style={{ color: COLORS.light.foreground }}>
-                    {isSeshPending ? 'Hold on...' : 'Drop a Log'}
-                  </Text>
+                  variant="tonal"
+                  size="icon"
+                  style={{ backgroundColor: colors.primary }}
+                  onPress={() => router.push('/(protected)/(screens)/poop-history')}>
+                  <Icon source="book-open-page-variant" size={24} />
                 </Button>
-              </View>
+              ) : (
+                <Button
+                  variant="tonal"
+                  size="icon"
+                  style={{ backgroundColor: colors.primary }}
+                  onPress={() => router.dismissTo('/(protected)')}>
+                  <Icon source="map-marker" size={24} />
+                </Button>
+              )}
             </View>
-          )}
+            {isLoadingActiveSesh ? (
+              <View className="flex-1 items-center justify-center">
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
+            ) : activeSesh ? (
+              <DuringSeshView
+                isLoading={isSeshPending}
+                handleEndSesh={handleEndSesh}
+                poopForm={poopForm}
+                activeSesh={activeSesh}
+                updateActiveSesh={updateActiveSesh}
+              />
+            ) : isOnHomeScreen ? (
+              <View className="relative flex-1 px-8">
+                <View>
+                  <Button
+                    disabled={isSeshPending}
+                    style={{ backgroundColor: COLORS.light.primary }}
+                    variant="primary"
+                    onPress={handleStartSesh}>
+                    <Text style={{ color: COLORS.light.foreground }}>
+                      {isSeshPending ? 'Hold on...' : 'Drop a Log'}
+                    </Text>
+                  </Button>
+                </View>
+              </View>
+            ) : null}
+          </View>
         </BottomSheetView>
       </Sheet>
     </>
@@ -121,19 +156,32 @@ export default function TabLayout() {
 }
 
 function PublicToggle({
+  isLoading,
   activeSesh,
   updateActiveSesh,
 }: {
+  isLoading: boolean;
   activeSesh: PoopSesh;
   updateActiveSesh: (payload: Partial<PoopSesh>) => Promise<void>;
 }) {
+  const queryClient = useQueryClient();
   const { pb } = usePocketBase();
 
   const [isPublic, setIsPublic] = useState(activeSesh.is_public);
 
   useEffect(() => {
     const updateActiveSesh = async () => {
-      await pb?.collection('poop_seshes').update(activeSesh.id!, { is_public: isPublic });
+      const cachedSesh = queryClient.getQueryData<PoopSesh>(['active-poop-sesh']);
+
+      // Update the cached sesh
+      if (cachedSesh) {
+        queryClient.setQueryData(['active-poop-sesh'], {
+          ...cachedSesh,
+          is_public: isPublic,
+        });
+      } else {
+        await pb?.collection('poop_seshes').update(activeSesh.id!, { is_public: isPublic });
+      }
     };
 
     updateActiveSesh();
@@ -142,7 +190,7 @@ function PublicToggle({
   return (
     <View className="flex-row items-center gap-2">
       <Text className="text-sm">Public log?</Text>
-      <Toggle value={isPublic} onValueChange={() => setIsPublic(!isPublic)} />
+      <Toggle value={isPublic} onValueChange={() => setIsPublic(!isPublic)} disabled={isLoading} />
     </View>
   );
 }
@@ -167,7 +215,11 @@ function DuringSeshView({
       <View className="gap-4">
         <View className="flex-row items-center justify-between">
           <Text className="font-semibold">Log Details</Text>
-          <PublicToggle activeSesh={activeSesh} updateActiveSesh={updateActiveSesh} />
+          <PublicToggle
+            isLoading={isLoading}
+            activeSesh={activeSesh}
+            updateActiveSesh={updateActiveSesh}
+          />
         </View>
         <Timer startTime={new Date(activeSesh.started)} />
         <Controller

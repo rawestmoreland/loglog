@@ -17,7 +17,7 @@ export function useStartPoopSesh() {
       });
 
       return {
-        id: sesh?.id,
+        id: sesh?.id!,
         location: sesh?.location,
         started: sesh?.started,
         ended: sesh?.ended,
@@ -40,7 +40,7 @@ export function useUpdatePoopSesh() {
       const sesh = await pb?.collection('poop_seshes').update(poopSesh.id!, poopSesh);
 
       return {
-        id: sesh?.id,
+        id: sesh?.id!,
         location: sesh?.location,
         started: sesh?.started,
         ended: sesh?.ended,
@@ -51,6 +51,24 @@ export function useUpdatePoopSesh() {
     },
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['active-poop-sesh'] });
+      queryClient.invalidateQueries({ queryKey: ['poop-sesh-history'] });
+    },
+  });
+}
+
+export function useDeletePoop() {
+  const { pb } = usePocketBase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ poopId }: { poopId: string }) => {
+      try {
+        await pb?.collection('poop_seshes').delete(poopId);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poop-sesh-history'] });
     },
   });

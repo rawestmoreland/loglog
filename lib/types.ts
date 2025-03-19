@@ -8,10 +8,10 @@ export interface PooperProfile {
 }
 
 export interface PoopSesh {
-  id?: string;
+  id: string;
   user?: string;
   is_public: boolean;
-  location: {
+  location?: {
     coordinates: {
       lat: number;
       lon: number;
@@ -20,4 +20,10 @@ export interface PoopSesh {
   revelations?: string;
   started: Date;
   ended?: Date;
+  expand?: {
+    user?: {
+      id: string;
+      codeName: string;
+    };
+  };
 }
