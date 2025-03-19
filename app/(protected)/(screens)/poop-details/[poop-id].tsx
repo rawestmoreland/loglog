@@ -24,8 +24,8 @@ export default function PoopSesh() {
 
   const updateSesh = useUpdatePoopSesh();
 
-  const [_startPickerOpen, setStartPickerOpen] = useState(false);
-  const [_endPickerOpen, setEndPickerOpen] = useState(false);
+  const [startPickerOpen, setStartPickerOpen] = useState(false);
+  const [endPickerOpen, setEndPickerOpen] = useState(false);
   if (!poopId) {
     router.dismissTo(`(protected)`);
   }
@@ -57,13 +57,11 @@ export default function PoopSesh() {
 
   useEffect(() => {
     if (poopSesh) {
-      poopForm.reset({
-        id: poopSesh.id,
-        started: poopSesh.started,
-        ended: poopSesh.ended,
-        revelations: poopSesh.revelations,
-        is_public: poopSesh.is_public,
-      });
+      poopForm.setValue('id', poopSesh.id);
+      poopForm.setValue('started', poopSesh.started);
+      poopForm.setValue('ended', poopSesh.ended!);
+      poopForm.setValue('revelations', poopSesh.revelations);
+      poopForm.setValue('is_public', poopSesh.is_public);
     }
   }, [poopSesh]);
 
@@ -113,7 +111,9 @@ export default function PoopSesh() {
           <View className="gap-2 px-8">
             <Text>Poop Start</Text>
             <Button variant="tonal" onPress={() => setStartPickerOpen(true)}>
-              <Text>{format(poopSesh?.started ?? new Date(), 'mm/dd/yyyy hh:mm a')}</Text>
+              <Text>
+                {format(poopForm.getValues('started') ?? new Date(), 'M/dd/yyyy hh:mm a')}
+              </Text>
             </Button>
             <Controller
               name="started"
@@ -121,9 +121,12 @@ export default function PoopSesh() {
               render={({ field }) => (
                 <DatePicker
                   modal
+                  open={startPickerOpen}
                   date={field.value ?? new Date()}
-                  onDateChange={field.onChange}
-                  onConfirm={field.onChange}
+                  onConfirm={(value) => {
+                    poopForm.setValue('started', value);
+                    setStartPickerOpen(false);
+                  }}
                   onCancel={() => setStartPickerOpen(false)}
                 />
               )}
@@ -132,7 +135,7 @@ export default function PoopSesh() {
           <View className="gap-2 px-8">
             <Text>Poop End</Text>
             <Button variant="tonal" onPress={() => setEndPickerOpen(true)}>
-              <Text>{format(poopSesh?.ended ?? new Date(), 'mm/dd/yyyy hh:mm a')}</Text>
+              <Text>{format(poopForm.getValues('ended') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
             </Button>
             <Controller
               name="ended"
@@ -140,9 +143,18 @@ export default function PoopSesh() {
               render={({ field }) => (
                 <DatePicker
                   modal
+                  open={endPickerOpen}
                   date={field.value ?? new Date()}
-                  onDateChange={field.onChange}
-                  onConfirm={field.onChange}
+                  onDateChange={(value) => {
+                    const dateValue = new Date(value);
+                    field.onChange(dateValue);
+                    setEndPickerOpen(false);
+                  }}
+                  onConfirm={(value) => {
+                    console.log(value);
+                    field.onChange(value);
+                    setEndPickerOpen(false);
+                  }}
                   onCancel={() => setEndPickerOpen(false)}
                 />
               )}
