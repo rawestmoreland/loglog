@@ -1,20 +1,22 @@
-import MapboxGL from '@rnmapbox/maps';
-import React, { useMemo } from 'react';
+import MapboxGL, { Camera } from '@rnmapbox/maps';
+import { isEmpty } from 'lodash';
+import React, { useMemo, useRef } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
 import { Text } from '~/components/nativewindui/Text';
-import { useAuth } from '~/context/authContext';
 import { useLocation } from '~/context/locationContext';
 import { useMyPoopSeshHistory, usePublicPoopSeshHistory } from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
+
 export default function HomeScreen() {
   const { colors } = useColorScheme();
-  const { signOut } = useAuth();
 
   const { data: history, isLoading: isLoadingHistory } = useMyPoopSeshHistory();
   const { data: publicHistory, isLoading: isLoadingPublicHistory } = usePublicPoopSeshHistory();
+
+  const mapRef = useRef<Camera>(null);
 
   const { userLocation, isLoadingLocation } = useLocation();
 
@@ -27,6 +29,16 @@ export default function HomeScreen() {
   if (isLoadingLocation || isLoadingHistory || isLoadingPublicHistory) {
     return <Text>Loading...</Text>;
   }
+
+  const handleCenterCamera = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current?.setCamera({
+        centerCoordinate: [userLocation.lon, userLocation.lat],
+        zoomLevel: 15,
+        animationDuration: 1000,
+      });
+    }
+  };
 
   return (
     <View style={[styles.page, { backgroundColor: colors.background }]}>
@@ -43,25 +55,35 @@ export default function HomeScreen() {
         onLongPress={() => console.log('long press')}
         onPress={() => Keyboard.dismiss()}>
         <MapboxGL.Camera
+          ref={mapRef}
           zoomLevel={15}
           centerCoordinate={[userLocation.lon, userLocation.lat]}
           animationDuration={2000}
         />
         <MapboxGL.LocationPuck puckBearing="heading" puckBearingEnabled />
-        {allHistory?.map((poop) => (
-          <MapboxGL.PointAnnotation
-            key={poop.id}
-            id={poop.id!}
-            coordinate={[poop.location.coordinates.lon, poop.location.coordinates.lat]}>
-            <Text className="text-2xl">💩</Text>
-          </MapboxGL.PointAnnotation>
-        ))}
+        {allHistory
+          ?.filter((poop) => !isEmpty(poop.location?.coordinates))
+          .map((poop) => (
+            <MapboxGL.PointAnnotation
+              key={poop.id}
+              id={poop.id!}
+              coordinate={[poop.location?.coordinates.lon!, poop.location?.coordinates.lat!]}>
+              <Text className="text-2xl">💩</Text>
+            </MapboxGL.PointAnnotation>
+          ))}
       </MapboxGL.MapView>
       <FAB
-        style={[styles.fab, { backgroundColor: colors.primary }]}
-        icon="logout"
+        size="small"
+        style={{
+          position: 'absolute',
+          bottom: 160,
+          right: 16,
+          margin: 16,
+          backgroundColor: colors.primary,
+        }}
+        icon="crosshairs-gps"
         color={COLORS.light.foreground}
-        onPress={signOut}
+        onPress={handleCenterCamera}
       />
     </View>
   );
