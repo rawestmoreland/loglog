@@ -43,10 +43,12 @@ export function useMyPoopSeshHistory() {
     queryFn: async (): Promise<PoopSesh[]> => {
       // Get public and user's private sesh
       const filter = `user = '${user?.id}' && started != null && ended != null`;
+      const sort = `-started`;
       const expand = `user`;
 
       const sesh = await pb?.collection('poop_seshes').getFullList<PoopSesh>(1, {
         filter,
+        sort,
         expand,
       });
       return sesh ?? [];
