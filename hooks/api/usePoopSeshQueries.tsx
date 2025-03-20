@@ -64,8 +64,12 @@ export function usePublicPoopSeshHistory() {
     queryKey: ['poop-sesh-history', { public: true }],
     queryFn: async (): Promise<PoopSesh[]> => {
       const filter = `is_public = true && started != null && ended != null`;
+      const sort = `-started`;
+      const expand = `user`;
       const sesh = await pb?.collection('poop_seshes').getFullList<PoopSesh>(100, {
         filter,
+        sort,
+        expand,
       });
       return sesh ?? [];
     },
@@ -78,8 +82,11 @@ export function usePoopSesh(poopId: string) {
   return useQuery({
     queryKey: ['poop-sesh', { poopId }],
     queryFn: async (): Promise<PoopSesh | null> => {
+      const expand = `user`;
       try {
-        const sesh = await pb?.collection('poop_seshes').getOne(poopId);
+        const sesh = await pb?.collection('poop_seshes').getOne(poopId, {
+          expand,
+        });
 
         return {
           id: sesh?.id!,

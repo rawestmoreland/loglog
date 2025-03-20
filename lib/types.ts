@@ -8,7 +8,7 @@ export interface PooperProfile {
 }
 
 export interface PoopSesh {
-  id: string;
+  id?: string;
   user?: string;
   is_public: boolean;
   location?: {

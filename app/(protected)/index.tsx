@@ -1,17 +1,20 @@
 import MapboxGL, { Camera } from '@rnmapbox/maps';
 import { isEmpty } from 'lodash';
 import React, { useMemo, useRef } from 'react';
-import { Keyboard, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
 import { Text } from '~/components/nativewindui/Text';
 import { useLocation } from '~/context/locationContext';
+import { useSesh } from '~/context/seshContext';
 import { useMyPoopSeshHistory, usePublicPoopSeshHistory } from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
 
 export default function HomeScreen() {
   const { colors } = useColorScheme();
+
+  const { setSelectedSesh } = useSesh();
 
   const { data: history, isLoading: isLoadingHistory } = useMyPoopSeshHistory();
   const { data: publicHistory, isLoading: isLoadingPublicHistory } = usePublicPoopSeshHistory();
@@ -52,8 +55,7 @@ export default function HomeScreen() {
         compassEnabled={false}
         projection="globe"
         styleURL="mapbox://styles/westmorelandcreative/cm7t35gm4003k01s06j3ubktu"
-        onLongPress={() => console.log('long press')}
-        onPress={() => Keyboard.dismiss()}>
+        onLongPress={() => console.log('long press')}>
         <MapboxGL.Camera
           ref={mapRef}
           zoomLevel={15}
@@ -62,15 +64,18 @@ export default function HomeScreen() {
         />
         <MapboxGL.LocationPuck puckBearing="heading" puckBearingEnabled />
         {allHistory
-          ?.filter((poop) => !isEmpty(poop.location?.coordinates))
-          .map((poop) => (
-            <MapboxGL.PointAnnotation
-              key={poop.id}
-              id={poop.id!}
-              coordinate={[poop.location?.coordinates.lon!, poop.location?.coordinates.lat!]}>
-              <Text className="text-2xl">💩</Text>
-            </MapboxGL.PointAnnotation>
-          ))}
+          ?.filter((poop) => !isEmpty(poop.location?.coordinates) && poop.started && poop.ended)
+          .map((poop) => {
+            return (
+              <MapboxGL.PointAnnotation
+                key={poop.id}
+                id={poop.id!}
+                onSelected={() => setSelectedSesh(poop)}
+                coordinate={[poop.location?.coordinates.lon!, poop.location?.coordinates.lat!]}>
+                <Text className="text-2xl">💩</Text>
+              </MapboxGL.PointAnnotation>
+            );
+          })}
       </MapboxGL.MapView>
       <FAB
         size="small"
@@ -100,6 +105,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     width: '100%',
+  },
+  callout: {
+    padding: 16,
+    borderRadius: 8,
+    minWidth: 200,
+    maxWidth: 200,
+    transform: [{ translateX: -75 }, { translateY: 75 }],
   },
   fab: {
     position: 'absolute',

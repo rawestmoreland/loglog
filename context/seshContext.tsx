@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Alert } from 'react-native';
 import { z } from 'zod';
 
 import { useLocation } from './locationContext';
@@ -8,10 +9,11 @@ import { useLocation } from './locationContext';
 import { useStartPoopSesh, useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { useActivePoopSesh } from '~/hooks/api/usePoopSeshQueries';
 import { PoopSesh } from '~/lib/types';
-import { Alert } from 'react-native';
 
 export const SeshContext = createContext<{
   activeSesh: PoopSesh | null | undefined;
+  selectedSesh: PoopSesh | null | undefined;
+  setSelectedSesh: (sesh: PoopSesh | null) => void;
   isLoadingActiveSesh: boolean;
   startSesh: () => Promise<void>;
   endSesh: () => Promise<void>;
@@ -29,6 +31,8 @@ export const SeshContext = createContext<{
     },
     started: new Date(),
   },
+  selectedSesh: null,
+  setSelectedSesh: () => {},
   isLoadingActiveSesh: false,
   startSesh: () => Promise.resolve(),
   endSesh: () => Promise.resolve(),
@@ -41,6 +45,10 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
   const startSeshMutation = useStartPoopSesh();
   const updateSeshMutation = useUpdatePoopSesh();
   const { data: activeSesh, isLoading: isLoadingActiveSesh } = useActivePoopSesh();
+
+  const [selectedSesh, setSelectedSesh] = useState<PoopSesh | null>(null);
+
+  console.log('selectedSesh', selectedSesh);
 
   const poopFormSchema = z.object({
     revelations: z.string().max(160).optional(),
@@ -84,6 +92,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         },
       });
     } catch (error) {
+      console.error(error);
       Alert.alert('We had trouble updating the poop sesh');
     }
   };
@@ -114,6 +123,8 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         endSesh,
         poopForm,
         updateActiveSesh,
+        selectedSesh,
+        setSelectedSesh,
         isSeshPending: startSeshMutation.isPending || updateSeshMutation.isPending,
       }}>
       {children}

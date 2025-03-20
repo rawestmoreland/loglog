@@ -1,5 +1,6 @@
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
+import { format, intervalToDuration } from 'date-fns';
 import { router, Stack, usePathname } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -35,6 +36,18 @@ export default function TabLayout() {
     bottomSheetModalRef.current?.present();
   }, []);
 
+  const {
+    startSesh,
+    activeSesh,
+    selectedSesh,
+    setSelectedSesh,
+    endSesh,
+    isLoadingActiveSesh,
+    poopForm,
+    updateActiveSesh,
+    isSeshPending,
+  } = useSesh();
+
   useEffect(() => {
     // Set up keyboard listeners
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -56,17 +69,7 @@ export default function TabLayout() {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-  }, []);
-
-  const {
-    startSesh,
-    activeSesh,
-    endSesh,
-    isLoadingActiveSesh,
-    poopForm,
-    updateActiveSesh,
-    isSeshPending,
-  } = useSesh();
+  }, [activeSesh]);
 
   const handleStartSesh = async () => {
     // Can't do two poops at once
@@ -98,29 +101,46 @@ export default function TabLayout() {
         ref={bottomSheetModalRef}
         enablePanDownToClose={false}
         backdropComponent={() => <View className="absolute inset-0 bg-transparent" />}
-        snapPoints={activeSesh ? ['40%', '80%'] : !isOnHomeScreen ? ['10%'] : ['17%']}>
+        snapPoints={
+          selectedSesh ? ['90%'] : activeSesh ? ['40%', '80%'] : !isOnHomeScreen ? ['10%'] : ['17%']
+        }>
         <BottomSheetView className="flex-1">
           <View className="flex-1 gap-2">
-            <View className="flex-row items-center justify-between gap-2 px-8">
-              <Text className="font-semibold">{user?.codeName}</Text>
-              {isOnHomeScreen ? (
-                <Button
-                  variant="tonal"
-                  size="icon"
-                  style={{ backgroundColor: colors.primary }}
-                  onPress={() => router.push('/(protected)/(screens)/poop-history')}>
-                  <Icon source="book-open-page-variant" size={24} />
+            {!selectedSesh ? (
+              <View className="flex-row items-center justify-between gap-2 px-8">
+                <Text className="font-semibold">{user?.codeName}</Text>
+                {isOnHomeScreen ? (
+                  <Button
+                    variant="tonal"
+                    size="icon"
+                    style={{ backgroundColor: colors.primary }}
+                    onPress={() => router.push('/(protected)/(screens)/poop-history')}>
+                    <Icon
+                      source="book-open-page-variant"
+                      size={24}
+                      color={COLORS.light.foreground}
+                    />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="tonal"
+                    size="icon"
+                    style={{ backgroundColor: colors.primary }}
+                    onPress={() => router.dismissTo('/(protected)')}>
+                    <Icon source="map-marker" size={24} color={COLORS.light.foreground} />
+                  </Button>
+                )}
+              </View>
+            ) : (
+              <View className="flex-row items-center justify-between gap-2 px-8">
+                <Text className="font-semibold">
+                  {format(new Date(selectedSesh.started), 'MM/dd/yyyy HH:mm')}
+                </Text>
+                <Button variant="plain" size="icon" onPress={() => setSelectedSesh(null)}>
+                  <Icon source="close" size={24} color={COLORS.light.foreground} />
                 </Button>
-              ) : (
-                <Button
-                  variant="tonal"
-                  size="icon"
-                  style={{ backgroundColor: colors.primary }}
-                  onPress={() => router.dismissTo('/(protected)')}>
-                  <Icon source="map-marker" size={24} />
-                </Button>
-              )}
-            </View>
+              </View>
+            )}
             {isLoadingActiveSesh ? (
               <View className="flex-1 items-center justify-center">
                 <ActivityIndicator size="large" color={colors.primary} />
@@ -133,7 +153,7 @@ export default function TabLayout() {
                 activeSesh={activeSesh}
                 updateActiveSesh={updateActiveSesh}
               />
-            ) : isOnHomeScreen ? (
+            ) : isOnHomeScreen && !selectedSesh ? (
               <View className="relative flex-1 px-8">
                 <View>
                   <Button
@@ -145,6 +165,43 @@ export default function TabLayout() {
                       {isSeshPending ? 'Hold on...' : 'Drop a Log'}
                     </Text>
                   </Button>
+                </View>
+              </View>
+            ) : selectedSesh ? (
+              <View className="relative flex-1 px-8">
+                <View className="gap-2">
+                  <Text variant="title1" className="font-semibold">
+                    Sesh Details
+                  </Text>
+                  <Text>
+                    <Text className="font-semibold">Time:</Text>{' '}
+                    {format(new Date(selectedSesh.started), 'HH:mm')}
+                  </Text>
+                  <Text>
+                    <Text className="font-semibold">Duration:</Text>{' '}
+                    {`${intervalToDuration({ start: new Date(selectedSesh.started), end: new Date(selectedSesh.ended!) })?.minutes ?? 0}m ${intervalToDuration({ start: new Date(selectedSesh.started), end: new Date(selectedSesh.ended!) })?.seconds ?? 0}s`}
+                  </Text>
+                  {selectedSesh.revelations && (
+                    <Text>
+                      <Text className="font-semibold">Revelations:</Text> {selectedSesh.revelations}
+                    </Text>
+                  )}
+                  {selectedSesh.expand?.user?.id === user?.id && (
+                    <Button
+                      style={{ backgroundColor: colors.primary }}
+                      onPress={() => {
+                        setSelectedSesh(null);
+                        router.push({
+                          pathname: `/(protected)/(screens)/poop-details/${selectedSesh.id}`,
+                          params: {
+                            poopId: selectedSesh.id,
+                          },
+                        });
+                      }}>
+                      <Icon source="pencil" size={24} color={COLORS.light.foreground} />
+                      <Text style={{ color: COLORS.light.foreground }}>Edit this sesh</Text>
+                    </Button>
+                  )}
                 </View>
               </View>
             ) : null}
