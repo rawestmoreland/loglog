@@ -57,7 +57,7 @@ export default function PoopSesh() {
 
   useEffect(() => {
     if (poopSesh) {
-      poopForm.setValue('id', poopSesh.id);
+      poopForm.setValue('id', poopSesh.id!);
       poopForm.setValue('started', poopSesh.started);
       poopForm.setValue('ended', poopSesh.ended!);
       poopForm.setValue('revelations', poopSesh.revelations);
@@ -122,7 +122,7 @@ export default function PoopSesh() {
                 <DatePicker
                   modal
                   open={startPickerOpen}
-                  date={field.value ?? new Date()}
+                  date={poopForm.getValues('started') ?? new Date()}
                   onConfirm={(value) => {
                     poopForm.setValue('started', value);
                     setStartPickerOpen(false);
@@ -144,14 +144,13 @@ export default function PoopSesh() {
                 <DatePicker
                   modal
                   open={endPickerOpen}
-                  date={field.value ?? new Date()}
+                  date={poopForm.getValues('ended') ?? new Date()}
                   onDateChange={(value) => {
                     const dateValue = new Date(value);
                     field.onChange(dateValue);
                     setEndPickerOpen(false);
                   }}
                   onConfirm={(value) => {
-                    console.log(value);
                     field.onChange(value);
                     setEndPickerOpen(false);
                   }}
