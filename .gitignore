@@ -25,3 +25,6 @@ android
 
 .env.local
 .env
+
+# Builds
+build-*.**
