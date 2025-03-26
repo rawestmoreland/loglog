@@ -132,7 +132,7 @@ export default function HomeScreen() {
               iconOffset: [0, -40], // Move the emoji up slightly
               textField: ['get', 'point_count_abbreviated'],
               textSize: 14,
-              textColor: colors.foreground,
+              textColor: '#000',
               textOffset: [0, 1], // Move the text down below the emoji
             }}
           />

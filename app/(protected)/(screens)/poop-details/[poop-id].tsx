@@ -48,8 +48,8 @@ export default function PoopSesh() {
     resolver: zodResolver(poopSchema),
     defaultValues: {
       id: poopSesh?.id,
-      started: poopSesh?.started,
-      ended: poopSesh?.ended,
+      started: poopSesh?.started ?? new Date(),
+      ended: poopSesh?.ended ?? new Date(),
       revelations: poopSesh?.revelations,
       is_public: poopSesh?.is_public,
     },
@@ -111,18 +111,16 @@ export default function PoopSesh() {
           <View className="gap-2 px-8">
             <Text>Poop Start</Text>
             <Button variant="tonal" onPress={() => setStartPickerOpen(true)}>
-              <Text>
-                {format(poopForm.getValues('started') ?? new Date(), 'M/dd/yyyy hh:mm a')}
-              </Text>
+              <Text>{format(poopForm.watch('started') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
             </Button>
             <Controller
               name="started"
               control={poopForm.control}
-              render={({ field }) => (
+              render={({ field: { value } }) => (
                 <DatePicker
                   modal
                   open={startPickerOpen}
-                  date={poopForm.getValues('started') ?? new Date()}
+                  date={value ?? new Date()}
                   onConfirm={(value) => {
                     poopForm.setValue('started', value);
                     setStartPickerOpen(false);
@@ -135,23 +133,18 @@ export default function PoopSesh() {
           <View className="gap-2 px-8">
             <Text>Poop End</Text>
             <Button variant="tonal" onPress={() => setEndPickerOpen(true)}>
-              <Text>{format(poopForm.getValues('ended') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
+              <Text>{format(poopForm.watch('ended') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
             </Button>
             <Controller
               name="ended"
               control={poopForm.control}
-              render={({ field }) => (
+              render={({ field: { value, onChange } }) => (
                 <DatePicker
                   modal
                   open={endPickerOpen}
-                  date={poopForm.getValues('ended') ?? new Date()}
-                  onDateChange={(value) => {
-                    const dateValue = new Date(value);
-                    field.onChange(dateValue);
-                    setEndPickerOpen(false);
-                  }}
+                  date={value ?? new Date()}
                   onConfirm={(value) => {
-                    field.onChange(value);
+                    onChange(value);
                     setEndPickerOpen(false);
                   }}
                   onCancel={() => setEndPickerOpen(false)}
