@@ -1,5 +1,6 @@
 import { Stack, router } from 'expo-router';
 import * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { Image, Platform, View } from 'react-native';
 import {
   KeyboardAwareScrollView,
@@ -7,6 +8,7 @@ import {
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { z } from 'zod';
 
 import { AlertAnchor } from '~/components/nativewindui/Alert';
 import { AlertRef } from '~/components/nativewindui/Alert/types';
@@ -14,43 +16,65 @@ import { Button } from '~/components/nativewindui/Button';
 import { Form, FormItem, FormSection } from '~/components/nativewindui/Form';
 import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
+import { usePocketBase } from '~/lib/pocketbaseConfig';
 
 const LOGO_SOURCE = {
   uri: 'https://nativewindui.com/_next/image?url=/_next/static/media/logo.28276aeb.png&w=2048&q=75',
 };
 
 export default function ForgotPasswordScreen() {
+  const { pb } = usePocketBase();
   const insets = useSafeAreaInsets();
   const alertRef = React.useRef<AlertRef>(null);
 
-  function onSubmit() {
-    alertRef.current?.prompt({
-      title: 'Check your inbox',
-      message: "We've sent you a code to reset your password. Enter it below:",
-      prompt: {
-        keyboardType: 'number-pad',
-        type: 'plain-text',
-      },
-      buttons: [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => {
-            KeyboardController.dismiss();
-            router.replace('/');
+  const schema = z.object({
+    email: z.string().email(),
+  });
+
+  const form = useForm({
+    defaultValues: {
+      email: '',
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof schema>) => {
+    if (!pb) return;
+
+    const { email } = data;
+
+    try {
+      await pb?.collection('users').requestPasswordReset(email);
+
+      alertRef.current?.alert({
+        title: 'Check your inbox',
+        message: "We've sent you a password reset link. Check your email.",
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              KeyboardController.dismiss();
+              router.replace('/');
+            },
           },
-        },
-        {
-          text: 'Submit',
-          style: 'default',
-          onPress: () => {
-            KeyboardController.dismiss();
-            router.replace('/');
+        ],
+      });
+    } catch (e) {
+      alertRef.current?.alert({
+        title: 'Error',
+        message: e instanceof Error ? e.message : 'An unknown error occurred',
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              alertRef.current?.blur();
+            },
           },
-        },
-      ],
-    });
-  }
+        ],
+      });
+    }
+  };
 
   return (
     <View className="ios:bg-card flex-1" style={{ paddingBottom: insets.bottom }}>
@@ -85,18 +109,27 @@ export default function ForgotPasswordScreen() {
           <View className="ios:pt-4 pt-6">
             <Form className="gap-2">
               <FormSection className="ios:bg-background">
-                <FormItem>
-                  <TextField
-                    placeholder={Platform.select({ ios: 'Email', default: '' })}
-                    label={Platform.select({ ios: undefined, default: 'Email' })}
-                    onSubmitEditing={onSubmit}
-                    submitBehavior="submit"
-                    autoFocus
-                    keyboardType="email-address"
-                    textContentType="emailAddress"
-                    returnKeyType="next"
-                  />
-                </FormItem>
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <TextField
+                        value={field.value}
+                        onChangeText={field.onChange}
+                        placeholder={Platform.select({ ios: 'Email', default: '' })}
+                        label={Platform.select({ ios: undefined, default: 'Email' })}
+                        onSubmitEditing={() => form.handleSubmit(onSubmit)()}
+                        submitBehavior="submit"
+                        autoFocus
+                        keyboardType="email-address"
+                        textContentType="emailAddress"
+                        autoCapitalize="none"
+                        returnKeyType="next"
+                      />
+                    </FormItem>
+                  )}
+                />
               </FormSection>
             </Form>
           </View>
@@ -105,7 +138,7 @@ export default function ForgotPasswordScreen() {
       <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
         {Platform.OS === 'ios' ? (
           <View className=" px-12 py-4">
-            <Button size="lg" onPress={onSubmit}>
+            <Button size="lg" onPress={form.handleSubmit(onSubmit)}>
               <Text>Submit</Text>
             </Button>
           </View>
@@ -119,7 +152,7 @@ export default function ForgotPasswordScreen() {
               }}>
               <Text className="text-sm text-primary">Create Account</Text>
             </Button>
-            <Button onPress={onSubmit}>
+            <Button onPress={() => form.handleSubmit(onSubmit)()}>
               <Text className="text-sm">Submit</Text>
             </Button>
           </View>
