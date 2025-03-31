@@ -32,5 +32,9 @@ export interface PoopSesh {
       id: string;
       codeName: string;
     };
+    poo_profile?: {
+      id: string;
+      codeName: string;
+    };
   };
 }

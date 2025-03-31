@@ -1,9 +1,10 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Stack, usePathname } from 'expo-router';
+import { Stack, useFocusEffect, usePathname } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { Keyboard } from 'react-native';
 
+import { useSheetRef } from '~/components/nativewindui/Sheet';
 import ActiveSeshSheet from '~/components/sheets/ActiveSeshSheet';
 import DefaultSheet from '~/components/sheets/DefaultSheet';
 import PoopPalsSheet from '~/components/sheets/PoopPalsSheet';
@@ -17,11 +18,12 @@ import { useColorScheme } from '~/lib/useColorScheme';
 export default function TabLayout() {
   const { colors } = useColorScheme();
 
-  const { user } = useAuth();
+  const { user, pooProfile } = useAuth();
 
   const pathname = usePathname();
 
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const bottomSheetModalRef = useSheetRef();
+  const selectedSeshSheetRef = useSheetRef();
 
   const profileSheetRef = useRef<BottomSheetModal>(null);
   const poopPalsSheetRef = useRef<BottomSheetModal>(null);
@@ -72,6 +74,15 @@ export default function TabLayout() {
     }
   }, [activeSesh]);
 
+  useEffect(() => {
+    if (selectedSesh) {
+      selectedSeshSheetRef.current?.present();
+    } else {
+      selectedSeshSheetRef.current?.dismiss();
+      bottomSheetModalRef.current?.present();
+    }
+  }, [selectedSesh]);
+
   const handleStartSesh = async () => {
     // Can't do two poops at once
     if (activeSesh) return;
@@ -101,11 +112,12 @@ export default function TabLayout() {
 
       {selectedSesh ? (
         <SelectedSeshSheet
-          ref={bottomSheetModalRef}
+          ref={selectedSeshSheetRef}
           sesh={selectedSesh}
           onClose={() => setSelectedSesh(null)}
           colors={colors}
           user={user}
+          pooProfile={pooProfile}
         />
       ) : activeSesh ? (
         <ActiveSeshSheet

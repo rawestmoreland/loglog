@@ -17,14 +17,16 @@ type SelectedSeshSheetProps = {
   onClose: () => void;
   colors: any;
   user: any;
+  pooProfile: any;
 };
 
 const SelectedSeshSheet = forwardRef<BottomSheetModal, SelectedSeshSheetProps>(
-  ({ sesh, onClose, colors, user }, ref) => {
+  ({ sesh, onClose, colors, user, pooProfile }, ref) => {
     return (
       <Sheet
         ref={ref}
         enablePanDownToClose={false}
+        handleComponent={() => <View className="h-4" />}
         snapPoints={['90%']}
         backdropComponent={() => <View className="absolute inset-0 bg-transparent" />}>
         <BottomSheetView className="flex-1">
@@ -56,7 +58,7 @@ const SelectedSeshSheet = forwardRef<BottomSheetModal, SelectedSeshSheetProps>(
                     <Text className="font-semibold">Revelations:</Text> {sesh.revelations}
                   </Text>
                 )}
-                {sesh.expand?.user?.id === user?.id && (
+                {sesh.expand?.poo_profile?.id === pooProfile?.id && (
                   <Button
                     style={{ backgroundColor: colors.primary }}
                     onPress={() => {
