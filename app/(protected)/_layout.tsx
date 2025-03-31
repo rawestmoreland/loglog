@@ -74,7 +74,7 @@ export default function TabLayout() {
         keyboardDidHideListener.remove();
       };
     }
-  }, [activeSesh]);
+  }, [activeSesh, selectedSesh]);
 
   useEffect(() => {
     if (selectedSesh) {
