@@ -38,7 +38,7 @@ export default function PoopPalsSearchModal() {
       const pals = await pb
         ?.collection('poo_profiles')
         .getList(1, 10, {
-          filter: `codeName ~ "${debouncedSearchQuery}" && codeName ?!~ "${following?.map((f) => f.expand?.following?.codeName).join('|')}"`,
+          filter: `codeName ~ "${debouncedSearchQuery}" && ${following?.map((f) => `codeName != "${f.expand?.following.codeName}"`).join(' && ')}`,
         })
         .catch((e) => console.error(e));
 
@@ -134,7 +134,7 @@ export default function PoopPalsSearchModal() {
         animationType="slide"
         visible={addPalsOpen}
         onRequestClose={() => setAddPalsOpen(false)}>
-        <SafeAreaView className="flex-1">
+        <SafeAreaView className="flex-1 bg-background">
           <View className="flex-1 gap-2">
             <View className="flex-row items-center justify-between px-4">
               <Pressable onPress={() => setAddPalsOpen(false)}>
@@ -145,7 +145,7 @@ export default function PoopPalsSearchModal() {
             <View className="flex-1 gap-2 px-4">
               <SearchInput
                 placeholder="Search by nickname..."
-                className="border border-border"
+                className="bg-muted-background border border-border"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />

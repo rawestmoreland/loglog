@@ -10,6 +10,7 @@ import { useSesh } from '~/context/seshContext';
 import {
   useFriendsPoopSeshHistory,
   useMyPoopSeshHistory,
+  usePalPoopSeshHistory,
   usePublicPoopSeshHistory,
 } from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -20,13 +21,14 @@ const POOP_MARKER = require('~/assets/poo-pile.png');
 export default function HomeScreen() {
   const { colors } = useColorScheme();
 
-  const { poopsToView } = useMapViewContext();
+  const { poopsToView, palSelected } = useMapViewContext();
 
   const { setSelectedSesh } = useSesh();
 
   const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory();
   const { data: publicHistory, isLoading: isLoadingPublicHistory } = usePublicPoopSeshHistory();
   const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory();
+  const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory();
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -44,11 +46,22 @@ export default function HomeScreen() {
       case 'yours':
         return myHistory;
       case 'friends':
+        if (palSelected !== 'all') {
+          return palHistory;
+        }
         return friendsHistory;
       default:
         return allHistory;
     }
-  }, [myHistory, publicHistory, friendsHistory, poopsToView, allHistory]);
+  }, [
+    myHistory,
+    publicHistory,
+    friendsHistory,
+    poopsToView,
+    allHistory,
+    palSelected,
+    isLoadingPalHistory,
+  ]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {

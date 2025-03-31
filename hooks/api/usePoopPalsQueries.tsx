@@ -30,7 +30,7 @@ export function useMyFollowers() {
  * Get all users that the user is following
  * @returns list of users
  */
-export function useFollowing() {
+export function useFollowing(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
 
   const { pooProfile } = useAuth();
@@ -58,7 +58,7 @@ export function useFollowing() {
         }) ?? []
       );
     },
-    enabled: !!pooProfile?.id && !isLoadingMyFollowers,
+    enabled: !!pooProfile?.id && !isLoadingMyFollowers && params.enabled,
   });
 }
 

@@ -5,6 +5,7 @@ import { useFollowing } from './usePoopPalsQueries';
 import { useAuth } from '~/context/authContext';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
+import { useMapViewContext } from '~/context/mapViewContext';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
@@ -122,8 +123,6 @@ export function useFriendsPoopSeshHistory() {
 
   const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
-  console.log('following', following);
-
   return useQuery({
     queryKey: ['friends-poop-sesh-history', pooProfile?.id],
     queryFn: async () => {
@@ -145,5 +144,27 @@ export function useFriendsPoopSeshHistory() {
       return sesh ?? [];
     },
     enabled: !isLoadingFollowing && !!pooProfile?.id,
+  });
+}
+
+export function usePalPoopSeshHistory() {
+  const { pb } = usePocketBase();
+  const { palSelected } = useMapViewContext();
+
+  return useQuery({
+    queryKey: ['poop-sesh-history', { palId: palSelected }],
+    queryFn: async () => {
+      const filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}'`;
+      const sort = `-started`;
+      const expand = `user,poo_profile`;
+
+      const sesh = await pb?.collection('poop_seshes').getFullList(100, {
+        filter,
+        sort,
+        expand,
+      });
+      return sesh ?? [];
+    },
+    enabled: palSelected !== 'all',
   });
 }

@@ -221,6 +221,7 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
               variant="insets"
               keyExtractor={keyExtractor}
               data={listData}
+              ItemSeparatorComponent={() => <View className="h-2" />}
               renderItem={(info) => {
                 return renderItem(
                   info,

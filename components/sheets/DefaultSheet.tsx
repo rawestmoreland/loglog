@@ -1,4 +1,5 @@
 import { BottomSheetView } from '@gorhom/bottom-sheet';
+import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import React, { forwardRef } from 'react';
 import { Pressable, View } from 'react-native';
@@ -11,6 +12,8 @@ import { Button } from '~/components/nativewindui/Button';
 import { Sheet } from '~/components/nativewindui/Sheet';
 import { Text } from '~/components/nativewindui/Text';
 import { useMapViewContext } from '~/context/mapViewContext';
+import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
+import { cn } from '~/lib/cn';
 import { COLORS } from '~/theme/colors';
 
 const DefaultSheet = forwardRef(
@@ -32,17 +35,26 @@ const DefaultSheet = forwardRef(
     },
     ref: any
   ) => {
-    const { poopsToView, setPoopsToView } = useMapViewContext();
+    const { poopsToView, setPoopsToView, palSelected, setPalSelected } = useMapViewContext();
+
+    const { data: following, isLoading: isFollowingLoading } = useFollowing({
+      enabled: poopsToView === 'friends',
+    });
 
     return (
       <Sheet
         ref={ref}
+        handleComponent={() => <View className="h-4" />}
         enablePanDownToClose={false}
         enableDismissOnClose={false}
         backdropComponent={() => <View className="absolute inset-0 bg-transparent" />}
-        snapPoints={!isOnHomeScreen ? ['10%'] : ['17%']}>
-        <BottomSheetView className="flex-1">
-          <View className="mb-4 flex-row items-center justify-between gap-2 px-8">
+        snapPoints={['20%']}>
+        <BottomSheetView className="relative flex-1">
+          <View
+            className={cn(
+              poopsToView === 'friends' ? 'mb-2' : 'mb-4',
+              `flex-row items-center justify-between gap-2 px-8`
+            )}>
             <DropdownMenu
               items={[
                 createDropdownItem({
@@ -100,6 +112,39 @@ const DefaultSheet = forwardRef(
               )}
             </View>
           </View>
+          {/* Friend Selector */}
+          {poopsToView === 'friends' && !isFollowingLoading && (
+            <View className="mb-2 px-8">
+              <FlashList
+                estimatedItemSize={100}
+                keyExtractor={(item) => item.id}
+                ItemSeparatorComponent={() => <View className="w-2" />}
+                data={[
+                  {
+                    id: 'all',
+                    expand: { following: { codeName: 'All', id: 'all' } },
+                  },
+                  ...(following ?? []),
+                ]}
+                horizontal
+                renderItem={({ item }) => {
+                  return (
+                    <Pressable
+                      onPress={() => setPalSelected(item.expand?.following.id)}
+                      className={cn(
+                        palSelected === item.expand?.following.id
+                          ? 'rounded-lg border border-border bg-gray-100 px-2 py-1 dark:border-muted-foreground dark:bg-gray-100/50'
+                          : 'rounded-lg border border-border bg-transparent px-2 py-1 dark:border-muted-foreground dark:bg-transparent'
+                      )}>
+                      <Text className="text-sm text-foreground">
+                        {item.expand?.following.codeName}
+                      </Text>
+                    </Pressable>
+                  );
+                }}
+              />
+            </View>
+          )}
           {isOnHomeScreen && (
             <View className="relative flex-1 px-8">
               <Button
