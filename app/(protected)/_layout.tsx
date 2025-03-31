@@ -1,7 +1,6 @@
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Stack, useFocusEffect, usePathname } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Keyboard } from 'react-native';
 
 import { useSheetRef } from '~/components/nativewindui/Sheet';
@@ -24,13 +23,15 @@ export default function TabLayout() {
 
   const bottomSheetModalRef = useSheetRef();
   const selectedSeshSheetRef = useSheetRef();
+  const defaultSheetRef = useSheetRef();
 
-  const profileSheetRef = useRef<BottomSheetModal>(null);
-  const poopPalsSheetRef = useRef<BottomSheetModal>(null);
+  const profileSheetRef = useSheetRef();
+  const poopPalsSheetRef = useSheetRef();
   const isOnHomeScreen = pathname === '/';
 
   useEffect(() => {
     bottomSheetModalRef.current?.present();
+    defaultSheetRef.current?.present();
   }, []);
 
   const {
@@ -49,6 +50,8 @@ export default function TabLayout() {
     // Show the active sesh sheet
     if (activeSesh) {
       bottomSheetModalRef.current?.present();
+    } else {
+      defaultSheetRef.current?.present();
     }
 
     // Set up keyboard listeners only when we have an active session
@@ -132,7 +135,7 @@ export default function TabLayout() {
       ) : (
         <>
           <DefaultSheet
-            ref={bottomSheetModalRef}
+            ref={defaultSheetRef}
             isOnHomeScreen={isOnHomeScreen}
             onProfilePress={() => profileSheetRef.current?.present()}
             user={user}

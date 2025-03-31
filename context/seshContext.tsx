@@ -74,8 +74,12 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         started: new Date(),
       });
     } catch (error) {
-      console.error(error);
-      Alert.alert('We had trouble starting the poop sesh');
+      if (error instanceof Error && error.message === 'rate-limit') {
+        Alert.alert('You can only make one poop sesh every 5 minutes');
+      } else {
+        console.error(error);
+        Alert.alert('We had trouble starting the poop sesh');
+      }
     }
   };
 

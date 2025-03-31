@@ -10,6 +10,18 @@ export function useStartPoopSesh() {
   const { user, pooProfile } = useAuth();
   return useMutation({
     mutationFn: async (poopSesh: PoopSesh): Promise<PoopSesh> => {
+      // Check for a sesh made within the last 5 minutes for rate limiting
+      const lastSesh = await pb
+        ?.collection('poop_seshes')
+        .getFirstListItem(
+          `poo_profile = "${pooProfile?.id}" && started >= "${new Date(Date.now() - 5 * 60 * 1000).toISOString().replace('T', ' ')}"`
+        )
+        .catch((e) => console.log('sesherror', e));
+
+      if (lastSesh) {
+        throw new Error('rate-limit');
+      }
+
       const sesh = await pb?.collection('poop_seshes').create({
         ...poopSesh,
         user: user?.id,
