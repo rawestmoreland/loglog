@@ -1,7 +1,7 @@
 import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
 import { isEmpty } from 'lodash';
 import React, { useMemo, useRef } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
 import { useLocation } from '~/context/locationContext';
@@ -15,6 +15,9 @@ import {
 } from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+const pixelSnapPoint = SCREEN_HEIGHT * 0.2;
 
 const POOP_MARKER = require('~/assets/poo-pile.png');
 
@@ -205,7 +208,7 @@ export default function HomeScreen() {
         size="small"
         style={{
           position: 'absolute',
-          bottom: 160,
+          top: SCREEN_HEIGHT - pixelSnapPoint - 80,
           right: 16,
           margin: 16,
           backgroundColor: colors.primary,

@@ -24,7 +24,6 @@ export default function TabLayout() {
   const bottomSheetModalRef = useSheetRef();
   const selectedSeshSheetRef = useSheetRef();
   const defaultSheetRef = useSheetRef();
-
   const profileSheetRef = useSheetRef();
   const poopPalsSheetRef = useSheetRef();
   const isOnHomeScreen = pathname === '/';
