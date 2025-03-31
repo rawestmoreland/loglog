@@ -41,7 +41,6 @@ export default function CredentialsScreen() {
         passwordConfirm: confirmPassword,
         codeName: codeName as string,
       });
-      console.log('Create account response:', response);
     } catch (error) {
       console.error('Create account error:', error);
     }

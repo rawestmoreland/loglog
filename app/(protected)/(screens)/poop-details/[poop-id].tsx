@@ -15,11 +15,9 @@ import { TextField } from '~/components/nativewindui/TextField';
 import { Toggle } from '~/components/nativewindui/Toggle';
 import { useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { usePoopSesh } from '~/hooks/api/usePoopSeshQueries';
-import { useColorScheme } from '~/lib/useColorScheme';
 
 export default function PoopSesh() {
   const insets = useSafeAreaInsets();
-  const { colors } = useColorScheme();
   const { poopId } = useLocalSearchParams();
 
   const updateSesh = useUpdatePoopSesh();

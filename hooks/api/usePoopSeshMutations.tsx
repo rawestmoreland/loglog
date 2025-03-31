@@ -7,12 +7,13 @@ import { PoopSesh } from '~/lib/types';
 export function useStartPoopSesh() {
   const { pb } = usePocketBase();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, pooProfile } = useAuth();
   return useMutation({
     mutationFn: async (poopSesh: PoopSesh): Promise<PoopSesh> => {
       const sesh = await pb?.collection('poop_seshes').create({
         ...poopSesh,
         user: user?.id,
+        poo_profile: pooProfile?.id,
         started: new Date(),
       });
 
@@ -23,6 +24,7 @@ export function useStartPoopSesh() {
         ended: sesh?.ended,
         revelations: sesh?.revelations,
         user: sesh?.user,
+        poo_profile: sesh?.poo_profile,
         is_public: sesh?.is_public,
       };
     },
@@ -46,6 +48,7 @@ export function useUpdatePoopSesh() {
         ended: sesh?.ended,
         revelations: sesh?.revelations,
         user: sesh?.user,
+        poo_profile: sesh?.poo_profile,
         is_public: sesh?.is_public,
       };
     },

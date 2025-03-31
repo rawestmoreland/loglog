@@ -54,12 +54,18 @@ export default function useSignUp() {
         codeName: form.codeName,
       };
 
-      await pb.collection('users').create(data);
+      const user = await pb.collection('users').create(data);
       const formData = {
         email: form.email,
         password: form.password,
       };
       await signIn(formData);
+
+      await pb.collection('poo_profiles').create({
+        user,
+        codeName: form.codeName,
+      });
+
       router.push('/(protected)');
     } catch (err: any) {
       console.error(err.originalError);

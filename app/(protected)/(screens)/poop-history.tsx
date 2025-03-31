@@ -79,18 +79,22 @@ export default function PoopHistory() {
   const logHistory = useMemo(() => {
     return [
       'My Logs',
-      ...(privateLogs ?? []).map((log) => {
-        const isPublic = log.is_public;
-        const title = isPublic ? 'Public poop' : 'Private poop';
-        const subTitle = format(new Date(log.started), 'MMM d, yyyy h:mm a');
-        const poopInMinutes = log.ended ? differenceInMinutes(log.ended, log.started) : 0;
-        return {
-          id: log.id!,
-          title,
-          subTitle,
-          poopInMinutes,
-        };
-      }),
+      ...(privateLogs ?? [])
+        .sort((a, b) => {
+          return new Date(b.started).getTime() - new Date(a.started).getTime();
+        })
+        .map((log) => {
+          const isPublic = log.is_public;
+          const title = isPublic ? 'Public poop' : 'Private poop';
+          const subTitle = format(new Date(log.started), 'MMM d, yyyy h:mm a');
+          const poopInMinutes = log.ended ? differenceInMinutes(log.ended, log.started) : 0;
+          return {
+            id: log.id!,
+            title,
+            subTitle,
+            poopInMinutes,
+          };
+        }),
     ];
   }, [privateLogs]);
 

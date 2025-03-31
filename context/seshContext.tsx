@@ -48,8 +48,6 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
 
   const [selectedSesh, setSelectedSesh] = useState<PoopSesh | null>(null);
 
-  console.log('selectedSesh', selectedSesh);
-
   const poopFormSchema = z.object({
     revelations: z.string().max(160).optional(),
   });

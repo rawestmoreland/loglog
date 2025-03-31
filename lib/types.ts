@@ -7,9 +7,16 @@ export interface PooperProfile {
   codeName: string;
 }
 
+export interface PooProfile {
+  id?: string;
+  user?: string;
+  codeName: string;
+}
+
 export interface PoopSesh {
   id?: string;
   user?: string;
+  poo_profile?: string;
   is_public: boolean;
   location?: {
     coordinates: {

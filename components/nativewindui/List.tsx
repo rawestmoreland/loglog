@@ -30,7 +30,13 @@ cssInterop(FlashList, {
 
 type ListDataItem =
   | string
-  | { id: string; title: string; subTitle?: string; poopInMinutes?: number };
+  | {
+      id: string;
+      title: string;
+      subTitle?: string;
+      poopInMinutes?: number;
+      followRequest?: boolean;
+    };
 type ListVariant = 'insets' | 'full-width';
 
 type ListRef<T extends ListDataItem> = React.Ref<FlashList<T>>;

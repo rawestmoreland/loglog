@@ -1,13 +1,17 @@
 import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
 import { isEmpty } from 'lodash';
 import React, { useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
-import { Text } from '~/components/nativewindui/Text';
 import { useLocation } from '~/context/locationContext';
+import { useMapViewContext } from '~/context/mapViewContext';
 import { useSesh } from '~/context/seshContext';
-import { useMyPoopSeshHistory, usePublicPoopSeshHistory } from '~/hooks/api/usePoopSeshQueries';
+import {
+  useFriendsPoopSeshHistory,
+  useMyPoopSeshHistory,
+  usePublicPoopSeshHistory,
+} from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
 
@@ -16,10 +20,13 @@ const POOP_MARKER = require('~/assets/poo-pile.png');
 export default function HomeScreen() {
   const { colors } = useColorScheme();
 
+  const { poopsToView } = useMapViewContext();
+
   const { setSelectedSesh } = useSesh();
 
-  const { data: history, isLoading: isLoadingHistory } = useMyPoopSeshHistory();
+  const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory();
   const { data: publicHistory, isLoading: isLoadingPublicHistory } = usePublicPoopSeshHistory();
+  const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory();
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -27,10 +34,21 @@ export default function HomeScreen() {
   const { userLocation, isLoadingLocation } = useLocation();
 
   const allHistory = useMemo(() => {
-    const combined = [...(history ?? []), ...(publicHistory ?? [])];
+    const combined = [...(myHistory ?? []), ...(publicHistory ?? [])];
     const uniqueMap = new Map(combined.map((item) => [item.id, item]));
     return Array.from(uniqueMap.values());
-  }, [history, publicHistory]);
+  }, [myHistory, publicHistory, poopsToView]);
+
+  const historyToMap = useMemo(() => {
+    switch (poopsToView) {
+      case 'yours':
+        return myHistory;
+      case 'friends':
+        return friendsHistory;
+      default:
+        return allHistory;
+    }
+  }, [myHistory, publicHistory, friendsHistory, poopsToView, allHistory]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {
@@ -46,8 +64,19 @@ export default function HomeScreen() {
     }
   };
 
-  if (isLoadingLocation || isLoadingHistory || isLoadingPublicHistory) {
-    return <Text>Loading...</Text>;
+  if (
+    isLoadingLocation ||
+    isLoadingMyHistory ||
+    isLoadingPublicHistory ||
+    isLoadingFriendsHistory
+  ) {
+    return (
+      <View
+        style={[StyleSheet.absoluteFillObject, styles.loadingContainer]}
+        className="bg-background">
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   const handleCenterCamera = () => {
@@ -95,7 +124,7 @@ export default function HomeScreen() {
           shape={{
             type: 'FeatureCollection',
             features:
-              allHistory
+              historyToMap
                 ?.filter(
                   (poop) => !isEmpty(poop.location?.coordinates) && poop.started && poop.ended
                 )
@@ -200,5 +229,9 @@ const styles = StyleSheet.create({
     top: 48,
     right: 16,
     margin: 16,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

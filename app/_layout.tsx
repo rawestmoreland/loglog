@@ -46,9 +46,9 @@ export default function RootLayout() {
       {/* WRAP YOUR APP WITH ANY ADDITIONAL PROVIDERS HERE */}
       {/* <ExampleProvider> */}
       <PocketBaseProvider>
-        <LocationContextProvider>
-          <AuthContextProvider>
-            <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <LocationContextProvider>
+            <AuthContextProvider>
               <SeshContextProvider>
                 <PaperProvider>
                   <Portal>
@@ -70,9 +70,9 @@ export default function RootLayout() {
                   </Portal>
                 </PaperProvider>
               </SeshContextProvider>
-            </QueryClientProvider>
-          </AuthContextProvider>
-        </LocationContextProvider>
+            </AuthContextProvider>
+          </LocationContextProvider>
+        </QueryClientProvider>
       </PocketBaseProvider>
 
       {/* </ExampleProvider> */}

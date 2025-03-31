@@ -1,12 +1,15 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { router, useNavigationContainerRef, useRouter, useSegments } from 'expo-router';
 import { AuthRecord } from 'pocketbase';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { LoadingScreen } from '~/components/LoadingScreen';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { PooProfile } from '~/lib/types';
 
 export type AuthContextProps = {
   user: AuthRecord | null;
+  pooProfile: PooProfile | null;
   isLoggedIn: boolean;
   isLoadingUserData: boolean;
   signIn: ({ email, password }: { email: string; password: string }) => Promise<void>;
@@ -19,6 +22,7 @@ type AuthContextProviderProps = {
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
+  pooProfile: null,
   isLoggedIn: false,
   isLoadingUserData: true,
   signIn: async () => {},
@@ -69,7 +73,10 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const { pb, isLoading: isPocketBaseLoading } = usePocketBase();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<AuthRecord | null>(null);
+  const [pooProfile, setPooProfile] = useState<PooProfile | null>(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -88,6 +95,13 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
         const isLoggedIn = pb.authStore.isValid;
         setIsLoggedIn(isLoggedIn);
         setUser(isLoggedIn ? pb.authStore.record : null);
+
+        if (isLoggedIn) {
+          const pooProfile = await pb.collection('poo_profiles').getList(1, 1, {
+            filter: `user = '${pb.authStore.record?.id}'`,
+          });
+          setPooProfile(pooProfile.items[0] as unknown as PooProfile);
+        }
       } catch (error) {
         console.error('Error checking auth status:', error);
         setIsLoggedIn(false);
@@ -108,6 +122,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     pb.authStore.clear();
     setIsLoggedIn(false);
     setUser(null);
+    queryClient.clear();
   };
 
   const handleSignIn = async ({ email, password }: { email: string; password: string }) => {
@@ -121,6 +136,11 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
 
     try {
       const { record } = await pb.collection('users').authWithPassword(email, password);
+
+      const pooProfile = await pb.collection('poo_profiles').getList(1, 1, {
+        filter: `user = '${record?.id}'`,
+      });
+      setPooProfile(pooProfile.items[0] as unknown as PooProfile);
       setUser(record);
       setIsLoggedIn(true);
       router.replace('/(protected)');
@@ -139,7 +159,14 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoadingUserData, isLoggedIn, signIn: handleSignIn, signOut: handleSignOut }}>
+      value={{
+        user,
+        pooProfile,
+        isLoadingUserData,
+        isLoggedIn,
+        signIn: handleSignIn,
+        signOut: handleSignOut,
+      }}>
       {children}
     </AuthContext.Provider>
   );

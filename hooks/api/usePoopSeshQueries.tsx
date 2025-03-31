@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { useFollowing } from './usePoopPalsQueries';
+
 import { useAuth } from '~/context/authContext';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
@@ -7,7 +9,7 @@ import { PoopSesh } from '~/lib/types';
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
 
-  const { user } = useAuth();
+  const { user, pooProfile } = useAuth();
 
   return useQuery({
     queryKey: ['active-poop-sesh'],
@@ -15,7 +17,9 @@ export function useActivePoopSesh() {
       try {
         const sesh = await pb
           ?.collection('poop_seshes')
-          .getFirstListItem(`started != null && ended = null && user = '${user?.id}'`);
+          .getFirstListItem(
+            `started != null && ended = null && (user = '${user?.id}' || poo_profile = '${pooProfile?.id}')`
+          );
         return {
           id: sesh?.id!,
           location: sesh?.location,
@@ -23,6 +27,7 @@ export function useActivePoopSesh() {
           ended: sesh?.ended,
           revelations: sesh?.revelations,
           user: sesh?.user,
+          poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
         };
       } catch (error) {
@@ -36,13 +41,13 @@ export function useActivePoopSesh() {
 
 export function useMyPoopSeshHistory() {
   const { pb } = usePocketBase();
-  const { user } = useAuth();
+  const { user, pooProfile } = useAuth();
 
   return useQuery({
     queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
       // Get public and user's private sesh
-      const filter = `user = '${user?.id}' && started != null && ended != null`;
+      const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null`;
       const sort = `-started`;
       const expand = `user`;
 
@@ -108,5 +113,37 @@ export function usePoopSesh(poopId: string) {
       }
     },
     enabled: !!poopId,
+  });
+}
+
+export function useFriendsPoopSeshHistory() {
+  const { pb } = usePocketBase();
+  const { pooProfile } = useAuth();
+
+  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
+
+  console.log('following', following);
+
+  return useQuery({
+    queryKey: ['friends-poop-sesh-history', pooProfile?.id],
+    queryFn: async () => {
+      if (!following || following.length === 0) {
+        return [];
+      }
+
+      const followingIds = following.map((friend) => friend.following);
+
+      const filter = `is_public = true && started != null && ended != null && (${followingIds.map((id) => `poo_profile="${id}"`).join('||')})`;
+      const sort = `-started`;
+      const expand = `user,poo_profile`;
+
+      const sesh = await pb?.collection('poop_seshes').getFullList(100, {
+        filter,
+        sort,
+        expand,
+      });
+      return sesh ?? [];
+    },
+    enabled: !isLoadingFollowing && !!pooProfile?.id,
   });
 }
