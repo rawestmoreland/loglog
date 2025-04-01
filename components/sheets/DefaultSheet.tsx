@@ -117,6 +117,7 @@ const DefaultSheet = forwardRef(
             <View className="mb-2 px-8">
               <FlashList
                 estimatedItemSize={100}
+                showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
                 ItemSeparatorComponent={() => <View className="w-2" />}
                 data={[
