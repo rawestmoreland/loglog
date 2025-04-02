@@ -21,6 +21,7 @@ const DefaultSheet = forwardRef(
     {
       isOnHomeScreen,
       user,
+      onPoopHistoryPress,
       isSeshPending,
       onStartSesh,
       colors,
@@ -32,6 +33,7 @@ const DefaultSheet = forwardRef(
       onStartSesh: () => void;
       colors: any;
       onProfilePress: () => void;
+      onPoopHistoryPress: () => void;
     },
     ref: any
   ) => {
@@ -97,7 +99,7 @@ const DefaultSheet = forwardRef(
                   style={{ backgroundColor: COLORS.light.primary, height: 30, width: 30 }}
                   variant="plain"
                   size="icon"
-                  onPress={() => router.push('/(protected)/(screens)/poop-history')}>
+                  onPress={onPoopHistoryPress}>
                   <Icon source="book-open-page-variant" size={24} color={COLORS.dark.background} />
                 </Button>
               ) : (
