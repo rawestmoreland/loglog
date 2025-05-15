@@ -10,6 +10,8 @@ import { TextField } from '~/components/nativewindui/TextField';
 import type { PoopSesh } from '~/lib/types';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
+import { Toggle } from '~/components/nativewindui/Toggle';
+import { CompanyTimeToggle } from './CompanyTimeToggle';
 
 type DuringSeshViewProps = {
   isLoading: boolean;
@@ -60,6 +62,11 @@ export function DuringSeshView({
               numberOfLines={4}
             />
           )}
+        />
+        <CompanyTimeToggle
+          isLoading={isLoading}
+          activeSesh={activeSesh}
+          updateActiveSesh={updateActiveSesh}
         />
         <Button
           style={{ backgroundColor: colors.primary }}

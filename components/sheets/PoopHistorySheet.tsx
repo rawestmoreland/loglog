@@ -43,7 +43,7 @@ const PoopHistorySheet = forwardRef<any, PoopHistorySheetProps>(({ onViewPoop },
   };
 
   const handleActionSheet = (poopId: string) => {
-    const options = ['View', 'Delete', 'Cancel'];
+    const options = ['View / Edit', 'Delete', 'Cancel'];
     const destructiveButtonIndex = 1;
     const cancelButtonIndex = 2;
 

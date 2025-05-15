@@ -30,6 +30,7 @@ export function useActivePoopSesh() {
           user: sesh?.user,
           poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
+          company_time: sesh?.company_time,
         };
       } catch (error) {
         console.error(error);
@@ -107,6 +108,7 @@ export function usePoopSesh(poopId: string) {
           revelations: sesh?.revelations,
           user: sesh?.user,
           is_public: sesh?.is_public ?? false,
+          company_time: sesh?.company_time ?? false,
         } as PoopSesh;
       } catch (error) {
         console.error(error);

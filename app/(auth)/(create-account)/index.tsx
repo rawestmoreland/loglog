@@ -13,7 +13,7 @@ import { Form, FormItem, FormSection } from '~/components/nativewindui/Form';
 import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
 
-const LOGO_SOURCE = require('~/assets/logs.png');
+const LOGO_SOURCE = require('~/assets/loggie.png');
 
 export default function InfoScreen() {
   const insets = useSafeAreaInsets();

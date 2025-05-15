@@ -1,22 +1,38 @@
+# Build stage
+FROM golang:1.23.4-alpine AS builder
+
+# Set working directory for the build
+WORKDIR /build
+
+# Install necessary build dependencies
+RUN apk add --no-cache gcc musl-dev
+
+# Copy the Go project from ./base directory
+COPY ./base /build
+
+# Download Go dependencies
+RUN go mod download
+
+# Build the application
+RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o pocketbase .
+
+# Final stage - similar to your original Dockerfile
 FROM alpine:latest
 
-ARG PB_VERSION=0.25.8
+# Install necessary runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
 
-RUN apk add --no-cache \
-    unzip \
-    ca-certificates
+# Create app directory
+RUN mkdir -p /pb/pb_data /pb/pb_public /pb/pb_migrations
 
-# download and unzip PocketBase
-ADD https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip /tmp/pb.zip
-RUN unzip /tmp/pb.zip -d /pb/
+# Copy the compiled binary from the builder stage
+COPY --from=builder /build/pocketbase /pb/
 
-# uncomment to copy the local pb_migrations dir into the image
-# COPY ./pb_migrations /pb/pb_migrations
+# Set proper permissions
+RUN chmod +x /pb/pocketbase
 
-# uncomment to copy the local pb_hooks dir into the image
-# COPY ./pb_hooks /pb/pb_hooks
-
+# Expose the port
 EXPOSE 8080
 
-# start PocketBase
+# Start PocketBase
 CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8080"]

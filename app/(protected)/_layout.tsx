@@ -1,11 +1,12 @@
 import { Stack, usePathname } from 'expo-router';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Keyboard } from 'react-native';
 
 import { useSheetRef } from '~/components/nativewindui/Sheet';
 import ActiveSeshSheet from '~/components/sheets/ActiveSeshSheet';
 import DefaultSheet from '~/components/sheets/DefaultSheet';
+import PoopDetailsSheet from '~/components/sheets/PoopDetailsSheet';
 import PoopHistorySheet from '~/components/sheets/PoopHistorySheet';
 import PoopPalsSheet from '~/components/sheets/PoopPalsSheet';
 import ProfileSheet from '~/components/sheets/ProfileSheet';
@@ -14,7 +15,6 @@ import { useAuth } from '~/context/authContext';
 import { MapViewContextProvider } from '~/context/mapViewContext';
 import { useSesh } from '~/context/seshContext';
 import { useColorScheme } from '~/lib/useColorScheme';
-import PoopDetailsSheet from '~/components/sheets/PoopDetailsSheet';
 
 export default function TabLayout() {
   const { colors } = useColorScheme();
@@ -46,69 +46,115 @@ export default function TabLayout() {
 
   const [selectedPoopId, setSelectedPoopId] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Only present sheets when on home screen
-    if (isOnHomeScreen) {
-      // When returning to home screen, show the appropriate sheet based on state
-      if (selectedSesh) {
-        selectedSeshSheetRef.current?.present();
-      } else if (activeSesh) {
-        bottomSheetModalRef.current?.present();
-      } else {
-        defaultSheetRef.current?.present();
+  // Helper function to safely dismiss all sheets
+  const dismissAllSheets = useCallback(async () => {
+    const sheets = [
+      bottomSheetModalRef,
+      defaultSheetRef,
+      selectedSeshSheetRef,
+      profileSheetRef,
+      poopPalsSheetRef,
+      poopHistorySheetRef,
+      poopDetailsSheetRef,
+    ];
+
+    // Dismiss all sheets with a slight delay to prevent race conditions
+    for (const sheet of sheets) {
+      if (sheet.current?.dismiss) {
+        try {
+          await sheet.current.dismiss();
+        } catch (error) {
+          console.log('Error dismissing sheet:', error);
+        }
       }
-    } else {
-      // Hide all sheets when not on home screen
-      bottomSheetModalRef.current?.dismiss();
-      defaultSheetRef.current?.dismiss();
-      selectedSeshSheetRef.current?.dismiss();
-      profileSheetRef.current?.dismiss();
-      poopPalsSheetRef.current?.dismiss();
     }
-  }, [isOnHomeScreen, selectedSesh, activeSesh]);
+  }, []);
 
   useEffect(() => {
-    // Only handle active sesh sheet logic when on home screen
+    let mounted = true;
+
+    const handleVisibilityChange = async () => {
+      if (!mounted) return;
+
+      if (!isOnHomeScreen) {
+        // When leaving home screen, forcefully dismiss all sheets
+        await dismissAllSheets();
+      } else {
+        // When returning to home screen, show appropriate sheet after a brief delay
+        setTimeout(() => {
+          if (!mounted) return;
+
+          if (selectedSesh && selectedSeshSheetRef.current?.present) {
+            selectedSeshSheetRef.current.present();
+          } else if (activeSesh && bottomSheetModalRef.current?.present) {
+            bottomSheetModalRef.current.present();
+          } else if (defaultSheetRef.current?.present) {
+            defaultSheetRef.current.present();
+          }
+        }, 100);
+      }
+    };
+
+    handleVisibilityChange();
+
+    // Cleanup function to dismiss sheets when component unmounts
+    return () => {
+      mounted = false;
+      dismissAllSheets();
+    };
+  }, [isOnHomeScreen, selectedSesh, activeSesh, dismissAllSheets]);
+
+  useEffect(() => {
     if (!isOnHomeScreen) return;
 
-    if (activeSesh) {
-      bottomSheetModalRef.current?.present();
-    } else {
-      defaultSheetRef.current?.present();
-    }
+    let keyboardDidShowListener: any;
+    let keyboardDidHideListener: any;
 
-    // Set up keyboard listeners only when we have an active session
     if (activeSesh) {
-      const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-        if (activeSesh) {
+      keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+        if (activeSesh && bottomSheetModalRef.current?.snapToIndex) {
           setTimeout(() => {
             bottomSheetModalRef.current?.snapToIndex(1);
           }, 100);
         }
       });
 
-      const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        bottomSheetModalRef.current?.snapToIndex(0);
+      keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+        if (bottomSheetModalRef.current?.snapToIndex) {
+          bottomSheetModalRef.current.snapToIndex(0);
+        }
       });
-
-      return () => {
-        keyboardDidShowListener.remove();
-        keyboardDidHideListener.remove();
-      };
     }
-  }, [activeSesh, selectedSesh, isOnHomeScreen]);
+
+    return () => {
+      if (keyboardDidShowListener?.remove) keyboardDidShowListener.remove();
+      if (keyboardDidHideListener?.remove) keyboardDidHideListener.remove();
+    };
+  }, [activeSesh, isOnHomeScreen]);
 
   useEffect(() => {
-    // Only handle selected sesh sheet logic when on home screen
     if (!isOnHomeScreen) return;
 
-    if (selectedSesh) {
-      selectedSeshSheetRef.current?.present();
-    } else {
-      selectedSeshSheetRef.current?.dismiss();
-      bottomSheetModalRef.current?.present();
-    }
-  }, [selectedSesh, isOnHomeScreen]);
+    let mounted = true;
+
+    const updateSheetVisibility = async () => {
+      if (!mounted) return;
+
+      if (selectedSesh && selectedSeshSheetRef.current?.present) {
+        await dismissAllSheets();
+        selectedSeshSheetRef.current.present();
+      } else if (!selectedSesh && bottomSheetModalRef.current?.present) {
+        selectedSeshSheetRef.current?.dismiss();
+        bottomSheetModalRef.current.present();
+      }
+    };
+
+    updateSheetVisibility();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedSesh, isOnHomeScreen, dismissAllSheets]);
 
   const handleStartSesh = async () => {
     // Can't do two poops at once

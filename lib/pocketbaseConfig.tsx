@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PocketBase, { AsyncAuthStore } from 'pocketbase';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import eventsource from 'react-native-sse';
+
+// @ts-ignore
+global.EventSource = eventsource;
 
 const PocketBaseContext = createContext<{
   pb: PocketBase | null;
@@ -31,10 +35,12 @@ export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) 
           clear: async () => AsyncStorage.removeItem('pb_auth'),
         });
 
-        const baseUrl = 'https://loglog-pocketbase-backend.fly.dev';
+        // const baseUrl = 'https://loglog-pocketbase-backend.fly.dev';
+        const baseUrl = 'http://127.0.0.1:8080';
 
         console.log('Connecting to PocketBase at:', baseUrl);
         const pbInstance = new PocketBase(baseUrl, store);
+        pbInstance.autoCancellation(false);
 
         // Test the connection
         await pbInstance.health.check();

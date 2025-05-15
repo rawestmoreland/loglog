@@ -7,6 +7,15 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/loggie.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "iosDisplayInForeground": true
+        }
+      ],
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "The app needs access to your location to drop a log."
@@ -24,7 +33,7 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/logs.png",
+    "icon": "./assets/loggie.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",

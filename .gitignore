@@ -26,5 +26,8 @@ android
 .env.local
 .env
 
+pocketbase/base/pb_public/
+pocketbase/base/pb_data/
+
 # Builds
 build-*.**

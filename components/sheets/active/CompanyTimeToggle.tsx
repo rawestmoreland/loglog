@@ -6,30 +6,38 @@ import { Toggle } from '~/components/nativewindui/Toggle';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import type { PoopSesh } from '~/lib/types';
 
-type PublicToggleProps = {
+type CompanyTimeToggleProps = {
   isLoading: boolean;
   activeSesh: PoopSesh;
   updateActiveSesh: (payload: Partial<PoopSesh>) => Promise<void>;
 };
 
-export function PublicToggle({ isLoading, activeSesh, updateActiveSesh }: PublicToggleProps) {
-  const [isPublic, setIsPublic] = useState(activeSesh.is_public);
+export function CompanyTimeToggle({
+  isLoading,
+  activeSesh,
+  updateActiveSesh,
+}: CompanyTimeToggleProps) {
+  const [isCompanyTime, setIsCompanyTime] = useState(activeSesh.company_time);
   const { pb } = usePocketBase();
 
   useEffect(() => {
     const updateActiveSesh = async () => {
       await pb?.collection('poop_seshes').update(activeSesh.id!, {
-        is_public: isPublic,
+        company_time: isCompanyTime,
       });
     };
 
     updateActiveSesh();
-  }, [isPublic]);
+  }, [isCompanyTime]);
 
   return (
-    <View className="flex-row items-center gap-2">
-      <Text className="text-sm">Public log?</Text>
-      <Toggle value={isPublic} onValueChange={() => setIsPublic(!isPublic)} disabled={isLoading} />
+    <View className="flex-row items-center justify-between gap-2">
+      <Text>Company Time?</Text>
+      <Toggle
+        value={isCompanyTime}
+        onValueChange={() => setIsCompanyTime(!isCompanyTime)}
+        disabled={isLoading}
+      />
     </View>
   );
 }

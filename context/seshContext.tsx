@@ -30,6 +30,7 @@ export const SeshContext = createContext<{
       },
     },
     started: new Date(),
+    company_time: false,
   },
   selectedSesh: null,
   setSelectedSesh: () => {},
@@ -72,6 +73,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
           },
         },
         started: new Date(),
+        company_time: false,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'rate-limit') {

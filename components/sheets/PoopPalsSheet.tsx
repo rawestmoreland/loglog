@@ -1,8 +1,10 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
+import { MaterialIcons } from '@expo/vector-icons';
 import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ListRenderItemInfo } from '@shopify/flash-list';
+import { router } from 'expo-router';
 import React, { forwardRef, useMemo } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
 import PoopPalsSearchModal from './PoopPalsSearchModal';
@@ -18,6 +20,7 @@ import {
 import { Sheet } from '../nativewindui/Sheet';
 import { Text } from '../nativewindui/Text';
 
+import { useAuth } from '~/context/authContext';
 import {
   useAcceptFollowRequest,
   useDeclineFollowRequest,
@@ -31,6 +34,7 @@ type PoopPalsSheetProps = object;
 
 const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
   (props: PoopPalsSheetProps, ref: any) => {
+    const { pooProfile } = useAuth();
     const { colorScheme, colors } = useColorScheme();
     const { showActionSheetWithOptions } = useActionSheet();
     const { data: myFollowers, isLoading: isLoadingMyFollowers } = useMyFollowers();
@@ -164,6 +168,7 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
               id: pal.id,
               title: pal.expand?.following?.codeName,
               followsYou: pal.followsYou,
+              theirProfileId: pal.expand?.following?.id,
             };
           })
         );
@@ -175,6 +180,7 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
           ...(myFollowers ?? []).map((follower) => ({
             id: follower.id,
             title: follower.expand?.follower?.codeName,
+            theirProfileId: follower.expand?.follower?.id,
             followsYou: follower.followsYou,
           }))
         );
@@ -186,6 +192,7 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
           ...(followMeRequests ?? []).map((request) => ({
             id: request.id,
             title: request.expand?.follower?.codeName,
+            theirProfileId: request.expand?.follower?.id,
             followRequest: true,
           }))
         );
@@ -227,7 +234,10 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
                   info,
                   (info.item as { followRequest?: boolean }).followRequest
                     ? handleShowRequestActionSheet
-                    : handleShowRemoveActionSheet
+                    : handleShowRemoveActionSheet,
+                  pooProfile?.id ?? '',
+                  (info.item as { theirProfileId: string }).theirProfileId ?? '',
+                  colors
                 );
               }}
               estimatedItemSize={ESTIMATED_ITEM_HEIGHT.titleOnly}
@@ -245,12 +255,21 @@ function keyExtractor(item: (Omit<ListDataItem, string> & { id: string }) | stri
 
 function renderItem(
   info: ListRenderItemInfo<string | { id: string; title: string }>,
-  handleShowActionSheet: (item: { id: string; title: string; followsYou?: boolean }) => void
+  handleShowActionSheet: (item: { id: string; title: string; followsYou?: boolean }) => void,
+  myProfileId: string,
+  theirProfileId: string,
+  colors: any
 ) {
   if (typeof info.item === 'string') {
     return <ListSectionHeader className="bg-card" {...info} />;
   }
-  const item = info.item as { id: string; title: string; followsYou: boolean };
+  const item = info.item as {
+    id: string;
+    title: string;
+    followsYou?: boolean;
+    theirProfileId?: string;
+  };
+
   return (
     <ListItem
       className="border-b-border border-t-border"
@@ -264,7 +283,16 @@ function renderItem(
         </View>
       }
       rightView={
-        item.followsYou && <Text className="text-xs text-muted-foreground">Follows you</Text>
+        item.followsYou &&
+        item.theirProfileId &&
+        item.theirProfileId !== myProfileId && (
+          <TouchableOpacity
+            onPress={() => {
+              router.push(`/chat/${myProfileId}/${item.theirProfileId}`);
+            }}>
+            <MaterialIcons name="chat" size={24} color={colors.foreground} />
+          </TouchableOpacity>
+        )
       }
       {...info}
       onPress={() => handleShowActionSheet(item)}

@@ -23,7 +23,9 @@ export interface PoopSesh {
       lat: number;
       lon: number;
     };
+    city?: string;
   };
+  company_time: boolean;
   revelations?: string;
   started: Date;
   ended?: Date;

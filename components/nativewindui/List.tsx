@@ -36,6 +36,7 @@ type ListDataItem =
       subTitle?: string;
       poopInMinutes?: number;
       followRequest?: boolean;
+      theirProfileId?: string;
     };
 type ListVariant = 'insets' | 'full-width';
 

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { router } from 'expo-router';
-import React, { forwardRef } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { forwardRef, useCallback } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -9,6 +9,7 @@ import { Button } from '~/components/nativewindui/Button';
 import { Sheet } from '~/components/nativewindui/Sheet';
 import { Text } from '~/components/nativewindui/Text';
 import { useAuth } from '~/context/authContext';
+import { useTimeOnToilet } from '~/hooks/api/usePoopStats';
 import { COLORS } from '~/theme/colors';
 
 const ProfileSheet = forwardRef(
@@ -25,11 +26,20 @@ const ProfileSheet = forwardRef(
     ref: any
   ) => {
     const { signOut } = useAuth();
+
+    const { data: timeOnToilet, refetch } = useTimeOnToilet();
+
+    useFocusEffect(
+      useCallback(() => {
+        refetch();
+      }, [ref.current])
+    );
+
     return (
       <Sheet
         ref={ref}
         enablePanDownToClose
-        snapPoints={['50%', '90%']}
+        snapPoints={['60%', '90%']}
         handleComponent={() => <></>}>
         <BottomSheetView className="flex-1 p-4">
           {/* Header */}
@@ -70,8 +80,41 @@ const ProfileSheet = forwardRef(
               <Text className="text-lg">{user?.email}</Text>
             </View>
 
+            {/* Stats */}
+            <View className="gap-2">
+              <Text className="text-sm text-gray-500">Stats</Text>
+              <View className="flex-row justify-between gap-2">
+                <View className="flex-1 items-center rounded-md border border-border px-2 pb-2">
+                  <Text variant="subhead" className="font-semibold">
+                    Time
+                  </Text>
+                  <Text variant="subhead">{timeOnToilet?.totalTime}</Text>
+                </View>
+                <View className="flex-1 items-center rounded-md border border-border px-2 pb-2">
+                  <Text variant="subhead" className="font-semibold">
+                    Poops
+                  </Text>
+                  <Text variant="subhead">{timeOnToilet?.count}</Text>
+                </View>
+                <View className="flex-1 items-center rounded-md border-2 border-border px-2 pb-2">
+                  <Text variant="subhead" className="font-semibold">
+                    Cities
+                  </Text>
+                  <Text variant="subhead">{timeOnToilet?.cityCount}</Text>
+                </View>
+              </View>
+              <View className="flex-row justify-between gap-2">
+                <View className="flex-1 items-center rounded-md border border-border px-2 pb-2">
+                  <Text variant="subhead" className="font-semibold">
+                    Company Time
+                  </Text>
+                  <Text variant="subhead">{timeOnToilet?.companyTime}</Text>
+                </View>
+              </View>
+            </View>
+
             {/* Actions */}
-            <View className="mt-6">
+            <View>
               <Button
                 style={{ backgroundColor: COLORS.light.primary }}
                 variant="primary"

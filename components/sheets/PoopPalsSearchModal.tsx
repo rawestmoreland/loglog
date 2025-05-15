@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback } from '../nativewindui/Avatar';
 import { SearchInput } from '../nativewindui/SearchInput';
 import { Text } from '../nativewindui/Text';
 
+import { useAuth } from '~/context/authContext';
+
 import { useAddPal } from '~/hooks/api/usePoopPalMutations';
 import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
@@ -20,6 +22,8 @@ import { useColorScheme } from '~/lib/useColorScheme';
 export default function PoopPalsSearchModal() {
   const { pb } = usePocketBase();
   const queryClient = useQueryClient();
+
+  const { pooProfile } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
@@ -37,12 +41,12 @@ export default function PoopPalsSearchModal() {
     queryFn: async () => {
       const pals = await pb
         ?.collection('poo_profiles')
-        .getList(1, 10, {
-          filter: `codeName ~ "${debouncedSearchQuery}" && ${following?.map((f) => `codeName != "${f.expand?.following.codeName}"`).join(' && ')}`,
+        .getFullList(100, {
+          filter: `codeName ~ "${debouncedSearchQuery}" && id != "${pooProfile?.id}" && id != "${following?.map((f) => f.expand?.following?.id).join('" && id != "')}"`,
         })
         .catch((e) => console.error(e));
 
-      return pals?.items ?? [];
+      return pals ?? [];
     },
     enabled: !!debouncedSearchQuery && !!pb && !followingLoading,
   });
@@ -79,6 +83,7 @@ export default function PoopPalsSearchModal() {
     try {
       await addPal(item.id);
       setAddPalsOpen(false);
+      setSearchQuery('');
     } catch (error) {
       Alert.alert('Error', 'Failed to add pal');
     }

@@ -18,7 +18,7 @@ import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
 import { AuthContext } from '~/context/authContext';
 
-const LOGO_SOURCE = require('~/assets/logs.png');
+const LOGO_SOURCE = require('~/assets/loggie.png');
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
