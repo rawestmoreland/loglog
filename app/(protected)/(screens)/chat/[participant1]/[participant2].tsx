@@ -67,18 +67,24 @@ export default function ChatScreen() {
       .subscribe(
         `*`,
         (data) => {
-          setGiftedMessages((prev) => [
-            {
-              _id: data.record.id!,
-              text: data.record.content,
-              createdAt: new Date(data.record.created),
-              user: {
-                _id: data.record.sender,
-                name: data.record.expand?.sender?.codeName,
+          setGiftedMessages((prev) => {
+            // Check if message already exists
+            const messageExists = prev.some((msg) => msg._id === data.record.id);
+            if (messageExists) return prev;
+
+            return [
+              {
+                _id: data.record.id!,
+                text: data.record.content,
+                createdAt: new Date(data.record.created),
+                user: {
+                  _id: data.record.sender,
+                  name: data.record.expand?.sender?.codeName,
+                },
               },
-            },
-            ...prev,
-          ]);
+              ...prev,
+            ];
+          });
         },
         { filter: `chat="${chat.id}"`, expand: 'sender' }
       )
