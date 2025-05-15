@@ -1,20 +1,20 @@
 package main
 
 import (
-    "log"
-    "os"
-    "strings"
-		"fmt"
+	"fmt"
+	"log"
+	"os"
+	"strings"
 
-		"loglog/notifications"
-		_ "loglog/migrations"
+	_ "loglog/migrations"
+	"loglog/notifications"
 
-		"github.com/pocketbase/dbx"
-    "github.com/pocketbase/pocketbase"
-    "github.com/pocketbase/pocketbase/apis"
-    "github.com/pocketbase/pocketbase/core"
-    "github.com/pocketbase/pocketbase/plugins/migratecmd"
-		"github.com/joho/godotenv"
+	"github.com/joho/godotenv"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase"
+	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 )
 
 func main() {
@@ -103,6 +103,38 @@ func main() {
 
     app.OnServe().BindFunc(func(se *core.ServeEvent) error {
         // Register task routes
+				se.Router.GET("/api/geo-conversion", func(e *core.RequestEvent) error {
+
+					result := struct {
+						City string `json:"city"`
+						Coordinates struct {
+							Lat float64 `json:"lat"`
+							Lon float64 `json:"lon"`
+						} `json:"coordinates"`
+					}{}
+
+					allSeshes, err := app.FindAllRecords("poop_seshes")
+					if err != nil {
+						return e.JSON(500, err)
+					}
+
+					for _, sesh := range allSeshes {
+						err := sesh.UnmarshalJSONField("location", &result)
+						if err != nil {
+							return e.JSON(500, err)
+						}
+
+						sesh.Set("coords", result.Coordinates)
+
+						err = app.Save(sesh)
+						if err != nil {
+							return e.JSON(500, err)
+						}
+
+						fmt.Println(result.Coordinates)
+					}
+					return e.JSON(200, "success")
+				})
 
         // serves static files from the provided public dir (if exists)
         se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))

@@ -72,6 +72,10 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
             lon: userLocation.lon,
           },
         },
+        coords: {
+          lat: userLocation.lat,
+          lon: userLocation.lon,
+        },
         started: new Date(),
         company_time: false,
       });

@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useFollowing } from './usePoopPalsQueries';
 
 import { useAuth } from '~/context/authContext';
+import { useMapViewContext } from '~/context/mapViewContext';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
-import { useMapViewContext } from '~/context/mapViewContext';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();

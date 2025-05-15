@@ -18,6 +18,10 @@ export interface PoopSesh {
   user?: string;
   poo_profile?: string;
   is_public: boolean;
+  coords?: {
+    lat: number;
+    lon: number;
+  };
   location?: {
     coordinates: {
       lat: number;

@@ -42,6 +42,7 @@ export function useStartPoopSesh() {
       return {
         id: sesh?.id!,
         location: sesh?.location,
+        coords: sesh?.coords,
         started: sesh?.started,
         ended: sesh?.ended,
         revelations: sesh?.revelations,
@@ -67,6 +68,7 @@ export function useUpdatePoopSesh() {
       return {
         id: sesh?.id!,
         location: sesh?.location,
+        coords: sesh?.coords,
         started: sesh?.started,
         ended: sesh?.ended,
         revelations: sesh?.revelations,
