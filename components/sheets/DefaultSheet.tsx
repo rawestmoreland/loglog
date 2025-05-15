@@ -1,7 +1,7 @@
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -38,14 +38,16 @@ const DefaultSheet = forwardRef(
     ref: any
   ) => {
     const { poopsToView, setPoopsToView, palSelected, setPalSelected } = useMapViewContext();
+    const [isPresented, setIsPresented] = useState(false);
 
     const { data: following, isLoading: isFollowingLoading } = useFollowing({
-      enabled: poopsToView === 'friends',
+      enabled: isPresented && poopsToView === 'friends',
     });
 
     return (
       <Sheet
         ref={ref}
+        onPresent={() => setIsPresented(true)}
         handleComponent={() => <View className="h-4" />}
         enablePanDownToClose={false}
         enableDismissOnClose={false}

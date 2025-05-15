@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { type BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { ListRenderItemInfo } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -37,9 +37,17 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
     const { pooProfile } = useAuth();
     const { colorScheme, colors } = useColorScheme();
     const { showActionSheetWithOptions } = useActionSheet();
-    const { data: myFollowers, isLoading: isLoadingMyFollowers } = useMyFollowers();
-    const { data: following, isLoading: isLoadingFollowing } = useFollowing();
-    const { data: followMeRequests, isLoading: isLoadingFollowMeRequests } = useFollowMeRequests();
+    const [isPresented, setIsPresented] = useState(false);
+
+    const { data: myFollowers, isLoading: isLoadingMyFollowers } = useMyFollowers({
+      enabled: isPresented,
+    });
+    const { data: following, isLoading: isLoadingFollowing } = useFollowing({
+      enabled: isPresented,
+    });
+    const { data: followMeRequests, isLoading: isLoadingFollowMeRequests } = useFollowMeRequests({
+      enabled: isPresented,
+    });
     const { mutateAsync: removePoopPal } = useRemovePoopPal();
 
     const { mutateAsync: declineFollowRequest, isPending: isDecliningFollowRequest } =
@@ -82,8 +90,8 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
       const destructiveButtonIndex = 1;
       const cancelButtonIndex = 2;
 
-      const title = 'Accept of Decline';
-      const message = 'Accept or decline this follow request.';
+      const title = 'Follow Request';
+      const message = 'Would you like to accept or decline this follow request?';
 
       showActionSheetWithOptions(
         {
@@ -201,7 +209,11 @@ const PoopPalsSheet = forwardRef<BottomSheetModal, PoopPalsSheetProps>(
     }, [myFollowers, followMeRequests, isLoadingMyFollowers, isLoadingFollowMeRequests, following]);
 
     return (
-      <Sheet ref={ref} snapPoints={['90%']} handleComponent={() => <></>}>
+      <Sheet
+        ref={ref}
+        onPresent={() => setIsPresented(true)}
+        snapPoints={['90%']}
+        handleComponent={() => <></>}>
         <BottomSheetView className="flex-1">
           {/* Header */}
           <View className="flex-row items-center justify-between p-4">

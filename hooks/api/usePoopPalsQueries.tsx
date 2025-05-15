@@ -7,7 +7,7 @@ import { usePocketBase } from '~/lib/pocketbaseConfig';
  * Get all users that follow the user
  * @returns list of users
  */
-export function useMyFollowers() {
+export function useMyFollowers(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
 
   const { pooProfile } = useAuth();
@@ -22,7 +22,7 @@ export function useMyFollowers() {
 
       return followers ?? [];
     },
-    enabled: !!pooProfile?.id,
+    enabled: !!pooProfile?.id && params.enabled,
   });
 }
 
@@ -66,7 +66,7 @@ export function useFollowing(params: { enabled?: boolean } = { enabled: true }) 
  * Get all follow requests where the user is receiving a follow request
  * @returns list of follow requests
  */
-export function useFollowMeRequests() {
+export function useFollowMeRequests(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
 
   const { pooProfile } = useAuth();
@@ -83,6 +83,6 @@ export function useFollowMeRequests() {
         .catch((error) => console.error(error));
       return requests ?? [];
     },
-    enabled: !!pooProfile?.id,
+    enabled: !!pooProfile?.id && params.enabled,
   });
 }

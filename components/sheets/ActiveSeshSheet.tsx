@@ -19,7 +19,7 @@ type ActiveSeshSheetProps = {
 };
 
 const ActiveSeshSheet = forwardRef<BottomSheetModal, ActiveSeshSheetProps>(
-  ({ sesh, isLoading, isSeshPending, onEnd, poopForm, updateActiveSesh }, ref) => {
+  ({ sesh, isLoading, isSeshPending, onEnd, poopForm, updateActiveSesh }, ref: any) => {
     const { colors } = useColorScheme();
 
     return (

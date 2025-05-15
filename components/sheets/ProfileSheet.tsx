@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
-import { router, useFocusEffect } from 'expo-router';
-import React, { forwardRef, useCallback } from 'react';
+import { router } from 'expo-router';
+import React, { forwardRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -26,18 +26,16 @@ const ProfileSheet = forwardRef(
     ref: any
   ) => {
     const { signOut } = useAuth();
+    const [isPresented, setIsPresented] = useState(false);
 
-    const { data: timeOnToilet, refetch } = useTimeOnToilet();
-
-    useFocusEffect(
-      useCallback(() => {
-        refetch();
-      }, [ref.current])
-    );
+    const { data: timeOnToilet } = useTimeOnToilet({
+      enabled: isPresented,
+    });
 
     return (
       <Sheet
         ref={ref}
+        onPresent={() => setIsPresented(true)}
         enablePanDownToClose
         snapPoints={['60%', '90%']}
         handleComponent={() => <></>}>

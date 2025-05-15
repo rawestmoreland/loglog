@@ -41,7 +41,7 @@ export function useActivePoopSesh() {
   });
 }
 
-export function useMyPoopSeshHistory() {
+export function useMyPoopSeshHistory(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
   const { user, pooProfile } = useAuth();
 
@@ -60,11 +60,11 @@ export function useMyPoopSeshHistory() {
       });
       return sesh ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && params.enabled,
   });
 }
 
-export function usePublicPoopSeshHistory() {
+export function usePublicPoopSeshHistory(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
 
   return useQuery({
@@ -80,10 +80,11 @@ export function usePublicPoopSeshHistory() {
       });
       return sesh ?? [];
     },
+    enabled: params.enabled,
   });
 }
 
-export function usePoopSesh(poopId: string) {
+export function usePoopSesh(poopId: string, params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
 
   return useQuery({
@@ -115,11 +116,11 @@ export function usePoopSesh(poopId: string) {
         return null;
       }
     },
-    enabled: !!poopId,
+    enabled: !!poopId && params.enabled,
   });
 }
 
-export function useFriendsPoopSeshHistory() {
+export function useFriendsPoopSeshHistory(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
   const { pooProfile } = useAuth();
 
@@ -145,11 +146,11 @@ export function useFriendsPoopSeshHistory() {
       });
       return sesh ?? [];
     },
-    enabled: !isLoadingFollowing && !!pooProfile?.id,
+    enabled: !isLoadingFollowing && !!pooProfile?.id && params.enabled,
   });
 }
 
-export function usePalPoopSeshHistory() {
+export function usePalPoopSeshHistory(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
   const { palSelected } = useMapViewContext();
 
@@ -167,6 +168,6 @@ export function usePalPoopSeshHistory() {
       });
       return sesh ?? [];
     },
-    enabled: palSelected !== 'all',
+    enabled: palSelected !== 'all' && params.enabled,
   });
 }

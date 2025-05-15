@@ -112,16 +112,16 @@ export default function TabLayout() {
 
     if (activeSesh) {
       keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-        if (activeSesh && bottomSheetModalRef.current?.snapToIndex) {
+        if (activeSesh && bottomSheetModalRef.current?.present) {
           setTimeout(() => {
-            bottomSheetModalRef.current?.snapToIndex(1);
+            bottomSheetModalRef.current?.present();
           }, 100);
         }
       });
 
       keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        if (bottomSheetModalRef.current?.snapToIndex) {
-          bottomSheetModalRef.current.snapToIndex(0);
+        if (bottomSheetModalRef.current?.present) {
+          bottomSheetModalRef.current.present();
         }
       });
     }
@@ -190,7 +190,7 @@ export default function TabLayout() {
 
       {selectedSesh ? (
         <SelectedSeshSheet
-          ref={selectedSeshSheetRef}
+          ref={selectedSeshSheetRef as any}
           sesh={selectedSesh}
           onClose={() => setSelectedSesh(null)}
           colors={colors}
@@ -199,7 +199,7 @@ export default function TabLayout() {
         />
       ) : activeSesh ? (
         <ActiveSeshSheet
-          ref={bottomSheetModalRef}
+          ref={bottomSheetModalRef as any}
           sesh={activeSesh}
           isLoading={isLoadingActiveSesh}
           isSeshPending={isSeshPending}
@@ -225,10 +225,10 @@ export default function TabLayout() {
             colors={colors}
             onPoopPalsPress={() => poopPalsSheetRef.current?.present()}
           />
-          <PoopPalsSheet ref={poopPalsSheetRef} />
-          <PoopHistorySheet ref={poopHistorySheetRef} onViewPoop={handleViewPoopDetails} />
+          <PoopPalsSheet ref={poopPalsSheetRef as any} />
+          <PoopHistorySheet ref={poopHistorySheetRef as any} onViewPoop={handleViewPoopDetails} />
           <PoopDetailsSheet
-            ref={poopDetailsSheetRef}
+            ref={poopDetailsSheetRef as any}
             poopId={selectedPoopId}
             onClose={() => {
               setSelectedPoopId(null);

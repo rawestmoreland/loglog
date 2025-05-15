@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Alert, Platform, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { z } from 'zod';
 
 import { Button } from '~/components/nativewindui/Button';
@@ -26,8 +26,11 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
     const updateSesh = useUpdatePoopSesh();
     const [startPickerOpen, setStartPickerOpen] = useState(false);
     const [endPickerOpen, setEndPickerOpen] = useState(false);
+    const [isPresented, setIsPresented] = useState(false);
 
-    const { data: poopSesh, isLoading: isPoopSeshLoading } = usePoopSesh(poopId as string);
+    const { data: poopSesh, isLoading: isPoopSeshLoading } = usePoopSesh(poopId as string, {
+      enabled: isPresented,
+    });
 
     const isLoading = useMemo(() => {
       return isPoopSeshLoading;
@@ -86,7 +89,7 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
 
     return (
       <NotificationProvider>
-        <Sheet ref={ref} snapPoints={['90%']}>
+        <Sheet ref={ref} snapPoints={['90%']} onPresent={() => setIsPresented(true)}>
           {isLoading ? (
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator />

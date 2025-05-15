@@ -8,7 +8,7 @@ import { PoopSesh } from '~/lib/types';
  * Returns the total time spent on the toilet
  * @returns total time in milliseconds
  */
-export function useTimeOnToilet() {
+export function useTimeOnToilet(params: { enabled?: boolean } = { enabled: true }) {
   const { pb } = usePocketBase();
   const { pooProfile } = useAuth();
 
@@ -58,6 +58,6 @@ export function useTimeOnToilet() {
         cityCount: uniqueCities.length,
       };
     },
-    enabled: !!pooProfile?.id,
+    enabled: !!pooProfile?.id && params.enabled,
   });
 }
