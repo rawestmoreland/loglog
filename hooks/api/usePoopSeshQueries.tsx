@@ -6,6 +6,7 @@ import { useAuth } from '~/context/authContext';
 import { useMapViewContext } from '~/context/mapViewContext';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
+import { shiftCoords } from '~/lib/geo-helpers';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
@@ -31,6 +32,7 @@ export function useActivePoopSesh() {
           poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
           company_time: sesh?.company_time,
+          shift_logs: sesh?.shift_logs,
         };
       } catch (error) {
         console.error(error);
@@ -72,13 +74,26 @@ export function usePublicPoopSeshHistory(params: { enabled?: boolean } = { enabl
     queryFn: async (): Promise<PoopSesh[]> => {
       const filter = `is_public = true && started != null && ended != null`;
       const sort = `-started`;
-      const expand = `user`;
-      const sesh = await pb?.collection('poop_seshes').getFullList<PoopSesh>(100, {
+      const expand = `user,poo_profile`;
+      const seshes = await pb?.collection('poop_seshes').getFullList<PoopSesh>({
         filter,
         sort,
         expand,
       });
-      return sesh ?? [];
+
+      const transformedSeshes = seshes?.map((sesh) => {
+        if (sesh.expand?.poo_profile) {
+          if (sesh.expand?.poo_profile?.shift_logs && sesh.coords) {
+            const { coords } = sesh;
+            const { latShift, lonShift } = shiftCoords(sesh.coords);
+            coords!.lat += latShift;
+            coords!.lon += lonShift;
+          }
+        }
+        return sesh;
+      });
+
+      return transformedSeshes ?? [];
     },
     enabled: params.enabled,
   });

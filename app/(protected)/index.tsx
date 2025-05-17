@@ -1,4 +1,5 @@
 import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
+import * as Location from 'expo-location';
 import { isEmpty } from 'lodash';
 import React, { useMemo, useRef } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
@@ -36,7 +37,7 @@ export default function HomeScreen() {
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
 
-  const { userLocation, isLoadingLocation } = useLocation();
+  const { userLocation, isLoadingLocation, setUserLocation } = useLocation();
 
   const allHistory = useMemo(() => {
     const combined = [...(myHistory ?? []), ...(publicHistory ?? [])];
@@ -95,10 +96,10 @@ export default function HomeScreen() {
     );
   }
 
-  const handleCenterCamera = () => {
+  const handleCenterCamera = (location?: { lat: number; lon: number }) => {
     if (userLocation && cameraRef.current) {
       cameraRef.current?.setCamera({
-        centerCoordinate: [userLocation.lon, userLocation.lat],
+        centerCoordinate: [location?.lon ?? userLocation.lon, location?.lat ?? userLocation.lat],
         zoomLevel: 15,
         animationDuration: 1000,
       });
@@ -141,14 +142,12 @@ export default function HomeScreen() {
             type: 'FeatureCollection',
             features:
               historyToMap
-                ?.filter(
-                  (poop) => !isEmpty(poop.location?.coordinates) && poop.started && poop.ended
-                )
+                ?.filter((poop) => !isEmpty(poop.coords) && poop.started && poop.ended)
                 .map((poop) => ({
                   type: 'Feature',
                   geometry: {
                     type: 'Point',
-                    coordinates: [poop.location?.coordinates.lon!, poop.location?.coordinates.lat!],
+                    coordinates: [poop.coords?.lon!, poop.coords?.lat!],
                   },
                   properties: {
                     ...poop,
@@ -190,19 +189,6 @@ export default function HomeScreen() {
             }}
           />
         </MapboxGL.ShapeSource>
-        {/* {allHistory
-          ?.filter((poop) => !isEmpty(poop.location?.coordinates) && poop.started && poop.ended)
-          .map((poop) => {
-            return (
-              <MapboxGL.PointAnnotation
-                key={poop.id}
-                id={poop.id!}
-                onSelected={() => setSelectedSesh(poop)}
-                coordinate={[poop.location?.coordinates.lon!, poop.location?.coordinates.lat!]}>
-                <Text className="text-2xl">💩</Text>
-              </MapboxGL.PointAnnotation>
-            );
-          })} */}
       </MapboxGL.MapView>
       <FAB
         size="small"
@@ -215,7 +201,17 @@ export default function HomeScreen() {
         }}
         icon="crosshairs-gps"
         color={COLORS.light.foreground}
-        onPress={handleCenterCamera}
+        onPress={async () => {
+          const currentLocation = await Location.getCurrentPositionAsync();
+          setUserLocation({
+            lat: currentLocation.coords.latitude,
+            lon: currentLocation.coords.longitude,
+          });
+          handleCenterCamera({
+            lat: currentLocation.coords.latitude,
+            lon: currentLocation.coords.longitude,
+          });
+        }}
       />
     </View>
   );

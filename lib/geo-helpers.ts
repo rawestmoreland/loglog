@@ -27,3 +27,22 @@ export async function getCityFromCoords({
     return null;
   }
 }
+
+export function shiftCoords(coords: { lat: number; lon: number }): {
+  latShift: number;
+  lonShift: number;
+} {
+  // Randomly shift coordinates within 2km for privacy
+  const randomAngle = Math.random() * 2 * Math.PI; // Random angle in radians
+  const randomDistance = Math.random() * 2000; // Random distance up to 2km in meters
+
+  // Convert distance to approximate lat/lon shifts (rough approximation)
+  // 111,111 meters = 1 degree of latitude
+  // cos(lat) * 111,111 = meters per degree longitude at given latitude
+  const latShift = (randomDistance * Math.cos(randomAngle)) / 111111;
+  const lonShift =
+    (randomDistance * Math.sin(randomAngle)) /
+    (111111 * Math.cos(((coords?.lat ?? 0) * Math.PI) / 180));
+
+  return { latShift, lonShift };
+}

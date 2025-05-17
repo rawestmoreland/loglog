@@ -4,12 +4,13 @@ import { AuthRecord } from 'pocketbase';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import { LoadingScreen } from '~/components/LoadingScreen';
+import { usePooProfile } from '~/hooks/api/usePooProfileQueries';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PooProfile } from '~/lib/types';
 
 export type AuthContextProps = {
   user: AuthRecord | null;
-  pooProfile: PooProfile | null;
+  pooProfile: PooProfile | undefined;
   isLoggedIn: boolean;
   isLoadingUserData: boolean;
   signIn: ({ email, password }: { email: string; password: string }) => Promise<void>;
@@ -22,7 +23,7 @@ type AuthContextProviderProps = {
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
-  pooProfile: null,
+  pooProfile: undefined,
   isLoggedIn: false,
   isLoadingUserData: true,
   signIn: async () => {},
@@ -73,8 +74,8 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
   const { pb, isLoading: isPocketBaseLoading } = usePocketBase();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<AuthRecord | null>(null);
-  const [pooProfile, setPooProfile] = useState<PooProfile | null>(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+  const { data: pooProfile, refetch: refetchPooProfile } = usePooProfile();
 
   const queryClient = useQueryClient();
 
@@ -97,10 +98,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
         setUser(isLoggedIn ? pb.authStore.record : null);
 
         if (isLoggedIn) {
-          const pooProfile = await pb.collection('poo_profiles').getList(1, 1, {
-            filter: `user = '${pb.authStore.record?.id}'`,
-          });
-          setPooProfile(pooProfile.items[0] as unknown as PooProfile);
+          refetchPooProfile();
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
@@ -137,10 +135,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     try {
       const { record } = await pb.collection('users').authWithPassword(email, password);
 
-      const pooProfile = await pb.collection('poo_profiles').getList(1, 1, {
-        filter: `user = '${record?.id}'`,
-      });
-      setPooProfile(pooProfile.items[0] as unknown as PooProfile);
+      refetchPooProfile();
       setUser(record);
       setIsLoggedIn(true);
       router.replace('/(protected)');
@@ -161,7 +156,7 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     <AuthContext.Provider
       value={{
         user,
-        pooProfile,
+        pooProfile: pooProfile as PooProfile | undefined,
         isLoadingUserData,
         isLoggedIn,
         signIn: handleSignIn,

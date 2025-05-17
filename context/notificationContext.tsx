@@ -235,8 +235,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       .getOne(pooProfileId)
       .catch((e) => console.error(e));
 
-    console.log('POOPROFILE', pooProfile);
-
     if (!pooProfile) {
       throw new Error('Poo profile not found');
     }

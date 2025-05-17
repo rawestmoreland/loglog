@@ -50,6 +50,7 @@ export function useStartPoopSesh() {
         poo_profile: sesh?.poo_profile,
         is_public: sesh?.is_public,
         company_time: sesh?.company_time,
+        shift_logs: sesh?.expand?.poo_profile?.shift_logs,
       };
     },
     onSuccess: () => {

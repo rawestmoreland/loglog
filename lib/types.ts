@@ -10,11 +10,13 @@ export interface PooperProfile {
 export interface PooProfile {
   id?: string;
   user?: string;
-  codeName: string;
+  codeName?: string;
+  shift_logs: boolean;
 }
 
 export interface PoopSesh {
   id?: string;
+  shift_logs: boolean;
   user?: string;
   poo_profile?: string;
   is_public: boolean;
@@ -41,6 +43,7 @@ export interface PoopSesh {
     poo_profile?: {
       id: string;
       codeName: string;
+      shift_logs: boolean;
     };
   };
 }

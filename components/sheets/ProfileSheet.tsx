@@ -56,12 +56,18 @@ const ProfileSheet = forwardRef(
             </Button>
           </View>
 
-          <View className="mb-4 max-w-36">
+          <View className="mb-4 flex-row gap-2">
             <Pressable
-              className="flex-row items-center justify-center gap-2 rounded-lg border-2 border-border bg-background"
+              className="flex-row items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-1"
               onPress={onPoopPalsPress}>
               <Ionicons name="people" size={16} color={colors.foreground} />
               <Text className="text-sm">Poop Pals</Text>
+            </Pressable>
+            <Pressable
+              className="flex-row items-center justify-center gap-2 rounded-lg border-2 border-border bg-background px-1"
+              onPress={() => router.push('/settings')}>
+              <Ionicons name="settings" size={16} color={colors.foreground} />
+              <Text className="text-sm">Settings</Text>
             </Pressable>
           </View>
 
