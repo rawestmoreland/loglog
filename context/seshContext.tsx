@@ -51,12 +51,14 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
 
   const poopFormSchema = z.object({
     revelations: z.string().max(160).optional(),
+    bristol_score: z.number().min(1).max(7).optional(),
   });
 
   const poopForm = useForm<z.infer<typeof poopFormSchema>>({
     resolver: zodResolver(poopFormSchema),
     defaultValues: {
       revelations: '',
+      bristol_score: 1,
     },
   });
 
@@ -76,6 +78,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
           lat: userLocation.lat,
           lon: userLocation.lon,
         },
+        bristol_score: 1,
         started: new Date(),
         company_time: false,
       });
@@ -113,6 +116,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         poopSesh: {
           ...activeSesh,
           revelations: poopForm.getValues('revelations'),
+          bristol_score: poopForm.getValues('bristol_score'),
           ended: new Date(),
         },
       });

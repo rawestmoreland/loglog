@@ -28,7 +28,7 @@ const ActiveSeshSheet = forwardRef<BottomSheetModal, ActiveSeshSheetProps>(
         enablePanDownToClose={false}
         enableDismissOnClose={false}
         backdropComponent={() => <View className="absolute inset-0 bg-transparent" />}
-        snapPoints={['40%', '80%']}>
+        snapPoints={['50%', '80%']}>
         <BottomSheetView className="flex-1">
           {isLoading ? (
             <View className="flex-1 items-center justify-center">

@@ -11,7 +11,7 @@ export default function ChatLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Settings',
+          title: 'Bristol Scale',
           headerRight: () => (
             <Button variant="plain" onPress={() => router.back()} className="items-center gap-2">
               <Text>Done</Text>

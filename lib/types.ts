@@ -16,7 +16,7 @@ export interface PooProfile {
 
 export interface PoopSesh {
   id?: string;
-  shift_logs: boolean;
+  bristol_score?: number;
   user?: string;
   poo_profile?: string;
   is_public: boolean;

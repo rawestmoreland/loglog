@@ -1,11 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
+import { Link } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Alert, Platform, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { Icon } from 'react-native-paper';
 import { z } from 'zod';
+
+import { Stepper } from '../nativewindui/Stepper';
 
 import { Button } from '~/components/nativewindui/Button';
 import { Sheet } from '~/components/nativewindui/Sheet';
@@ -15,6 +19,8 @@ import { Toggle } from '~/components/nativewindui/Toggle';
 import { NotificationProvider } from '~/context/notificationContext';
 import { useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { usePoopSesh } from '~/hooks/api/usePoopSeshQueries';
+import { bristolScoreToImage } from '~/lib/helpers';
+import { useColorScheme } from '~/lib/useColorScheme';
 
 interface PoopDetailsSheetProps {
   poopId: string | null;
@@ -27,6 +33,8 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
     const [startPickerOpen, setStartPickerOpen] = useState(false);
     const [endPickerOpen, setEndPickerOpen] = useState(false);
     const [isPresented, setIsPresented] = useState(false);
+
+    const { colors } = useColorScheme();
 
     const { data: poopSesh, isLoading: isPoopSeshLoading } = usePoopSesh(poopId as string, {
       enabled: isPresented,
@@ -42,6 +50,7 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
       ended: z.date(),
       revelations: z.string().optional(),
       is_public: z.boolean(),
+      bristol_score: z.number().min(1).max(7).optional(),
       company_time: z.boolean(),
     });
 
@@ -53,6 +62,7 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
         ended: poopSesh?.ended ?? new Date(),
         revelations: poopSesh?.revelations,
         is_public: poopSesh?.is_public,
+        bristol_score: poopSesh?.bristol_score,
         company_time: poopSesh?.company_time,
       },
     });
@@ -188,6 +198,47 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
                     control={poopForm.control}
                     render={({ field }) => (
                       <Toggle value={field.value} onValueChange={field.onChange} />
+                    )}
+                  />
+                </View>
+                <View className="flex-row items-center justify-between gap-2 px-8">
+                  <View className="flex-row items-center gap-2">
+                    <Text>Bristol Score</Text>
+                    <Link href="/bristol">
+                      <Icon source="information-outline" size={16} color={colors.primary} />
+                    </Link>
+                  </View>
+                  <Controller
+                    name="bristol_score"
+                    control={poopForm.control}
+                    render={({ field }) => (
+                      <View className="flex-row items-center gap-2">
+                        <Image
+                          source={bristolScoreToImage(field.value || 1)}
+                          className="h-10 w-10"
+                          resizeMode="contain"
+                        />
+                        <Stepper
+                          subtractButton={{
+                            disabled: field.value === 1,
+                            onPress: () => {
+                              const newValue = (field.value || 1) - 1;
+                              if (newValue >= 1) {
+                                field.onChange(newValue);
+                              }
+                            },
+                          }}
+                          addButton={{
+                            disabled: field.value === 7,
+                            onPress: () => {
+                              const newValue = (field.value || 1) + 1;
+                              if (newValue <= 7) {
+                                field.onChange(newValue);
+                              }
+                            },
+                          }}
+                        />
+                      </View>
                     )}
                   />
                 </View>

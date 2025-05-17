@@ -32,7 +32,6 @@ export function useActivePoopSesh() {
           poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
           company_time: sesh?.company_time,
-          shift_logs: sesh?.shift_logs,
         };
       } catch (error) {
         console.error(error);
@@ -119,6 +118,7 @@ export function usePoopSesh(poopId: string, params: { enabled?: boolean } = { en
               lon: sesh?.location?.coordinates?.lon ?? 0,
             },
           },
+          bristol_score: sesh?.bristol_score,
           started: new Date(sesh?.started ?? new Date()),
           ended: sesh?.ended ? new Date(sesh?.ended) : null,
           revelations: sesh?.revelations,
