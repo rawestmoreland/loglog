@@ -35,8 +35,8 @@ export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) 
           clear: async () => AsyncStorage.removeItem('pb_auth'),
         });
 
-        // const baseUrl = 'https://loglog-pocketbase-backend.fly.dev';
-        const baseUrl = 'http://127.0.0.1:8080';
+        const baseUrl =
+          process.env.EXPO_PUBLIC_POCKETBASE_URL || 'https://loglog-pocketbase-backend.fly.dev';
 
         console.log('Connecting to PocketBase at:', baseUrl);
         const pbInstance = new PocketBase(baseUrl, store);
