@@ -1,16 +1,9 @@
-import { Stack, usePathname } from 'expo-router';
+import { Stack, usePathname, useFocusEffect } from 'expo-router';
 import * as React from 'react';
-import { useEffect, useState, useCallback } from 'react';
-import { Keyboard } from 'react-native';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Keyboard, AppState } from 'react-native';
 
-import { useSheetRef } from '~/components/nativewindui/Sheet';
-import ActiveSeshSheet from '~/components/sheets/ActiveSeshSheet';
-import DefaultSheet from '~/components/sheets/DefaultSheet';
-import PoopDetailsSheet from '~/components/sheets/PoopDetailsSheet';
-import PoopHistorySheet from '~/components/sheets/PoopHistorySheet';
-import PoopPalsSheet from '~/components/sheets/PoopPalsSheet';
-import ProfileSheet from '~/components/sheets/ProfileSheet';
-import SelectedSeshSheet from '~/components/sheets/SelectedSeshSheet';
+import UnifiedSheet, { UnifiedSheetRef, SheetContentType } from '~/components/sheets/UnifiedSheet';
 import { useAuth } from '~/context/authContext';
 import { MapViewContextProvider } from '~/context/mapViewContext';
 import { useSesh } from '~/context/seshContext';
@@ -18,19 +11,12 @@ import { useColorScheme } from '~/lib/useColorScheme';
 
 export default function TabLayout() {
   const { colors } = useColorScheme();
-
   const { user, pooProfile } = useAuth();
-
   const pathname = usePathname();
 
-  const bottomSheetModalRef = useSheetRef();
-  const selectedSeshSheetRef = useSheetRef();
-  const defaultSheetRef = useSheetRef();
-  const profileSheetRef = useSheetRef();
-  const poopPalsSheetRef = useSheetRef();
-  const poopHistorySheetRef = useSheetRef();
-  const poopDetailsSheetRef = useSheetRef();
-  const isOnHomeScreen = pathname === '/';
+  const unifiedSheetRef = useRef<UnifiedSheetRef>(null);
+  const appState = useRef(AppState.currentState);
+  const isOnHomeScreen = pathname === '/' || pathname === '/index';
 
   const {
     startSesh,
@@ -45,65 +31,114 @@ export default function TabLayout() {
   } = useSesh();
 
   const [selectedPoopId, setSelectedPoopId] = useState<string | null>(null);
+  const [currentSheetContent, setCurrentSheetContent] = useState<SheetContentType>('default');
+  const [isSessionOperationInProgress, setIsSessionOperationInProgress] = useState(false);
 
-  // Helper function to safely dismiss all sheets
-  const dismissAllSheets = useCallback(async () => {
-    const sheets = [
-      bottomSheetModalRef,
-      defaultSheetRef,
-      selectedSeshSheetRef,
-      profileSheetRef,
-      poopPalsSheetRef,
-      poopHistorySheetRef,
-      poopDetailsSheetRef,
-    ];
-
-    // Dismiss all sheets with a slight delay to prevent race conditions
-    for (const sheet of sheets) {
-      if (sheet.current?.dismiss) {
-        try {
-          await sheet.current.dismiss();
-        } catch (error) {
-          console.log('Error dismissing sheet:', error);
-        }
-      }
+  // Helper to change sheet content - simplified to avoid unnecessary state updates
+  const changeSheetContent = useCallback((contentType: SheetContentType, contentProps?: any) => {
+    setCurrentSheetContent(contentType);
+    if (unifiedSheetRef.current) {
+      unifiedSheetRef.current.changeContent(contentType, contentProps);
     }
   }, []);
 
-  useEffect(() => {
-    let mounted = true;
+  // Helper for profile and related actions
+  const handleProfilePress = useCallback(() => {
+    changeSheetContent('profile', {
+      user,
+      colors,
+      onPoopPalsPress: () => changeSheetContent('poopPals'),
+      onClose: () => updateSheetContent(), // Simply return to default state based on current app state
+    });
+  }, [user, colors]);
 
-    const handleVisibilityChange = async () => {
-      if (!mounted) return;
+  // Helper for poop history
+  const handlePoopHistoryPress = useCallback(() => {
+    changeSheetContent('poopHistory', {
+      onViewPoop: handleViewPoopDetails,
+      onClose: () => updateSheetContent(), // Simply return to default state based on current app state
+    });
+  }, [user, colors]);
 
-      if (!isOnHomeScreen) {
-        // When leaving home screen, forcefully dismiss all sheets
-        await dismissAllSheets();
-      } else {
-        // When returning to home screen, show appropriate sheet after a brief delay
+  // Default content props for reuse
+  const getDefaultContentProps = useCallback(() => {
+    return {
+      isOnHomeScreen,
+      user,
+      isSeshPending,
+      onStartSesh: handleStartSesh,
+      onPoopHistoryPress: handlePoopHistoryPress,
+      colors,
+      onProfilePress: handleProfilePress,
+    };
+  }, [isOnHomeScreen, user, isSeshPending, colors]);
+
+  // Update sheet visibility and content when screen focus changes
+  useFocusEffect(
+    useCallback(() => {
+      // This runs when the screen comes into focus
+      if (isOnHomeScreen && !isSessionOperationInProgress) {
+        updateSheetContent();
         setTimeout(() => {
-          if (!mounted) return;
-
-          if (selectedSesh && selectedSeshSheetRef.current?.present) {
-            selectedSeshSheetRef.current.present();
-          } else if (activeSesh && bottomSheetModalRef.current?.present) {
-            bottomSheetModalRef.current.present();
-          } else if (defaultSheetRef.current?.present) {
-            defaultSheetRef.current.present();
+          if (unifiedSheetRef.current) {
+            unifiedSheetRef.current.present();
           }
-        }, 100);
+        }, 250); // Slight delay to ensure navigation has completed
       }
-    };
 
-    handleVisibilityChange();
+      return () => {
+        // This runs when the screen goes out of focus
+        if (!isOnHomeScreen && !isSessionOperationInProgress) {
+          if (unifiedSheetRef.current) {
+            unifiedSheetRef.current.dismiss();
+          }
+        }
+      };
+    }, [isOnHomeScreen, selectedSesh, activeSesh, isSessionOperationInProgress])
+  );
 
-    // Cleanup function to dismiss sheets when component unmounts
+  // Listen for app state changes to handle background/foreground transitions
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        isOnHomeScreen
+      ) {
+        // App has come to the foreground
+        setTimeout(() => {
+          updateSheetContent();
+          if (unifiedSheetRef.current) {
+            unifiedSheetRef.current.present();
+          }
+        }, 250);
+      }
+
+      appState.current = nextAppState;
+    });
+
     return () => {
-      mounted = false;
-      dismissAllSheets();
+      subscription.remove();
     };
-  }, [isOnHomeScreen, selectedSesh, activeSesh, dismissAllSheets]);
+  }, [isOnHomeScreen, selectedSesh, activeSesh]);
 
+  // Update sheet when path changes
+  useEffect(() => {
+    if (isOnHomeScreen) {
+      updateSheetContent();
+      setTimeout(() => {
+        if (unifiedSheetRef.current) {
+          unifiedSheetRef.current.present();
+        }
+      }, 250);
+    } else {
+      if (unifiedSheetRef.current) {
+        unifiedSheetRef.current.dismiss();
+      }
+    }
+  }, [isOnHomeScreen]);
+
+  // Handle keyboard interactions with the sheet
   useEffect(() => {
     if (!isOnHomeScreen) return;
 
@@ -112,16 +147,16 @@ export default function TabLayout() {
 
     if (activeSesh) {
       keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-        if (activeSesh && bottomSheetModalRef.current?.present) {
+        if (activeSesh && unifiedSheetRef.current?.present) {
           setTimeout(() => {
-            bottomSheetModalRef.current?.present();
+            unifiedSheetRef.current?.present();
           }, 100);
         }
       });
 
       keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-        if (bottomSheetModalRef.current?.present) {
-          bottomSheetModalRef.current.present();
+        if (unifiedSheetRef.current?.present) {
+          unifiedSheetRef.current.present();
         }
       });
     }
@@ -132,46 +167,141 @@ export default function TabLayout() {
     };
   }, [activeSesh, isOnHomeScreen]);
 
+  // Update sheet content when selected session or active session changes
   useEffect(() => {
+    // Only update if we're on the home screen
     if (!isOnHomeScreen) return;
 
-    let mounted = true;
-
-    const updateSheetVisibility = async () => {
-      if (!mounted) return;
-
-      if (selectedSesh && selectedSeshSheetRef.current?.present) {
-        await dismissAllSheets();
-        selectedSeshSheetRef.current.present();
-      } else if (!selectedSesh && bottomSheetModalRef.current?.present) {
-        selectedSeshSheetRef.current?.dismiss();
-        bottomSheetModalRef.current.present();
+    // Ensure sheet is visible and content is updated
+    const timer = setTimeout(() => {
+      updateSheetContent();
+      if (unifiedSheetRef.current) {
+        unifiedSheetRef.current.present();
       }
-    };
+    }, 50);
 
-    updateSheetVisibility();
+    return () => clearTimeout(timer);
+  }, [selectedSesh, activeSesh, isOnHomeScreen]);
 
-    return () => {
-      mounted = false;
-    };
-  }, [selectedSesh, isOnHomeScreen, dismissAllSheets]);
+  // Function to update sheet content based on current state
+  const updateSheetContent = useCallback(() => {
+    if (!isOnHomeScreen) return;
+
+    if (selectedSesh) {
+      changeSheetContent('selectedSesh', {
+        sesh: selectedSesh,
+        onClose: () => setSelectedSesh(null),
+        colors,
+        user,
+        pooProfile,
+      });
+    } else if (activeSesh) {
+      changeSheetContent('activeSesh', {
+        sesh: activeSesh,
+        isLoading: isLoadingActiveSesh,
+        isSeshPending,
+        onEnd: handleEndSesh,
+        poopForm,
+        updateActiveSesh,
+      });
+    } else {
+      changeSheetContent('default', getDefaultContentProps());
+    }
+
+    // Always ensure sheet is presented after content update
+    if (unifiedSheetRef.current) {
+      unifiedSheetRef.current.present();
+    }
+  }, [
+    selectedSesh,
+    activeSesh,
+    colors,
+    user,
+    pooProfile,
+    isLoadingActiveSesh,
+    isSeshPending,
+    poopForm,
+    isOnHomeScreen,
+  ]);
+
+  // Add effect to handle session state changes
+  useEffect(() => {
+    if (isOnHomeScreen) {
+      updateSheetContent();
+    }
+  }, [activeSesh, selectedSesh, isOnHomeScreen, updateSheetContent]);
 
   const handleStartSesh = async () => {
     // Can't do two poops at once
     if (activeSesh) return;
 
-    await startSesh();
+    try {
+      setIsSessionOperationInProgress(true);
+
+      // Ensure sheet is visible before starting session
+      if (unifiedSheetRef.current && isOnHomeScreen) {
+        unifiedSheetRef.current.present();
+      }
+
+      // Start the session
+      await startSesh();
+
+      // Update content and keep sheet visible
+      if (isOnHomeScreen) {
+        updateSheetContent();
+      }
+    } catch (error) {
+      console.error('Failed to start session:', error);
+      // Ensure sheet is still visible and updated even if session start fails
+      if (isOnHomeScreen) {
+        updateSheetContent();
+      }
+    } finally {
+      setIsSessionOperationInProgress(false);
+    }
   };
 
   const handleEndSesh = async () => {
     if (!activeSesh) return;
 
-    await endSesh();
+    try {
+      setIsSessionOperationInProgress(true);
+
+      // Ensure sheet is visible before ending session
+      if (unifiedSheetRef.current && isOnHomeScreen) {
+        unifiedSheetRef.current.present();
+      }
+
+      // End the session
+      await endSesh();
+
+      // Update content and keep sheet visible
+      if (isOnHomeScreen) {
+        changeSheetContent('default', getDefaultContentProps());
+      }
+    } catch (error) {
+      console.error('Failed to end session:', error);
+      // Ensure sheet is still visible and updated even if session end fails
+      if (isOnHomeScreen) {
+        updateSheetContent();
+      }
+    } finally {
+      setIsSessionOperationInProgress(false);
+    }
   };
 
   const handleViewPoopDetails = (poopId: string) => {
     setSelectedPoopId(poopId);
-    poopDetailsSheetRef.current?.present();
+    changeSheetContent('poopDetails', {
+      poopId,
+      onClose: () => {
+        setSelectedPoopId(null);
+        changeSheetContent('poopHistory', {
+          onViewPoop: handleViewPoopDetails,
+          onClose: () => updateSheetContent(), // Use updateSheetContent to determine the correct content
+        });
+      },
+    });
   };
 
   return (
@@ -188,55 +318,11 @@ export default function TabLayout() {
         />
       </Stack>
 
-      {selectedSesh ? (
-        <SelectedSeshSheet
-          ref={selectedSeshSheetRef as any}
-          sesh={selectedSesh}
-          onClose={() => setSelectedSesh(null)}
-          colors={colors}
-          user={user}
-          pooProfile={pooProfile}
-        />
-      ) : activeSesh ? (
-        <ActiveSeshSheet
-          ref={bottomSheetModalRef as any}
-          sesh={activeSesh}
-          isLoading={isLoadingActiveSesh}
-          isSeshPending={isSeshPending}
-          onEnd={handleEndSesh}
-          poopForm={poopForm}
-          updateActiveSesh={updateActiveSesh}
-        />
-      ) : (
-        <>
-          <DefaultSheet
-            ref={defaultSheetRef}
-            isOnHomeScreen={isOnHomeScreen}
-            onProfilePress={() => profileSheetRef.current?.present()}
-            user={user}
-            isSeshPending={isSeshPending}
-            onStartSesh={handleStartSesh}
-            onPoopHistoryPress={() => poopHistorySheetRef.current?.present()}
-            colors={colors}
-          />
-          <ProfileSheet
-            ref={profileSheetRef}
-            user={user}
-            colors={colors}
-            onPoopPalsPress={() => poopPalsSheetRef.current?.present()}
-          />
-          <PoopPalsSheet ref={poopPalsSheetRef as any} />
-          <PoopHistorySheet ref={poopHistorySheetRef as any} onViewPoop={handleViewPoopDetails} />
-          <PoopDetailsSheet
-            ref={poopDetailsSheetRef as any}
-            poopId={selectedPoopId}
-            onClose={() => {
-              setSelectedPoopId(null);
-              poopDetailsSheetRef.current?.dismiss();
-            }}
-          />
-        </>
-      )}
+      <UnifiedSheet
+        ref={unifiedSheetRef}
+        initialContentType={selectedSesh ? 'selectedSesh' : activeSesh ? 'activeSesh' : 'default'}
+        preventDismissalOnHome={true}
+      />
     </MapViewContextProvider>
   );
 }

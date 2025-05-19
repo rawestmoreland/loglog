@@ -19,50 +19,78 @@ export const useSheetRef = () => {
 
 interface SheetProps extends Omit<BottomSheetModalProps, 'ref'> {
   onPresent?: () => void;
+  onDismiss?: () => void;
+  preventDismissal?: boolean;
 }
 
-export const Sheet = forwardRef<SheetRef, SheetProps>(({ onPresent, ...props }, ref) => {
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const { colors } = useColorScheme();
+export const Sheet = forwardRef<SheetRef, SheetProps>(
+  ({ onPresent, onDismiss, preventDismissal = false, ...props }, ref) => {
+    const bottomSheetRef = React.useRef<BottomSheetModal>(null);
+    const { colors } = useColorScheme();
 
-  useImperativeHandle(ref, () => ({
-    present: () => {
-      bottomSheetRef.current?.present();
-      onPresent?.();
-    },
-    dismiss: () => {
-      bottomSheetRef.current?.dismiss();
-    },
-  }));
+    useImperativeHandle(ref, () => ({
+      present: () => {
+        bottomSheetRef.current?.present();
+        onPresent?.();
+      },
+      dismiss: () => {
+        if (!preventDismissal) {
+          bottomSheetRef.current?.dismiss();
+          onDismiss?.();
+        } else {
+          // For sheets that should not dismiss, we re-present to ensure they stay open
+          bottomSheetRef.current?.present();
+        }
+      },
+    }));
 
-  const renderBackdrop = React.useCallback(
-    (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />,
-    []
-  );
-  return (
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={0}
-      backgroundStyle={
-        props.backgroundStyle ?? {
-          backgroundColor: colors.card,
-        }
+    const renderBackdrop = React.useCallback(
+      (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} />,
+      []
+    );
+    
+    // Handle attempts to dismiss the sheet
+    const handleDismiss = () => {
+      if (preventDismissal) {
+        // Re-present the sheet to prevent it from being dismissed
+        setTimeout(() => {
+          bottomSheetRef.current?.present();
+        }, 50);
+        return;
       }
-      style={
-        props.style ?? {
-          borderWidth: 1,
-          borderColor: colors.grey5,
-          borderTopStartRadius: 16,
-          borderTopEndRadius: 16,
+      
+      // Otherwise proceed with normal dismiss
+      onDismiss?.();
+    };
+    
+    return (
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        index={0}
+        backgroundStyle={
+          props.backgroundStyle ?? {
+            backgroundColor: colors.card,
+          }
         }
-      }
-      handleIndicatorStyle={
-        props.handleIndicatorStyle ?? {
-          backgroundColor: colors.grey4,
+        style={
+          props.style ?? {
+            borderWidth: 1,
+            borderColor: colors.grey5,
+            borderTopStartRadius: 16,
+            borderTopEndRadius: 16,
+          }
         }
-      }
-      backdropComponent={renderBackdrop}
-      {...props}
-    />
-  );
-});
+        handleIndicatorStyle={
+          props.handleIndicatorStyle ?? {
+            backgroundColor: colors.grey4,
+          }
+        }
+        backdropComponent={renderBackdrop}
+        onDismiss={handleDismiss}
+        enablePanDownToClose={!preventDismissal}
+        enableDismissOnClose={!preventDismissal}
+        {...props}
+      />
+    );
+  }
+);
