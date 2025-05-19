@@ -47,7 +47,8 @@ export default function TabLayout() {
     changeSheetContent('profile', {
       user,
       colors,
-      onPoopPalsPress: () => changeSheetContent('poopPals'),
+      onPoopPalsPress: () =>
+        changeSheetContent('poopPals', { onClose: () => updateSheetContent() }),
       onClose: () => updateSheetContent(), // Simply return to default state based on current app state
     });
   }, [user, colors]);
@@ -62,7 +63,7 @@ export default function TabLayout() {
 
   // Default content props for reuse
   const getDefaultContentProps = useCallback(() => {
-    return {
+    const props = {
       isOnHomeScreen,
       user,
       isSeshPending,
@@ -71,6 +72,8 @@ export default function TabLayout() {
       colors,
       onProfilePress: handleProfilePress,
     };
+    console.log('_layout - getDefaultContentProps:', props);
+    return props;
   }, [isOnHomeScreen, user, isSeshPending, colors]);
 
   // Update sheet visibility and content when screen focus changes
@@ -187,6 +190,8 @@ export default function TabLayout() {
   const updateSheetContent = useCallback(() => {
     if (!isOnHomeScreen) return;
 
+    console.log('_layout - updateSheetContent called');
+
     if (selectedSesh) {
       changeSheetContent('selectedSesh', {
         sesh: selectedSesh,
@@ -205,7 +210,9 @@ export default function TabLayout() {
         updateActiveSesh,
       });
     } else {
-      changeSheetContent('default', getDefaultContentProps());
+      const defaultProps = getDefaultContentProps();
+      console.log('_layout - changing to default content with props:', defaultProps);
+      changeSheetContent('default', defaultProps);
     }
 
     // Always ensure sheet is presented after content update

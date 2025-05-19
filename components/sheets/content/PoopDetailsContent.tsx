@@ -19,6 +19,7 @@ import { useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { usePoopSesh } from '~/hooks/api/usePoopSeshQueries';
 import { bristolScoreToImage } from '~/lib/helpers';
 import { useColorScheme } from '~/lib/useColorScheme';
+import { COLORS } from '~/theme/colors';
 
 export interface PoopDetailsContentProps {
   poopId: string | null;
@@ -110,14 +111,28 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
           bounces={false}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="pt-4">
+          contentContainerClassName="pt-2">
           <View className="flex-1 gap-2">
+            <View className="flex-row items-center justify-between px-8">
+              <Text className="text-xl font-semibold">Poop Details</Text>
+              {onClose && (
+                <Button
+                  style={{
+                    backgroundColor: COLORS.light.primary,
+                    height: 30,
+                    width: 30,
+                    borderRadius: 15,
+                  }}
+                  size="icon"
+                  onPress={onClose}>
+                  <Icon source="close" size={24} color={COLORS.dark.background} />
+                </Button>
+              )}
+            </View>
             <View className="gap-2 px-8">
               <Text>Poop Start</Text>
               <Button variant="tonal" onPress={() => setStartPickerOpen(true)}>
-                <Text>
-                  {format(poopForm.watch('started') ?? new Date(), 'M/dd/yyyy hh:mm a')}
-                </Text>
+                <Text>{format(poopForm.watch('started') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
               </Button>
               <Controller
                 name="started"
@@ -139,9 +154,7 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
             <View className="gap-2 px-8">
               <Text>Poop End</Text>
               <Button variant="tonal" onPress={() => setEndPickerOpen(true)}>
-                <Text>
-                  {format(poopForm.watch('ended') ?? new Date(), 'M/dd/yyyy hh:mm a')}
-                </Text>
+                <Text>{format(poopForm.watch('ended') ?? new Date(), 'M/dd/yyyy hh:mm a')}</Text>
               </Button>
               <Controller
                 name="ended"
@@ -209,11 +222,14 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
                 control={poopForm.control}
                 render={({ field }) => (
                   <View className="flex-row items-center gap-2">
-                    <Image
-                      source={bristolScoreToImage(field.value || 1)}
-                      className="h-10 w-10"
-                      resizeMode="contain"
-                    />
+                    <View className="flex-row items-center gap-2">
+                      <Text>{field.value}</Text>
+                      <Image
+                        source={bristolScoreToImage(field.value || 1)}
+                        className="h-10 w-10"
+                        resizeMode="contain"
+                      />
+                    </View>
                     <Stepper
                       subtractButton={{
                         disabled: field.value === 1,

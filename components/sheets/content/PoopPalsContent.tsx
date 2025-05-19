@@ -6,6 +6,8 @@ import React, { useMemo, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
+import PoopPalsSearchModal from '../PoopPalsSearchModal';
+
 import { Avatar, AvatarFallback } from '~/components/nativewindui/Avatar';
 import { Button } from '~/components/nativewindui/Button';
 import {
@@ -25,7 +27,6 @@ import {
 import { useFollowing, useFollowMeRequests, useMyFollowers } from '~/hooks/api/usePoopPalsQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
-import PoopPalsSearchModal from '../PoopPalsSearchModal';
 
 export interface PoopPalsContentProps {
   onClose?: () => void;

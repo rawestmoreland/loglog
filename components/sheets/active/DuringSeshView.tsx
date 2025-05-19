@@ -86,11 +86,14 @@ export function DuringSeshView({
               defaultValue={0}
               render={({ field }) => (
                 <View className="flex-row items-center gap-2">
-                  <Image
-                    source={bristolScoreToImage(field.value || 0)}
-                    className="h-10 w-10"
-                    resizeMode="contain"
-                  />
+                  <View className="flex-row items-center gap-2">
+                    <Text>{field.value}</Text>
+                    <Image
+                      source={bristolScoreToImage(field.value || 0)}
+                      className="h-10 w-10"
+                      resizeMode="contain"
+                    />
+                  </View>
                   <Stepper
                     subtractButton={{
                       disabled: field.value === 0,

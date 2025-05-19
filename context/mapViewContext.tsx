@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 
 const MapViewContext = createContext<{
   poopsToView: 'friends' | 'yours' | 'all';
@@ -13,8 +13,18 @@ const MapViewContext = createContext<{
 });
 
 export const MapViewContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const [poopsToView, setPoopsToView] = useState<'friends' | 'yours' | 'all'>('all');
-  const [palSelected, setPalSelected] = useState<string | null>('all');
+  const [poopsToView, setPoopsToViewState] = useState<'friends' | 'yours' | 'all'>('all');
+  const [palSelected, setPalSelectedState] = useState<string | null>('all');
+
+  const setPoopsToView = useCallback((newValue: 'friends' | 'yours' | 'all') => {
+    console.log('Setting poopsToView to:', newValue);
+    setPoopsToViewState(newValue);
+  }, []);
+
+  const setPalSelected = useCallback((newValue: string | null) => {
+    console.log('Setting palSelected to:', newValue);
+    setPalSelectedState(newValue);
+  }, []);
 
   return (
     <MapViewContext.Provider value={{ poopsToView, setPoopsToView, palSelected, setPalSelected }}>

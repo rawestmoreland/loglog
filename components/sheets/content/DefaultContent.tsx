@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -8,7 +8,6 @@ import { Button } from '~/components/nativewindui/Button';
 import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
 import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
 import { Text } from '~/components/nativewindui/Text';
-import { useMapViewContext } from '~/context/mapViewContext';
 import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -22,6 +21,10 @@ export interface DefaultContentProps {
   colors: any;
   onProfilePress: () => void;
   onPoopHistoryPress: () => void;
+  poopsToView: 'all' | 'friends' | 'yours';
+  setPoopsToView: (value: 'all' | 'friends' | 'yours') => void;
+  palSelected: string | null;
+  setPalSelected: (value: string | null) => void;
 }
 
 const DefaultContent = ({
@@ -32,10 +35,38 @@ const DefaultContent = ({
   colors: passedColors,
   onProfilePress,
   onPoopHistoryPress,
+  poopsToView,
+  setPoopsToView,
+  palSelected,
+  setPalSelected,
 }: DefaultContentProps) => {
   const { colors } = useColorScheme();
-  const { poopsToView, setPoopsToView, palSelected, setPalSelected } = useMapViewContext();
   const [isPresented, setIsPresented] = useState(true);
+
+  // Log props when component renders
+  useEffect(() => {
+    console.log('DefaultContent - received props:', {
+      isOnHomeScreen,
+      user,
+      isSeshPending,
+      onStartSesh: !!onStartSesh,
+      passedColors,
+      onProfilePress: !!onProfilePress,
+      onPoopHistoryPress: !!onPoopHistoryPress,
+      poopsToView,
+      palSelected,
+    });
+  }, [
+    isOnHomeScreen,
+    user,
+    isSeshPending,
+    onStartSesh,
+    passedColors,
+    onProfilePress,
+    onPoopHistoryPress,
+    poopsToView,
+    palSelected,
+  ]);
 
   // Use passed colors if available, otherwise use from context
   const effectiveColors = passedColors || colors;
@@ -43,6 +74,34 @@ const DefaultContent = ({
   const { data: following, isLoading: isFollowingLoading } = useFollowing({
     enabled: isPresented && poopsToView === 'friends',
   });
+
+  // Add effect to log state changes
+  useEffect(() => {
+    console.log('DefaultContent - poopsToView changed:', poopsToView);
+  }, [poopsToView]);
+
+  const handleItemPress = useCallback(
+    (item: { actionKey: string }) => {
+      console.log('DefaultContent - Dropdown item pressed:', item);
+      const newValue = item.actionKey as 'friends' | 'yours' | 'all';
+      console.log('DefaultContent - Setting poopsToView to:', newValue);
+      setPoopsToView(newValue);
+    },
+    [setPoopsToView]
+  );
+
+  const dropdownText = useMemo(() => {
+    switch (poopsToView) {
+      case 'all':
+        return 'All Poops';
+      case 'friends':
+        return "Friends' Poops";
+      case 'yours':
+        return 'Your Poops';
+      default:
+        return 'All Poops';
+    }
+  }, [poopsToView]);
 
   return (
     <>
@@ -66,17 +125,9 @@ const DefaultContent = ({
               title: 'All Poops',
             }),
           ]}
-          onItemPress={(item) => {
-            setPoopsToView(item.actionKey as 'friends' | 'yours' | 'all');
-          }}>
+          onItemPress={handleItemPress}>
           <Pressable className="flex-row items-center gap-2">
-            <Text>
-              {poopsToView === 'all'
-                ? 'All Poops'
-                : poopsToView === 'friends'
-                  ? "Friends' Poops"
-                  : 'Your Poops'}
-            </Text>
+            <Text>{dropdownText}</Text>
             <Icon source="chevron-down" size={24} color={effectiveColors.foreground} />
           </Pressable>
         </DropdownMenu>
