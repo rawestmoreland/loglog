@@ -21,7 +21,7 @@ const ActiveSeshContent = ({
   isSeshPending,
   onEnd,
   poopForm,
-  updateActiveSesh
+  updateActiveSesh,
 }: ActiveSeshContentProps) => {
   const { colors } = useColorScheme();
 

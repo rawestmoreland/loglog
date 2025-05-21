@@ -1,7 +1,7 @@
 import { BottomSheetBackdropProps, BottomSheetView } from '@gorhom/bottom-sheet';
-import React, { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
-import { View } from 'react-native';
 import { usePathname } from 'expo-router';
+import React, { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
+import { Keyboard, View } from 'react-native';
 
 import { Sheet, SheetRef } from '../nativewindui/Sheet';
 import ActiveSeshContent from './content/ActiveSeshContent';
@@ -11,6 +11,7 @@ import PoopHistoryContent from './content/PoopHistoryContent';
 import PoopPalsContent from './content/PoopPalsContent';
 import ProfileContent from './content/ProfileContent';
 import SelectedSeshContent from './content/SelectedSeshContent';
+
 import { useMapViewContext } from '~/context/mapViewContext';
 
 export type SheetContentType =
@@ -33,11 +34,15 @@ interface UnifiedSheetProps {
   preventDismissalOnHome?: boolean;
 }
 
-const getSnapPointForContent = (contentType: SheetContentType): string[] => {
+const getSnapPointForContent = (
+  contentType: SheetContentType,
+  keyboardVisible: boolean
+): string[] => {
   switch (contentType) {
     case 'default':
       return ['20%'];
     case 'activeSesh':
+      return keyboardVisible ? ['90%'] : ['50%'];
     case 'selectedSesh':
       return ['50%'];
     case 'profile':
@@ -66,7 +71,9 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
   const [contentType, setContentType] = useState<SheetContentType>(initialContentType);
   const [contentProps, setContentProps] = useState<any>({});
   const [snapPoints, setSnapPoints] = useState<string[]>(
-    initialSnapPoint ? [initialSnapPoint] : getSnapPointForContent(initialContentType)
+    initialSnapPoint
+      ? [initialSnapPoint]
+      : getSnapPointForContent(initialContentType, Keyboard.isVisible())
   );
   const [isPresented, setIsPresented] = useState(false);
 
@@ -81,6 +88,21 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
   useEffect(() => {
     console.log('UnifiedSheet - contentType changed:', contentType);
   }, [contentType]);
+
+  // Set up the listener for the keyboard visibility
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setSnapPoints(getSnapPointForContent(contentType, true));
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setSnapPoints(getSnapPointForContent(contentType, false));
+    });
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Handle pathname changes
   useEffect(() => {
@@ -129,7 +151,7 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
 
       // Then update content type and snap points
       setContentType(newContentType);
-      setSnapPoints(getSnapPointForContent(newContentType));
+      setSnapPoints(getSnapPointForContent(newContentType, Keyboard.isVisible()));
 
       // Always present sheet after content change
       setTimeout(() => {
