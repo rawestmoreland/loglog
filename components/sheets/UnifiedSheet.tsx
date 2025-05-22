@@ -1,7 +1,7 @@
 import { BottomSheetBackdropProps, BottomSheetView } from '@gorhom/bottom-sheet';
 import { usePathname } from 'expo-router';
 import React, { forwardRef, useImperativeHandle, useState, useEffect } from 'react';
-import { Keyboard, View } from 'react-native';
+import { Keyboard, View, Dimensions } from 'react-native';
 
 import { Sheet, SheetRef } from '../nativewindui/Sheet';
 import ActiveSeshContent from './content/ActiveSeshContent';
@@ -38,18 +38,20 @@ const getSnapPointForContent = (
   contentType: SheetContentType,
   keyboardVisible: boolean
 ): string[] => {
+  const { height: deviceHeight } = Dimensions.get('window');
+
   switch (contentType) {
     case 'default':
       return ['20%'];
     case 'activeSesh':
-      return keyboardVisible ? ['90%'] : ['50%'];
+      return keyboardVisible ? ['90%'] : deviceHeight < 700 ? ['60%'] : ['50%'];
     case 'selectedSesh':
-      return ['50%'];
+      return deviceHeight < 700 ? ['60%'] : ['50%'];
     case 'profile':
     case 'poopPals':
     case 'poopHistory':
     case 'poopDetails':
-      return ['75%'];
+      return deviceHeight < 700 ? ['85%'] : ['75%'];
     default:
       return ['20%'];
   }
@@ -89,6 +91,17 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
     console.log('UnifiedSheet - contentType changed:', contentType);
   }, [contentType]);
 
+  // Listen for dimension changes (e.g., orientation changes)
+  useEffect(() => {
+    const dimensionsChangeListener = Dimensions.addEventListener('change', () => {
+      setSnapPoints(getSnapPointForContent(contentType, Keyboard.isVisible()));
+    });
+
+    return () => {
+      dimensionsChangeListener.remove();
+    };
+  }, [contentType]);
+
   // Set up the listener for the keyboard visibility
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -102,7 +115,7 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-  }, []);
+  }, [contentType]);
 
   // Handle pathname changes
   useEffect(() => {
