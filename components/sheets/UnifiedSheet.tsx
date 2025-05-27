@@ -81,16 +81,6 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
 
   const sheetRef = React.useRef<SheetRef>(null);
 
-  // Add logging for content props changes
-  useEffect(() => {
-    console.log('UnifiedSheet - contentProps changed:', contentProps);
-  }, [contentProps]);
-
-  // Add logging for content type changes
-  useEffect(() => {
-    console.log('UnifiedSheet - contentType changed:', contentType);
-  }, [contentType]);
-
   // Listen for dimension changes (e.g., orientation changes)
   useEffect(() => {
     const dimensionsChangeListener = Dimensions.addEventListener('change', () => {
@@ -158,7 +148,6 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
       }
     },
     changeContent: (newContentType: SheetContentType, newContentProps = {}) => {
-      console.log('UnifiedSheet - changeContent called with:', { newContentType, newContentProps });
       // First update content props
       setContentProps(newContentProps);
 
@@ -206,13 +195,6 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
       ...contentProps,
       ...contextProps,
     };
-
-    console.log('UnifiedSheet - rendering content with props:', {
-      contentType,
-      mergedProps,
-      contentProps,
-      contextProps,
-    });
 
     switch (contentType) {
       case 'default':

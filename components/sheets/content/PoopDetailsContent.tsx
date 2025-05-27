@@ -48,7 +48,7 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
     ended: z.date(),
     revelations: z.string().optional(),
     is_public: z.boolean(),
-    bristol_score: z.number().min(1).max(7).optional(),
+    bristol_score: z.number().min(0).max(7).optional(),
     company_time: z.boolean(),
   });
 
@@ -67,12 +67,15 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
 
   useEffect(() => {
     if (poopSesh) {
-      poopForm.setValue('id', poopSesh.id!);
-      poopForm.setValue('started', poopSesh.started);
-      poopForm.setValue('ended', poopSesh.ended!);
-      poopForm.setValue('revelations', poopSesh.revelations);
-      poopForm.setValue('is_public', poopSesh.is_public);
-      poopForm.setValue('company_time', poopSesh.company_time);
+      poopForm.reset({
+        id: poopSesh.id,
+        started: poopSesh.started,
+        ended: poopSesh.ended,
+        revelations: poopSesh.revelations,
+        is_public: poopSesh.is_public,
+        company_time: poopSesh.company_time,
+        bristol_score: poopSesh.bristol_score,
+      });
     }
   }, [poopSesh]);
 
@@ -223,12 +226,16 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
                 render={({ field }) => (
                   <View className="flex-row items-center gap-2">
                     <View className="flex-row items-center gap-2">
-                      <Text>{field.value}</Text>
-                      <Image
-                        source={bristolScoreToImage(field.value || 1)}
-                        className="h-10 w-10"
-                        resizeMode="contain"
-                      />
+                      <Text>{field.value || 'No Score'}</Text>
+                      {field.value ? (
+                        <Image
+                          source={bristolScoreToImage(field.value || 1)}
+                          className="h-10 w-10"
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <Text>No Score</Text>
+                      )}
                     </View>
                     <Stepper
                       subtractButton={{

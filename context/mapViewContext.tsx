@@ -17,7 +17,6 @@ export const MapViewContextProvider = ({ children }: { children: React.ReactNode
   const [palSelected, setPalSelectedState] = useState<string | null>('all');
 
   const setPoopsToView = useCallback((newValue: 'friends' | 'yours' | 'all') => {
-    console.log('Setting poopsToView to:', newValue);
     setPoopsToViewState(newValue);
   }, []);
 

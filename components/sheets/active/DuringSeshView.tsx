@@ -1,21 +1,20 @@
+import { Link } from 'expo-router';
 import { Controller } from 'react-hook-form';
 import { Keyboard, View, Image } from 'react-native';
+import { Icon } from 'react-native-paper';
 
+import { CompanyTimeToggle } from './CompanyTimeToggle';
 import { PublicToggle } from './PublicToggle';
 
 import { Timer } from '~/components/Timer';
 import { Button } from '~/components/nativewindui/Button';
+import { Stepper } from '~/components/nativewindui/Stepper';
 import { Text } from '~/components/nativewindui/Text';
 import { TextField } from '~/components/nativewindui/TextField';
+import { bristolScoreToImage } from '~/lib/helpers';
 import type { PoopSesh } from '~/lib/types';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
-import { Toggle } from '~/components/nativewindui/Toggle';
-import { CompanyTimeToggle } from './CompanyTimeToggle';
-import { Stepper } from '~/components/nativewindui/Stepper';
-import { Icon } from 'react-native-paper';
-import { Link } from 'expo-router';
-import { bristolScoreToImage } from '~/lib/helpers';
 
 type DuringSeshViewProps = {
   isLoading: boolean;
@@ -87,12 +86,16 @@ export function DuringSeshView({
               render={({ field }) => (
                 <View className="flex-row items-center gap-2">
                   <View className="flex-row items-center gap-2">
-                    <Text>{field.value}</Text>
-                    <Image
-                      source={bristolScoreToImage(field.value || 0)}
-                      className="h-10 w-10"
-                      resizeMode="contain"
-                    />
+                    {field.value ?? <Text>{field.value}</Text>}
+                    {field.value ? (
+                      <Image
+                        source={bristolScoreToImage(field.value || 0)}
+                        className="h-10 w-10"
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <Text>No Score</Text>
+                    )}
                   </View>
                   <Stepper
                     subtractButton={{

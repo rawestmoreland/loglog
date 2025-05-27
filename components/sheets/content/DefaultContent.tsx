@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from 'react-native-paper';
 
@@ -41,32 +41,7 @@ const DefaultContent = ({
   setPalSelected,
 }: DefaultContentProps) => {
   const { colors } = useColorScheme();
-  const [isPresented, setIsPresented] = useState(true);
-
-  // Log props when component renders
-  useEffect(() => {
-    console.log('DefaultContent - received props:', {
-      isOnHomeScreen,
-      user,
-      isSeshPending,
-      onStartSesh: !!onStartSesh,
-      passedColors,
-      onProfilePress: !!onProfilePress,
-      onPoopHistoryPress: !!onPoopHistoryPress,
-      poopsToView,
-      palSelected,
-    });
-  }, [
-    isOnHomeScreen,
-    user,
-    isSeshPending,
-    onStartSesh,
-    passedColors,
-    onProfilePress,
-    onPoopHistoryPress,
-    poopsToView,
-    palSelected,
-  ]);
+  const [isPresented, _] = useState(true);
 
   // Use passed colors if available, otherwise use from context
   const effectiveColors = passedColors || colors;
@@ -75,16 +50,9 @@ const DefaultContent = ({
     enabled: isPresented && poopsToView === 'friends',
   });
 
-  // Add effect to log state changes
-  useEffect(() => {
-    console.log('DefaultContent - poopsToView changed:', poopsToView);
-  }, [poopsToView]);
-
   const handleItemPress = useCallback(
     (item: { actionKey: string }) => {
-      console.log('DefaultContent - Dropdown item pressed:', item);
       const newValue = item.actionKey as 'friends' | 'yours' | 'all';
-      console.log('DefaultContent - Setting poopsToView to:', newValue);
       setPoopsToView(newValue);
     },
     [setPoopsToView]

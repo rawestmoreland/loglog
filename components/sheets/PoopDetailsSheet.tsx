@@ -69,12 +69,15 @@ const PoopDetailsSheet = React.forwardRef<any, PoopDetailsSheetProps>(
 
     useEffect(() => {
       if (poopSesh) {
-        poopForm.setValue('id', poopSesh.id!);
-        poopForm.setValue('started', poopSesh.started);
-        poopForm.setValue('ended', poopSesh.ended!);
-        poopForm.setValue('revelations', poopSesh.revelations);
-        poopForm.setValue('is_public', poopSesh.is_public);
-        poopForm.setValue('company_time', poopSesh.company_time);
+        poopForm.reset({
+          id: poopSesh.id!,
+          started: poopSesh.started,
+          ended: poopSesh.ended!,
+          revelations: poopSesh.revelations,
+          is_public: poopSesh.is_public,
+          company_time: poopSesh.company_time,
+          bristol_score: poopSesh.bristol_score,
+        });
       }
     }, [poopSesh]);
 
