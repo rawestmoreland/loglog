@@ -226,8 +226,8 @@ const PoopDetailsContent = ({ poopId, onClose }: PoopDetailsContentProps) => {
                 render={({ field }) => (
                   <View className="flex-row items-center gap-2">
                     <View className="flex-row items-center gap-2">
-                      <Text>{field.value || 'No Score'}</Text>
-                      {field.value ? (
+                      <Text>{field.value || ''}</Text>
+                      {Boolean(field.value) ? (
                         <Image
                           source={bristolScoreToImage(field.value || 1)}
                           className="h-10 w-10"

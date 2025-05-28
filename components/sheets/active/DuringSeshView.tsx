@@ -86,7 +86,7 @@ export function DuringSeshView({
               render={({ field }) => (
                 <View className="flex-row items-center gap-2">
                   <View className="flex-row items-center gap-2">
-                    {field.value ?? <Text>{field.value}</Text>}
+                    <Text>{field.value || ''}</Text>
                     {field.value ? (
                       <Image
                         source={bristolScoreToImage(field.value || 0)}
