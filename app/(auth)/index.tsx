@@ -8,7 +8,7 @@ import { AlertRef } from '~/components/nativewindui/Alert/types';
 import { Button } from '~/components/nativewindui/Button';
 import { Text } from '~/components/nativewindui/Text';
 
-const LOGO_SOURCE = require('~/assets/logs.png');
+const LOGO_SOURCE = require('~/assets/loggie.png');
 
 const GOOGLE_SOURCE = {
   uri: 'https://www.pngall.com/wp-content/uploads/13/Google-Logo.png',
@@ -23,7 +23,7 @@ export default function AuthIndexScreen() {
           <View className="items-center">
             <Image
               source={LOGO_SOURCE}
-              className="ios:h-12 ios:w-12 h-8 w-8"
+              className="ios:h-12 ios:w-12 h-8 w-8 rounded-lg"
               resizeMode="contain"
             />
           </View>

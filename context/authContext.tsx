@@ -7,6 +7,7 @@ import { LoadingScreen } from '~/components/LoadingScreen';
 import { usePooProfile } from '~/hooks/api/usePooProfileQueries';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PooProfile } from '~/lib/types';
+import { useConnection } from './connectionContext';
 
 export type AuthContextProps = {
   user: AuthRecord | null;
@@ -34,6 +35,8 @@ function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
   const router = useRouter();
   const segments = useSegments();
 
+  const { isConnected } = useConnection();
+
   // Check that navigation is all good
   const [isNavigationReady, setIsNavigationReady] = useState(false);
   const rootNavRef = useNavigationContainerRef();
@@ -54,6 +57,11 @@ function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
     // Navigation isn't set up or we're still loading. Do nothing.
     if (!isNavigationReady || isLoadingUserData) return;
 
+    if (!isConnected) {
+      router.replace('/no-connection');
+      return;
+    }
+
     const inAuthGroup = segments[0] === '(auth)';
 
     if (
@@ -67,7 +75,7 @@ function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
       // Redirect away from the sign-in page.
       router.replace('/(protected)');
     }
-  }, [isLoggedIn, segments, isNavigationReady, isLoadingUserData]);
+  }, [isLoggedIn, segments, isNavigationReady, isLoadingUserData, isConnected]);
 }
 
 export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {

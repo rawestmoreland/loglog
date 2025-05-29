@@ -46,6 +46,9 @@
       "bundleIdentifier": "com.westmorelandcreative.dropspot",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.networking.wifi-info": true
       }
     },
     "android": {

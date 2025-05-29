@@ -14,6 +14,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PaperProvider, Portal } from 'react-native-paper';
 
 import { AuthContextProvider } from '~/context/authContext';
+import { ConnectionContextProvider } from '~/context/connectionContext';
 import { LocationContextProvider } from '~/context/locationContext';
 import { SeshContextProvider } from '~/context/seshContext';
 import { PocketBaseProvider } from '~/lib/pocketbaseConfig';
@@ -45,35 +46,37 @@ export default function RootLayout() {
       />
       {/* WRAP YOUR APP WITH ANY ADDITIONAL PROVIDERS HERE */}
       {/* <ExampleProvider> */}
-      <PocketBaseProvider>
-        <QueryClientProvider client={queryClient}>
-          <LocationContextProvider>
-            <AuthContextProvider>
-              <SeshContextProvider>
-                <PaperProvider>
-                  <Portal>
-                    <ActionSheetProvider>
-                      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                        <GestureHandlerRootView style={{ flex: 1 }}>
-                          <BottomSheetModalProvider>
-                            <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                              <Stack screenOptions={SCREEN_OPTIONS}>
-                                <Stack.Screen name="(auth)" />
-                                <Stack.Screen name="(protected)" />
-                              </Stack>
-                              <PortalHost />
-                            </NavThemeProvider>
-                          </BottomSheetModalProvider>
-                        </GestureHandlerRootView>
-                      </KeyboardProvider>
-                    </ActionSheetProvider>
-                  </Portal>
-                </PaperProvider>
-              </SeshContextProvider>
-            </AuthContextProvider>
-          </LocationContextProvider>
-        </QueryClientProvider>
-      </PocketBaseProvider>
+      <ConnectionContextProvider>
+        <PocketBaseProvider>
+          <QueryClientProvider client={queryClient}>
+            <LocationContextProvider>
+              <AuthContextProvider>
+                <SeshContextProvider>
+                  <PaperProvider>
+                    <Portal>
+                      <ActionSheetProvider>
+                        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+                          <GestureHandlerRootView style={{ flex: 1 }}>
+                            <BottomSheetModalProvider>
+                              <NavThemeProvider value={NAV_THEME[colorScheme]}>
+                                <Stack screenOptions={SCREEN_OPTIONS}>
+                                  <Stack.Screen name="(auth)" />
+                                  <Stack.Screen name="(protected)" />
+                                </Stack>
+                                <PortalHost />
+                              </NavThemeProvider>
+                            </BottomSheetModalProvider>
+                          </GestureHandlerRootView>
+                        </KeyboardProvider>
+                      </ActionSheetProvider>
+                    </Portal>
+                  </PaperProvider>
+                </SeshContextProvider>
+              </AuthContextProvider>
+            </LocationContextProvider>
+          </QueryClientProvider>
+        </PocketBaseProvider>
+      </ConnectionContextProvider>
 
       {/* </ExampleProvider> */}
     </>
