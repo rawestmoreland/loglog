@@ -3,11 +3,12 @@ import { router, useNavigationContainerRef, useRouter, useSegments } from 'expo-
 import { AuthRecord } from 'pocketbase';
 import { createContext, useContext, useEffect, useState } from 'react';
 
+import { useConnection } from './connectionContext';
+
 import { LoadingScreen } from '~/components/LoadingScreen';
 import { usePooProfile } from '~/hooks/api/usePooProfileQueries';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PooProfile } from '~/lib/types';
-import { useConnection } from './connectionContext';
 
 export type AuthContextProps = {
   user: AuthRecord | null;
