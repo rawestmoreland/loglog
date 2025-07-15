@@ -1,7 +1,7 @@
 import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
 import * as Location from 'expo-location';
 import { isEmpty } from 'lodash';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
@@ -27,12 +27,34 @@ export default function HomeScreen() {
 
   const { poopsToView, palSelected } = useMapViewContext();
 
+  const [cameraCenter, setCameraCenter] = useState<{ lon: number; lat: number } | null>(null);
+  const [cameraZoom, setCameraZoom] = useState<number | null>(null);
+
+  const [viewportBounds, setViewportBounds] = useState<{
+    minLon: number;
+    minLat: number;
+    maxLon: number;
+    maxLat: number;
+  } | null>(null);
+
   const { setSelectedSesh } = useSesh();
 
-  const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory();
-  const { data: publicHistory, isLoading: isLoadingPublicHistory } = usePublicPoopSeshHistory();
-  const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory();
-  const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory();
+  const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory({
+    viewportBounds: viewportBounds ?? undefined,
+  });
+  const {
+    data: publicHistory,
+    isLoading: isLoadingPublicHistory,
+    refetch: refetchPublicHistory,
+  } = usePublicPoopSeshHistory({
+    viewportBounds: viewportBounds ?? undefined,
+  });
+  const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory({
+    viewportBounds: viewportBounds ?? undefined,
+  });
+  const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory({
+    viewportBounds: viewportBounds ?? undefined,
+  });
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -111,6 +133,23 @@ export default function HomeScreen() {
       <MapboxGL.MapView
         ref={mapRef}
         style={styles.map}
+        onMapIdle={async () => {
+          const center = await mapRef.current?.getCenter();
+          const zoom = await mapRef.current?.getZoom();
+          const bounds = await mapRef.current?.getVisibleBounds();
+          if (center && zoom) {
+            setCameraCenter({ lon: center[0], lat: center[1] });
+            setCameraZoom(zoom);
+          }
+          if (bounds) {
+            setViewportBounds({
+              minLon: Math.min(bounds[0][0], bounds[1][0]),
+              minLat: Math.min(bounds[0][1], bounds[1][1]),
+              maxLon: Math.max(bounds[0][0], bounds[1][0]),
+              maxLat: Math.max(bounds[0][1], bounds[1][1]),
+            });
+          }
+        }}
         logoEnabled={false}
         scaleBarEnabled={false}
         attributionEnabled={false}
@@ -127,8 +166,12 @@ export default function HomeScreen() {
         />
         <MapboxGL.Camera
           ref={cameraRef}
-          zoomLevel={15}
-          centerCoordinate={[userLocation.lon, userLocation.lat]}
+          zoomLevel={cameraZoom ?? 15}
+          centerCoordinate={
+            cameraCenter
+              ? [cameraCenter.lon, cameraCenter.lat]
+              : [userLocation.lon, userLocation.lat]
+          }
           animationDuration={2000}
         />
         <MapboxGL.LocationPuck puckBearing="heading" puckBearingEnabled />
@@ -190,6 +233,21 @@ export default function HomeScreen() {
           />
         </MapboxGL.ShapeSource>
       </MapboxGL.MapView>
+      <FAB
+        size="small"
+        style={{
+          position: 'absolute',
+          top: SCREEN_HEIGHT - pixelSnapPoint - 130,
+          right: 16,
+          margin: 16,
+          backgroundColor: colors.primary,
+        }}
+        icon="refresh"
+        color={COLORS.light.foreground}
+        onPress={async () => {
+          refetchPublicHistory();
+        }}
+      />
       <FAB
         size="small"
         style={{
