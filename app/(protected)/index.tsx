@@ -1,7 +1,7 @@
 import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
 import * as Location from 'expo-location';
 import { isEmpty } from 'lodash';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
@@ -29,6 +29,7 @@ export default function HomeScreen() {
 
   const [cameraCenter, setCameraCenter] = useState<{ lon: number; lat: number } | null>(null);
   const [cameraZoom, setCameraZoom] = useState<number | null>(null);
+  const [hasInitialBounds, setHasInitialBounds] = useState(false);
 
   const [viewportBounds, setViewportBounds] = useState<{
     minLon: number;
@@ -47,12 +48,15 @@ export default function HomeScreen() {
     isLoading: isLoadingPublicHistory,
     refetch: refetchPublicHistory,
   } = usePublicPoopSeshHistory({
+    enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
   });
   const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory({
+    enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
   });
   const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory({
+    enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
   });
 
@@ -103,11 +107,28 @@ export default function HomeScreen() {
     }
   };
 
+  useEffect(() => {
+    const setBounds = async () => {
+      // Set the bounds based on 20km radius from the user's location
+      setViewportBounds({
+        minLon: userLocation.lon - 0.1,
+        minLat: userLocation.lat - 0.1,
+        maxLon: userLocation.lon + 0.1,
+        maxLat: userLocation.lat + 0.1,
+      });
+      setHasInitialBounds(true);
+    };
+    if (userLocation) {
+      setBounds();
+    }
+  }, [userLocation]);
+
   if (
     isLoadingLocation ||
     isLoadingMyHistory ||
     isLoadingPublicHistory ||
-    isLoadingFriendsHistory
+    isLoadingFriendsHistory ||
+    !hasInitialBounds
   ) {
     return (
       <View

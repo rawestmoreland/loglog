@@ -59,11 +59,11 @@ export function useMyPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      // Get public and user's private sesh
-      let filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null`;
-      if (params.viewportBounds) {
-        filter += ` && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!params.viewportBounds) {
+        return [];
       }
+      // Get public and user's private sesh
+      const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user`;
 
@@ -94,10 +94,10 @@ export function usePublicPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { public: true }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      let filter = `is_public = true && started != null && ended != null`;
-      if (params.viewportBounds) {
-        filter += ` && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!params.viewportBounds) {
+        return [];
       }
+      const filter = `is_public = true && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
       const seshes = await pb?.collection('poop_seshes').getFullList<PoopSesh>({
@@ -186,10 +186,11 @@ export function useFriendsPoopSeshHistory(
 
       const followingIds = following.map((friend) => friend.following);
 
-      let filter = `is_public = true && started != null && ended != null && (${followingIds.map((id) => `poo_profile="${id}"`).join('||')})`;
-      if (params.viewportBounds) {
-        filter += ` && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!params.viewportBounds) {
+        return [];
       }
+
+      const filter = `is_public = true && started != null && ended != null && (${followingIds.map((id) => `poo_profile="${id}"`).join('||')}) && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 
