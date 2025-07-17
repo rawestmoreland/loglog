@@ -4,10 +4,13 @@ import { useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
 import { z } from 'zod';
 
+import { useAuth } from './authContext';
 import { useLocation } from './locationContext';
+import { useNotification } from './notificationContext';
 
 import { useStartPoopSesh, useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { useActivePoopSesh } from '~/hooks/api/usePoopSeshQueries';
+import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
 
 export const SeshContext = createContext<{
@@ -43,11 +46,14 @@ export const SeshContext = createContext<{
 });
 
 export const SeshContextProvider = ({ children }: { children: React.ReactNode }) => {
+  const { pb } = usePocketBase();
   const startSeshMutation = useStartPoopSesh();
   const updateSeshMutation = useUpdatePoopSesh();
   const { data: activeSesh, isLoading: isLoadingActiveSesh } = useActivePoopSesh();
+  const { pooProfile } = useAuth();
 
   const [selectedSesh, setSelectedSesh] = useState<PoopSesh | null>(null);
+  const { scheduleNotification, cancelNotification } = useNotification();
 
   const poopFormSchema = z.object({
     revelations: z.string().max(160).optional(),
@@ -66,7 +72,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
 
   const startSesh = async () => {
     try {
-      await startSeshMutation.mutateAsync({
+      const sesh = await startSeshMutation.mutateAsync({
         is_public: true,
         location: {
           coordinates: {
@@ -81,6 +87,16 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         bristol_score: 0,
         started: new Date(),
         company_time: false,
+      });
+
+      // Schedule a notification for 10 minutes from now
+      await scheduleNotification({
+        pb: pb!,
+        sendAt: new Date(Date.now() + 10 * 60 * 1000),
+        title: 'Poop Sesh',
+        body: "You've been sitting for a while. Are you finished?",
+        pooProfileId: pooProfile?.id ?? '',
+        identifier: `poop-sesh-notification-${sesh.id}`,
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'rate-limit') {
@@ -119,6 +135,10 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
           bristol_score: poopForm.getValues('bristol_score'),
           ended: new Date(),
         },
+      });
+
+      await cancelNotification({
+        identifier: `poop-sesh-notification-${activeSesh.id}`,
       });
     } catch (error) {
       console.error(error);
