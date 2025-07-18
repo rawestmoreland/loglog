@@ -4,12 +4,10 @@ import { isEmpty } from 'lodash';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
-import { useAuth } from '~/context/authContext';
 
 import { useLocation } from '~/context/locationContext';
 import { useMapViewContext } from '~/context/mapViewContext';
 import { useSesh } from '~/context/seshContext';
-import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
 import {
   useFriendsPoopSeshHistory,
   useMyPoopSeshHistory,
@@ -29,8 +27,6 @@ export default function HomeScreen() {
 
   const { poopsToView, palSelected } = useMapViewContext();
 
-  const { pooProfile } = useAuth();
-
   const [cameraCenter, setCameraCenter] = useState<{ lon: number; lat: number } | null>(null);
   const [cameraZoom, setCameraZoom] = useState<number | null>(null);
   const [hasInitialBounds, setHasInitialBounds] = useState(false);
@@ -44,6 +40,9 @@ export default function HomeScreen() {
 
   const { setSelectedSesh } = useSesh();
 
+  const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory({
+    viewportBounds: viewportBounds ?? undefined,
+  });
   const {
     data: publicHistory,
     isLoading: isLoadingPublicHistory,
@@ -52,27 +51,10 @@ export default function HomeScreen() {
     enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
   });
-
-  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
-
-  const friendsHistory = useMemo(() => {
-    if (!following?.length || !publicHistory?.length) {
-      return [];
-    }
-
-    const followingIds = following.map((friend) => friend.following);
-
-    return publicHistory?.filter((poop) => followingIds.includes(poop.poo_profile!));
-  }, [following, publicHistory]);
-
-  const myHistory = useMemo(() => {
-    if (!publicHistory?.length || !pooProfile?.id) {
-      return [];
-    }
-
-    return publicHistory?.filter((poop) => poop.poo_profile === pooProfile?.id);
-  }, [publicHistory, pooProfile]);
-
+  const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory({
+    enabled: !!viewportBounds,
+    viewportBounds: viewportBounds ?? undefined,
+  });
   const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory({
     enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
@@ -143,10 +125,10 @@ export default function HomeScreen() {
 
   if (
     isLoadingLocation ||
+    isLoadingMyHistory ||
     isLoadingPublicHistory ||
-    isLoadingFollowing ||
-    !hasInitialBounds ||
-    !pooProfile
+    isLoadingFriendsHistory ||
+    !hasInitialBounds
   ) {
     return (
       <View

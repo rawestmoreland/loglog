@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { usePathname, useRouter } from 'expo-router';
-import PocketBase from 'pocketbase';
+import Client from 'pocketbase';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Platform, AppState } from 'react-native';
 
@@ -31,7 +31,7 @@ async function sendPushNotification({
   notificationType,
   data,
 }: {
-  pb: PocketBase;
+  pb: Client;
   expoPushToken: string;
   title: string;
   body: string;
@@ -65,7 +65,7 @@ function handleRegistrationError(errorMessage: string) {
   throw new Error(errorMessage);
 }
 
-async function registerForPushNotificationsAsync(pb: PocketBase, pooProfileId: string) {
+async function registerForPushNotificationsAsync(pb: Client, pooProfileId: string) {
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -120,23 +120,6 @@ export const NotificationContext = createContext<{
   expoPushToken: string;
   notification: Notifications.Notification | undefined;
   setNotification: (notification: Notifications.Notification | undefined) => void;
-  scheduleNotification: ({
-    pb,
-    sendAt,
-    title,
-    body,
-    pooProfileId,
-    data,
-    identifier,
-  }: {
-    pb: PocketBase;
-    sendAt: Date;
-    title: string;
-    body: string;
-    pooProfileId: string;
-    data?: Record<string, any>;
-    identifier?: string;
-  }) => Promise<void>;
   sendNotification: ({
     pb,
     pooProfileId,
@@ -145,21 +128,18 @@ export const NotificationContext = createContext<{
     notificationType,
     data,
   }: {
-    pb: PocketBase;
+    pb: Client;
     pooProfileId: string;
     title: string;
     body: string;
     notificationType: NotificationType;
     data?: Record<string, any>;
   }) => Promise<void>;
-  cancelNotification: ({ identifier }: { identifier: string }) => Promise<void>;
 }>({
   expoPushToken: '',
   notification: undefined,
-  scheduleNotification: async () => {},
   setNotification: () => {},
   sendNotification: async () => {},
-  cancelNotification: async () => {},
 });
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
@@ -235,59 +215,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     };
   }, [pooProfile]);
 
-  const handleScheduleNotification = async ({
-    pb,
-    sendAt,
-    title,
-    body,
-    pooProfileId,
-    data,
-    identifier,
-  }: {
-    pb: PocketBase;
-    sendAt: Date;
-    title: string;
-    body: string;
-    pooProfileId: string;
-    data?: Record<string, any>;
-    identifier?: string;
-  }) => {
-    const pooProfile = await pb
-      .collection('poo_profiles')
-      .getOne(pooProfileId)
-      .catch((e) => console.error(e));
-
-    if (!pooProfile) {
-      throw new Error('Poo profile not found');
-    }
-
-    if (!pooProfile.expo_push_token) {
-      throw new Error('Poo profile does not have an Expo push token');
-    }
-
-    const now = new Date();
-    const timeUntilSend = sendAt.getTime() - now.getTime();
-
-    if (timeUntilSend > 0) {
-      await Notifications.scheduleNotificationAsync({
-        identifier,
-        content: {
-          title,
-          body,
-          data,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: sendAt,
-        },
-      });
-    }
-  };
-
-  const handleCancelNotification = async ({ identifier }: { identifier: string }) => {
-    await Notifications.cancelScheduledNotificationAsync(identifier);
-  };
-
   const handleSendNotification = async ({
     pb,
     pooProfileId,
@@ -296,7 +223,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     notificationType,
     data,
   }: {
-    pb: PocketBase;
+    pb: Client;
     pooProfileId: string;
     title: string;
     body: string;
@@ -336,24 +263,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         expoPushToken,
         notification,
         setNotification,
-        scheduleNotification: async ({
-          pb,
-          sendAt,
-          title,
-          body,
-          pooProfileId,
-          data,
-          identifier,
-        }: {
-          pb: PocketBase;
-          sendAt: Date;
-          title: string;
-          body: string;
-          pooProfileId: string;
-          data?: Record<string, any>;
-          identifier?: string;
-        }) =>
-          handleScheduleNotification({ pb, sendAt, title, body, pooProfileId, data, identifier }),
         sendNotification: async ({
           pb,
           pooProfileId,
@@ -362,7 +271,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           notificationType,
           data,
         }: {
-          pb: PocketBase;
+          pb: Client;
           pooProfileId: string;
           title: string;
           body: string;
@@ -377,8 +286,6 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             notificationType,
             data,
           }),
-        cancelNotification: async ({ identifier }: { identifier: string }) =>
-          handleCancelNotification({ identifier }),
       }}>
       {children}
     </NotificationContext.Provider>
