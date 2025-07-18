@@ -4,9 +4,9 @@ import { useFollowing } from './usePoopPalsQueries';
 
 import { useAuth } from '~/context/authContext';
 import { useMapViewContext } from '~/context/mapViewContext';
+import { shiftCoords } from '~/lib/geo-helpers';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
-import { shiftCoords } from '~/lib/geo-helpers';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
@@ -74,7 +74,7 @@ export function useMyPoopSeshHistory(
       });
       return sesh ?? [];
     },
-    enabled: !!user && params.enabled,
+    enabled: !!user && !!pooProfile && params.enabled,
   });
 }
 
@@ -177,33 +177,40 @@ export function useFriendsPoopSeshHistory(
 
   const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
+  const { data: publicPoops } = usePublicPoopSeshHistory({
+    viewportBounds: params.viewportBounds,
+  });
+
   return useQuery({
     queryKey: ['friends-poop-sesh-history', pooProfile?.id],
     queryFn: async () => {
+      if (!params.viewportBounds) {
+        return [];
+      }
+
       if (!following || following.length === 0) {
         return [];
       }
 
       const followingIds = following.map((friend) => friend.following);
 
-      if (!params.viewportBounds) {
+      if (!publicPoops?.length) {
         return [];
       }
 
-      const filter = `is_public = true && started != null && ended != null && (${followingIds.map((id) => `poo_profile="${id}"`).join('||')}) && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      const filter = `is_public = true && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon} && ${followingIds.map((id) => `poo_profile?="${id}"`).join('||')}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 
-      const sesh = await pb
-        ?.collection('poop_seshes')
-        .getList(1, params.viewportBounds ? 500 : 10, {
-          filter,
-          sort,
-          expand,
-        });
-      return sesh?.items ?? [];
+      const sesh = await pb?.collection('poop_seshes').getFullList({
+        filter,
+        sort,
+        expand,
+      });
+
+      return sesh ?? [];
     },
-    enabled: !isLoadingFollowing && !!pooProfile?.id && params.enabled,
+    enabled: !isLoadingFollowing && !!pooProfile?.id && params.enabled && !publicPoops?.length,
   });
 }
 
@@ -224,10 +231,11 @@ export function usePalPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { palId: palSelected }],
     queryFn: async () => {
-      let filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}'`;
-      if (params.viewportBounds) {
-        filter += ` && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!params.viewportBounds) {
+        return [];
       }
+
+      const filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}' && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 
