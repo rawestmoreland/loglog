@@ -59,11 +59,11 @@ export function useMyPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      // Get public and user's private sesh
-      let filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null`;
-      if (params.viewportBounds) {
-        filter += `&& location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!params.viewportBounds) {
+        return [];
       }
+      // Get public and user's private sesh
+      const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user`;
 
