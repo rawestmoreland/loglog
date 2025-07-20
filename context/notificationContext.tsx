@@ -135,11 +135,27 @@ export const NotificationContext = createContext<{
     notificationType: NotificationType;
     data?: Record<string, any>;
   }) => Promise<void>;
+  scheduleNotification: ({
+    identifier,
+    sendAt,
+    title,
+    body,
+    data,
+  }: {
+    identifier: string;
+    sendAt: Date;
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+  }) => Promise<void>;
+  cancelNotification: ({ identifier }: { identifier: string }) => Promise<void>;
 }>({
   expoPushToken: '',
   notification: undefined,
   setNotification: () => {},
   sendNotification: async () => {},
+  scheduleNotification: async () => {},
+  cancelNotification: async () => {},
 });
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
@@ -215,6 +231,37 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     };
   }, [pooProfile]);
 
+  const handleScheduleNotification = async ({
+    identifier,
+    sendAt,
+    title,
+    body,
+    data,
+  }: {
+    identifier: string;
+    sendAt: Date;
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+  }) => {
+    await Notifications.scheduleNotificationAsync({
+      identifier,
+      content: {
+        title,
+        body,
+        data,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: sendAt,
+      },
+    });
+  };
+
+  const handleCancelNotification = async ({ identifier }: { identifier: string }) => {
+    await Notifications.cancelScheduledNotificationAsync(identifier);
+  };
+
   const handleSendNotification = async ({
     pb,
     pooProfileId,
@@ -286,6 +333,21 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
             notificationType,
             data,
           }),
+        scheduleNotification: async ({
+          identifier,
+          sendAt,
+          title,
+          body,
+          data,
+        }: {
+          identifier: string;
+          sendAt: Date;
+          title: string;
+          body: string;
+          data?: Record<string, any>;
+        }) => handleScheduleNotification({ identifier, sendAt, title, body, data }),
+        cancelNotification: async ({ identifier }: { identifier: string }) =>
+          handleCancelNotification({ identifier }),
       }}>
       {children}
     </NotificationContext.Provider>

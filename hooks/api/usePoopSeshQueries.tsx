@@ -4,9 +4,9 @@ import { useFollowing } from './usePoopPalsQueries';
 
 import { useAuth } from '~/context/authContext';
 import { useMapViewContext } from '~/context/mapViewContext';
+import { shiftCoords } from '~/lib/geo-helpers';
 import { usePocketBase } from '~/lib/pocketbaseConfig';
 import { PoopSesh } from '~/lib/types';
-import { shiftCoords } from '~/lib/geo-helpers';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
@@ -94,10 +94,7 @@ export function usePublicPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { public: true }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      if (!params.viewportBounds) {
-        return [];
-      }
-      const filter = `is_public = true && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      const filter = `is_public = true && started != null && ended != null`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
       const seshes = await pb?.collection('poop_seshes').getFullList<PoopSesh>({

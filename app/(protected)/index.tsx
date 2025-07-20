@@ -59,14 +59,14 @@ export default function HomeScreen() {
   }, [viewportBounds, publicHistory, pooProfile]);
 
   const friendsHistory = useMemo(() => {
-    if (!following?.length || !publicHistory?.length) {
+    if (isLoadingFollowing || !following?.length || !publicHistory?.length) {
       return [];
     }
 
     const followingIds = following.map((friend) => friend.following);
 
     return publicHistory.filter((poop) => followingIds.includes(poop.poo_profile!));
-  }, [following, publicHistory]);
+  }, [isLoadingFollowing, following, publicHistory]);
 
   const palHistory = useMemo(() => {
     if (!palSelected || !viewportBounds || !publicHistory) {
@@ -74,7 +74,7 @@ export default function HomeScreen() {
     }
 
     return publicHistory.filter((poop) => poop.poo_profile === palSelected);
-  }, [palSelected]);
+  }, [palSelected, viewportBounds, publicHistory]);
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -99,7 +99,7 @@ export default function HomeScreen() {
       default:
         return allHistory;
     }
-  }, [myHistory, publicHistory, friendsHistory, poopsToView, allHistory, palSelected]);
+  }, [myHistory, publicHistory, poopsToView, allHistory, palSelected]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {
@@ -131,13 +131,7 @@ export default function HomeScreen() {
     }
   }, [userLocation]);
 
-  if (
-    isLoadingLocation ||
-    isLoadingPublicHistory ||
-    isLoadingFollowing ||
-    !hasInitialBounds ||
-    !pooProfile
-  ) {
+  if (isLoadingLocation || isLoadingPublicHistory || !hasInitialBounds || !pooProfile) {
     return (
       <View
         style={[StyleSheet.absoluteFillObject, styles.loadingContainer]}

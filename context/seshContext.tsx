@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 import { z } from 'zod';
 
 import { useLocation } from './locationContext';
+import { useNotification } from './notificationContext';
 
 import { useStartPoopSesh, useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
 import { useActivePoopSesh } from '~/hooks/api/usePoopSeshQueries';
@@ -47,6 +48,8 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
   const updateSeshMutation = useUpdatePoopSesh();
   const { data: activeSesh, isLoading: isLoadingActiveSesh } = useActivePoopSesh();
 
+  const { scheduleNotification, cancelNotification } = useNotification();
+
   const [selectedSesh, setSelectedSesh] = useState<PoopSesh | null>(null);
 
   const poopFormSchema = z.object({
@@ -81,6 +84,14 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         bristol_score: 0,
         started: new Date(),
         company_time: false,
+      });
+
+      // Schedule a notification for 10 minutes from now
+      await scheduleNotification({
+        identifier: 'poop-sesh-started',
+        sendAt: new Date(Date.now() + 1000 * 60 * 10),
+        title: 'Are you ok?',
+        body: "You've been sitting there for a while. Are you ok?",
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'rate-limit') {
@@ -120,6 +131,8 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
           ended: new Date(),
         },
       });
+
+      await cancelNotification({ identifier: 'poop-sesh-started' });
     } catch (error) {
       console.error(error);
       Alert.alert('We had trouble ending the poop sesh');
