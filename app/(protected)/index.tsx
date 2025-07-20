@@ -5,15 +5,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
 import { FAB } from 'react-native-paper';
 
+import { useAuth } from '~/context/authContext';
 import { useLocation } from '~/context/locationContext';
 import { useMapViewContext } from '~/context/mapViewContext';
 import { useSesh } from '~/context/seshContext';
-import {
-  useFriendsPoopSeshHistory,
-  useMyPoopSeshHistory,
-  usePalPoopSeshHistory,
-  usePublicPoopSeshHistory,
-} from '~/hooks/api/usePoopSeshQueries';
+import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
+import { usePublicPoopSeshHistory } from '~/hooks/api/usePoopSeshQueries';
 import { useColorScheme } from '~/lib/useColorScheme';
 import { COLORS } from '~/theme/colors';
 
@@ -24,6 +21,8 @@ const POOP_MARKER = require('~/assets/poo-pile.png');
 
 export default function HomeScreen() {
   const { colors } = useColorScheme();
+
+  const { pooProfile } = useAuth();
 
   const { poopsToView, palSelected } = useMapViewContext();
 
@@ -40,9 +39,6 @@ export default function HomeScreen() {
 
   const { setSelectedSesh } = useSesh();
 
-  const { data: myHistory, isLoading: isLoadingMyHistory } = useMyPoopSeshHistory({
-    viewportBounds: viewportBounds ?? undefined,
-  });
   const {
     data: publicHistory,
     isLoading: isLoadingPublicHistory,
@@ -51,14 +47,34 @@ export default function HomeScreen() {
     enabled: !!viewportBounds,
     viewportBounds: viewportBounds ?? undefined,
   });
-  const { data: friendsHistory, isLoading: isLoadingFriendsHistory } = useFriendsPoopSeshHistory({
-    enabled: !!viewportBounds,
-    viewportBounds: viewportBounds ?? undefined,
-  });
-  const { data: palHistory, isLoading: isLoadingPalHistory } = usePalPoopSeshHistory({
-    enabled: !!viewportBounds,
-    viewportBounds: viewportBounds ?? undefined,
-  });
+
+  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
+
+  const myHistory = useMemo(() => {
+    if (!viewportBounds || !publicHistory || !pooProfile) {
+      return [];
+    }
+
+    return publicHistory.filter((poop) => poop.poo_profile === pooProfile.id);
+  }, [viewportBounds, publicHistory, pooProfile]);
+
+  const friendsHistory = useMemo(() => {
+    if (!following?.length || !publicHistory?.length) {
+      return [];
+    }
+
+    const followingIds = following.map((friend) => friend.following);
+
+    return publicHistory.filter((poop) => followingIds.includes(poop.poo_profile!));
+  }, [following, publicHistory]);
+
+  const palHistory = useMemo(() => {
+    if (!palSelected || !viewportBounds || !publicHistory) {
+      return [];
+    }
+
+    return publicHistory.filter((poop) => poop.poo_profile === palSelected);
+  }, [palSelected]);
 
   const cameraRef = useRef<Camera>(null);
   const mapRef = useRef<MapView>(null);
@@ -83,15 +99,7 @@ export default function HomeScreen() {
       default:
         return allHistory;
     }
-  }, [
-    myHistory,
-    publicHistory,
-    friendsHistory,
-    poopsToView,
-    allHistory,
-    palSelected,
-    isLoadingPalHistory,
-  ]);
+  }, [myHistory, publicHistory, friendsHistory, poopsToView, allHistory, palSelected]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {
@@ -125,10 +133,10 @@ export default function HomeScreen() {
 
   if (
     isLoadingLocation ||
-    isLoadingMyHistory ||
     isLoadingPublicHistory ||
-    isLoadingFriendsHistory ||
-    !hasInitialBounds
+    isLoadingFollowing ||
+    !hasInitialBounds ||
+    !pooProfile
   ) {
     return (
       <View
