@@ -45,13 +45,7 @@ export function useActivePoopSesh() {
 export function useMyPoopSeshHistory(
   params: {
     enabled?: boolean;
-    viewportBounds?: {
-      minLon: number;
-      minLat: number;
-      maxLon: number;
-      maxLat: number;
-    };
-  } = { enabled: true, viewportBounds: undefined }
+  } = { enabled: true }
 ) {
   const { pb } = usePocketBase();
   const { user, pooProfile } = useAuth();
@@ -59,11 +53,8 @@ export function useMyPoopSeshHistory(
   return useQuery({
     queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      if (!params.viewportBounds) {
-        return [];
-      }
       // Get public and user's private sesh
-      const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null`;
       const sort = `-started`;
       const expand = `user`;
 
