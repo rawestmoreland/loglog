@@ -35,6 +35,18 @@ export interface PoopSesh {
   revelations?: string;
   started: Date;
   ended?: Date;
+  place_id?: string;
+  place?: {
+    id: string;
+    name: string;
+    location: {
+      lon: number;
+      lat: number;
+    };
+    place_type: string;
+    rating?: number;
+  };
+  place_type?: string;
   expand?: {
     user?: {
       id: string;

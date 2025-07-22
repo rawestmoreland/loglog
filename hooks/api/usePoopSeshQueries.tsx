@@ -20,7 +20,10 @@ export function useActivePoopSesh() {
         const sesh = await pb
           ?.collection('poop_seshes')
           .getFirstListItem(
-            `started != null && ended = null && (user = '${user?.id}' || poo_profile = '${pooProfile?.id}')`
+            `started != null && ended = null && (user = '${user?.id}' || poo_profile = '${pooProfile?.id}')`,
+            {
+              expand: `place_id`,
+            }
           );
         return {
           id: sesh?.id!,
@@ -32,6 +35,8 @@ export function useActivePoopSesh() {
           poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
           company_time: sesh?.company_time,
+          place_id: sesh?.place_id,
+          place: sesh?.expand?.place_id,
         };
       } catch (error) {
         console.error(error);

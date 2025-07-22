@@ -44,7 +44,7 @@ const getSnapPointForContent = (
     case 'default':
       return ['20%'];
     case 'activeSesh':
-      return keyboardVisible ? ['90%'] : deviceHeight < 700 ? ['60%'] : ['50%'];
+      return keyboardVisible ? ['90%'] : deviceHeight < 700 ? ['80%'] : ['80%'];
     case 'selectedSesh':
       return deviceHeight < 700 ? ['60%'] : ['50%'];
     case 'profile':
@@ -232,8 +232,11 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
       snapPoints={snapPoints}
       onPresent={handleOnPresent}
       onDismiss={handleOnDismiss}
+      enablePanDownToClose={false}
+      enableDismissOnClose={false}
       handleComponent={() => <View className="h-4" />}
       preventDismissal={shouldPreventDismissal}
+      enableDynamicSizing
       backdropComponent={
         backdropComponent || (() => <View className="absolute inset-0 bg-transparent" />)
       }>

@@ -54,6 +54,7 @@ const ActiveSeshContent = ({
           poopForm={poopForm}
           activeSesh={sesh}
           updateActiveSesh={updateActiveSesh}
+          userLocation={sesh.location?.coordinates}
         />
       )}
     </View>
