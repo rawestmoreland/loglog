@@ -147,14 +147,14 @@ export const NotificationContext = createContext<{
     title: string;
     body: string;
     data?: Record<string, any>;
-  }) => Promise<void>;
+  }) => Promise<string>;
   cancelNotification: ({ identifier }: { identifier: string }) => Promise<void>;
 }>({
   expoPushToken: '',
   notification: undefined,
   setNotification: () => {},
   sendNotification: async () => {},
-  scheduleNotification: async () => {},
+  scheduleNotification: async () => '',
   cancelNotification: async () => {},
 });
 
@@ -175,24 +175,49 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
   // Add this function to check permissions and register if granted
   const checkAndRegisterForNotifications = async () => {
-    if (!pooProfile?.id || !pb) return;
+    if (!pooProfile?.id || !pb) {
+      console.log('📱 Cannot check notifications: pooProfile or pb missing');
+      return;
+    }
 
     const { status } = await Notifications.getPermissionsAsync();
+    console.log('📱 Current notification permission status:', status);
+    console.log('📱 Current expoPushToken:', expoPushToken ? 'exists' : 'missing');
+
     if (status === 'granted' && !expoPushToken) {
+      console.log('📱 Permissions granted but no token, registering...');
       const token = await registerForPushNotificationsAsync(pb, pooProfile.id);
       setExpoPushToken(token ?? '');
+    } else if (status !== 'granted') {
+      console.log('📱 Notification permissions not granted');
+    } else {
+      console.log('📱 Permissions granted and token already exists');
     }
   };
 
   useEffect(() => {
-    if (!pooProfile?.id || hasRegistered.current || !pb) return;
+    if (!pooProfile?.id || hasRegistered.current || !pb) {
+      console.log('📱 Skipping notification registration:', {
+        pooProfileId: pooProfile?.id,
+        hasRegistered: hasRegistered.current,
+        pb: !!pb,
+      });
+      return;
+    }
 
+    console.log('📱 Starting initial notification registration for profile:', pooProfile.id);
     hasRegistered.current = true;
 
     // Initial registration attempt
     registerForPushNotificationsAsync(pb, pooProfile?.id)
-      .then((token) => setExpoPushToken(token ?? ''))
-      .catch((error: any) => setExpoPushToken(`${error}`));
+      .then((token) => {
+        console.log('📱 Initial registration success, token:', token ? 'received' : 'none');
+        setExpoPushToken(token ?? '');
+      })
+      .catch((error: any) => {
+        console.log('📱 Initial registration failed:', error);
+        setExpoPushToken(`${error}`);
+      });
 
     // Add foreground listener to check permissions when app becomes active
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -244,22 +269,63 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     body: string;
     data?: Record<string, any>;
   }) => {
-    await Notifications.scheduleNotificationAsync({
+    console.log('🔔 handleScheduleNotification called with:', {
       identifier,
-      content: {
-        title,
-        body,
-        data,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DATE,
-        date: sendAt,
-      },
+      sendAt,
+      title,
+      body,
+      data,
     });
+
+    // Check permissions for local notifications
+    const { status } = await Notifications.getPermissionsAsync();
+    console.log('🔔 Current notification permissions for scheduling:', status);
+
+    if (status !== 'granted') {
+      console.log('🔔 Requesting notification permissions...');
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      console.log('🔔 Permission request result:', newStatus);
+      
+      if (newStatus !== 'granted') {
+        throw new Error('Notification permissions not granted');
+      }
+    }
+
+    // Check existing scheduled notifications
+    const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    console.log('📋 Existing scheduled notifications:', existingNotifications.length);
+
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        identifier,
+        content: {
+          title,
+          body,
+          data,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: sendAt,
+        },
+      });
+
+      console.log('✅ Notification scheduled successfully with ID:', id);
+      return id;
+    } catch (error) {
+      console.error('❌ Failed to schedule notification:', error);
+      throw error;
+    }
   };
 
   const handleCancelNotification = async ({ identifier }: { identifier: string }) => {
-    await Notifications.cancelScheduledNotificationAsync(identifier);
+    console.log('🚫 Cancelling notification with identifier:', identifier);
+    try {
+      await Notifications.cancelScheduledNotificationAsync(identifier);
+      console.log('✅ Notification cancelled successfully');
+    } catch (error) {
+      console.error('❌ Failed to cancel notification:', error);
+      throw error;
+    }
   };
 
   const handleSendNotification = async ({
@@ -345,7 +411,12 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           title: string;
           body: string;
           data?: Record<string, any>;
-        }) => handleScheduleNotification({ identifier, sendAt, title, body, data }),
+        }) => {
+          console.log(
+            '📨 scheduleNotification context method called, forwarding to handleScheduleNotification'
+          );
+          return handleScheduleNotification({ identifier, sendAt, title, body, data });
+        },
         cancelNotification: async ({ identifier }: { identifier: string }) =>
           handleCancelNotification({ identifier }),
       }}>

@@ -8,6 +8,7 @@ import { Button } from '~/components/nativewindui/Button';
 import { DropdownMenu } from '~/components/nativewindui/DropdownMenu';
 import { createDropdownItem } from '~/components/nativewindui/DropdownMenu/utils';
 import { Text } from '~/components/nativewindui/Text';
+import { NotificationProvider } from '~/context/notificationContext';
 import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
 import { cn } from '~/lib/cn';
 import { useColorScheme } from '~/lib/useColorScheme';
@@ -72,7 +73,7 @@ const DefaultContent = ({
   }, [poopsToView]);
 
   return (
-    <>
+    <NotificationProvider>
       <View
         className={cn(
           poopsToView === 'friends' ? 'mb-2' : 'mb-4',
@@ -172,7 +173,7 @@ const DefaultContent = ({
           </Button>
         </View>
       )}
-    </>
+    </NotificationProvider>
   );
 };
 

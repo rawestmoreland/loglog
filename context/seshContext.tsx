@@ -86,13 +86,22 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         company_time: false,
       });
 
+      const sendAt = new Date(Date.now() + 1000 * 60 * 10);
+
+      console.log('About to schedule notification for:', sendAt);
+      
       // Schedule a notification for 10 minutes from now
-      await scheduleNotification({
-        identifier: 'poop-sesh-started',
-        sendAt: new Date(Date.now() + 1000 * 60 * 10),
-        title: 'Are you ok?',
-        body: "You've been sitting there for a while. Are you ok?",
-      });
+      try {
+        const notificationId = await scheduleNotification({
+          identifier: 'poop-sesh-started',
+          sendAt,
+          title: 'Are you ok?',
+          body: "You've been sitting there for a while. Are you ok?",
+        });
+        console.log('Notification scheduled successfully with ID:', notificationId);
+      } catch (notificationError) {
+        console.error('Failed to schedule notification:', notificationError);
+      }
     } catch (error) {
       if (error instanceof Error && error.message === 'rate-limit') {
         Alert.alert('You can only make one poop sesh every 5 minutes');

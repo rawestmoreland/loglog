@@ -16,6 +16,7 @@ import { PaperProvider, Portal } from 'react-native-paper';
 import { AuthContextProvider } from '~/context/authContext';
 import { ConnectionContextProvider } from '~/context/connectionContext';
 import { LocationContextProvider } from '~/context/locationContext';
+import { NotificationProvider } from '~/context/notificationContext';
 import { SeshContextProvider } from '~/context/seshContext';
 import { PocketBaseProvider } from '~/lib/pocketbaseConfig';
 import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
@@ -51,7 +52,8 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <LocationContextProvider>
               <AuthContextProvider>
-                <SeshContextProvider>
+                <NotificationProvider>
+                  <SeshContextProvider>
                   <PaperProvider>
                     <Portal>
                       <ActionSheetProvider>
@@ -71,7 +73,8 @@ export default function RootLayout() {
                       </ActionSheetProvider>
                     </Portal>
                   </PaperProvider>
-                </SeshContextProvider>
+                  </SeshContextProvider>
+                </NotificationProvider>
               </AuthContextProvider>
             </LocationContextProvider>
           </QueryClientProvider>
