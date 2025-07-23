@@ -61,7 +61,6 @@ async function sendPushNotification({
 }
 
 function handleRegistrationError(errorMessage: string) {
-  alert(errorMessage);
   throw new Error(errorMessage);
 }
 
@@ -285,7 +284,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       console.log('🔔 Requesting notification permissions...');
       const { status: newStatus } = await Notifications.requestPermissionsAsync();
       console.log('🔔 Permission request result:', newStatus);
-      
+
       if (newStatus !== 'granted') {
         throw new Error('Notification permissions not granted');
       }

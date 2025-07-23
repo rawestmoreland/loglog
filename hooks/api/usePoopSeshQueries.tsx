@@ -37,6 +37,7 @@ export function useActivePoopSesh() {
           company_time: sesh?.company_time,
           place_id: sesh?.place_id,
           place: sesh?.expand?.place_id,
+          custom_place_name: sesh?.custom_place_name,
         };
       } catch (error) {
         console.error(error);

@@ -44,10 +44,10 @@ export function DuringSeshView({
 }: DuringSeshViewProps) {
   const { pb } = usePocketBase();
 
-  const { colors } = useColorScheme();
+  const { colors, isDarkColorScheme } = useColorScheme();
 
   const [locationType, setLocationType] = useState<
-    | 'home'
+    | 'house'
     | 'office'
     | 'school'
     | 'gas_station'
@@ -57,18 +57,20 @@ export function DuringSeshView({
     | 'bar'
     | 'cafe'
     | 'other'
-  >((activeSesh?.place?.place_type as any) || 'home');
+  >((activeSesh?.place?.place_type as any) || 'house');
   const [showPlacesView, setShowPlacesView] = useState(false);
   const [toiletName, setToiletName] = useState('');
   const [toiletResults, setToiletResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  const [selectedPlace, setSelectedPlace] = useState<any>(null);
 
   const { data: toiletRating } = useToiletRatingForPlace(activeSesh?.place_id || '');
   const { mutateAsync: updateToiletRating } = useUpdatePlaceRating(activeSesh?.place_id || '');
 
   useEffect(() => {
     if (showPlacesView) {
-      setToiletName(activeSesh?.place?.name || '');
+      setToiletName(activeSesh?.place?.name || activeSesh?.custom_place_name || '');
     }
   }, [showPlacesView]);
 
@@ -93,37 +95,51 @@ export function DuringSeshView({
   }, [toiletName]);
 
   const handlePlaceSelect = async (place: any) => {
-    const existingPlace = await pb
-      ?.collection('places')
-      .getFirstListItem(`mapbox_place_id = "${place.properties?.mapbox_id}"`)
-      .catch(() => null);
-    if (!existingPlace) {
-      const newPlace = await pb
-        ?.collection('places')
-        .create({
-          mapbox_place_id: place.properties?.mapbox_id,
-          name: place.properties?.name,
-          address: place.properties?.address,
-          place_formatted: place.properties?.place_formatted,
-          location: {
-            lat: place.geometry?.coordinates[1],
-            lon: place.geometry?.coordinates[0],
-          },
-          place_type: locationType,
-        })
-        .catch(() => null);
-      if (newPlace) {
+    if (!selectedPlace) {
+      if (toiletName) {
+        // Update the active sesh with the toilet name if there's no place selected
         await updateActiveSesh({
-          place_id: newPlace.id,
+          place_id: null,
           place_type: locationType,
+          custom_place_name: toiletName,
         });
       }
     } else {
-      await updateActiveSesh({
-        place_id: existingPlace.id,
-        place_type: locationType,
-      });
+      // Update the active sesh with the place
+      const existingPlace = await pb
+        ?.collection('places')
+        .getFirstListItem(`mapbox_place_id = "${place.properties?.mapbox_id}"`)
+        .catch(() => null);
+      if (!existingPlace) {
+        const newPlace = await pb
+          ?.collection('places')
+          .create({
+            mapbox_place_id: place.properties?.mapbox_id,
+            name: place.properties?.name,
+            address: place.properties?.address,
+            place_formatted: place.properties?.place_formatted,
+            location: {
+              lat: place.geometry?.coordinates[1],
+              lon: place.geometry?.coordinates[0],
+            },
+            place_type: locationType,
+          })
+          .catch(() => null);
+        if (newPlace) {
+          await updateActiveSesh({
+            place_id: newPlace.id,
+            place_type: locationType,
+          });
+        }
+      } else {
+        await updateActiveSesh({
+          custom_place_name: null,
+          place_id: existingPlace.id,
+          place_type: locationType,
+        });
+      }
     }
+
     setShowPlacesView(false);
   };
 
@@ -134,7 +150,20 @@ export function DuringSeshView({
   return (
     <View className="relative flex-1 px-8">
       {showPlacesView ? (
-        <View>
+        <View className="gap-4">
+          <View className="flex-row items-center justify-between">
+            <Pressable
+              onPress={() => setShowPlacesView(false)}
+              className="rounded-full p-2"
+              style={{ backgroundColor: colors.primary }}>
+              <Icon source="close" size={18} color={COLORS.light.foreground} />
+            </Pressable>
+            {(toiletName || selectedPlace) && (
+              <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
+                <Text style={{ color: colors.foreground }}>Save</Text>
+              </Pressable>
+            )}
+          </View>
           <FlatList
             data={[
               { name: 'House' },
@@ -186,7 +215,7 @@ export function DuringSeshView({
               renderItem={({ item }) => (
                 <Pressable
                   className="flex-row items-center gap-2 rounded-md border border-gray-300 p-4"
-                  onPress={() => handlePlaceSelect(item)}>
+                  onPress={() => setSelectedPlace(item)}>
                   <View className="rounded-full p-2" style={{ backgroundColor: colors.primary }}>
                     <Icon source="toilet" size={24} color={COLORS.black} />
                   </View>
@@ -196,6 +225,23 @@ export function DuringSeshView({
                     <Text className="text-sm text-gray-500" numberOfLines={2}>
                       {item.properties?.place_formatted}
                     </Text>
+                  </View>
+                  <View>
+                    {selectedPlace?.properties?.mapbox_id === item.properties?.mapbox_id ? (
+                      <View
+                        className="h-8 w-8 items-center justify-center rounded-full p-2"
+                        style={{ backgroundColor: colors.primary }}>
+                        <Icon source="check" size={18} color={COLORS.light.foreground} />
+                      </View>
+                    ) : (
+                      <View
+                        className="h-8 w-8 rounded-full"
+                        style={{
+                          borderColor: isDarkColorScheme ? colors.primary : colors.grey2,
+                          borderWidth: 2,
+                        }}
+                      />
+                    )}
                   </View>
                 </Pressable>
               )}
@@ -243,7 +289,9 @@ export function DuringSeshView({
           <Pressable
             className="flex-row items-center justify-between"
             onPress={() => setShowPlacesView(true)}>
-            <Text>{activeSesh?.place?.name || 'Name your toilet'}</Text>
+            <Text>
+              {activeSesh?.place?.name || activeSesh?.custom_place_name || 'Name your toilet'}
+            </Text>
             <Icon source="chevron-right" size={24} color={colors.primary} />
           </Pressable>
           {activeSesh?.place?.name && (

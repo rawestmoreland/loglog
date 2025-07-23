@@ -153,15 +153,22 @@ const UnifiedSheet = forwardRef<UnifiedSheetRef, UnifiedSheetProps>((props, ref)
 
       // Then update content type and snap points
       setContentType(newContentType);
-      setSnapPoints(getSnapPointForContent(newContentType, Keyboard.isVisible()));
+      const newSnapPoints = getSnapPointForContent(newContentType, Keyboard.isVisible());
+      setSnapPoints(newSnapPoints);
 
-      // Always present sheet after content change
-      setTimeout(() => {
-        if (sheetRef.current) {
-          sheetRef.current.present();
-          setIsPresented(true);
-        }
-      }, 50);
+      // Force sheet to re-initialize with new snap points by dismissing and re-presenting
+      if (sheetRef.current) {
+        // Temporarily dismiss to force re-initialization
+        sheetRef.current.dismiss();
+
+        // Re-present with new snap points after a short delay
+        setTimeout(() => {
+          if (sheetRef.current) {
+            sheetRef.current.present();
+            setIsPresented(true);
+          }
+        }, 100);
+      }
     },
   }));
 

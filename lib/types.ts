@@ -35,7 +35,7 @@ export interface PoopSesh {
   revelations?: string;
   started: Date;
   ended?: Date;
-  place_id?: string;
+  place_id?: string | null;
   place?: {
     id: string;
     name: string;
@@ -46,6 +46,7 @@ export interface PoopSesh {
     place_type: string;
     rating?: number;
   };
+  custom_place_name?: string | null;
   place_type?: string;
   expand?: {
     user?: {
