@@ -8,7 +8,7 @@ export function useUpdatePlaceRating(placeId: string) {
   const { pooProfile } = useAuth();
   const { pb } = usePocketBase();
 
-  if (!pooProfile?.id || !placeId) {
+  if (!pooProfile?.id) {
     throw new Error('Poo profile or place ID is missing');
   }
 
