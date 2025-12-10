@@ -2,99 +2,163 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-LogLog is a mobile application for tracking and logging bathroom activities with social features. The app allows users to log their bathroom visits, track stats, share with friends, and view a map of activity locations.
-
-## Tech Stack
-
-- **Frontend**: React Native with Expo (v52) and Expo Router
-- **Styling**: NativeWind (Tailwind CSS for React Native)
-- **State Management**: React Query for data fetching
-- **Backend**: PocketBase (custom Go backend)
-- **Maps/Location**: Mapbox (@rnmapbox/maps) and Expo Location
-- **Forms & Validation**: React Hook Form with Zod
-
 ## Development Commands
 
-### App Development
+### React Native App
 
 ```bash
-# Start development server
+# Install dependencies
+npm install
+
+# Start Expo development server
 npm start
 
-# Start on specific platforms
-npm run ios
-npm run android
-npm run web
+# Run on specific platforms
+npm run ios        # iOS simulator
+npm run android    # Android emulator
+npm run web        # Web browser
 
-# Code quality
-npm run lint      # Check code quality
-npm run format    # Format code with ESLint and Prettier
+# Linting
+npm run lint
 ```
 
-### PocketBase Backend Development
-
-The backend uses PocketBase, a Go-based backend that can be run locally:
+### PocketBase Backend
 
 ```bash
 # Run PocketBase backend locally
-cd pocketbase/base && go run . serve --http="127.0.0.1:8080"
-
-# Or use the makefile
 cd pocketbase && make run
 
-# Run with Docker
+# Run PocketBase with Docker
 cd pocketbase && docker-compose up
+
+# Backend will be available at http://127.0.0.1:8080
 ```
 
-## Project Structure
+## Architecture Overview
 
-### Key Directories
+### Tech Stack
 
-- `app/`: Expo Router screens and navigation
-  - `(auth)/`: Authentication screens (login, signup)
-  - `(protected)/`: App screens requiring authentication
-- `components/`: Reusable React components
-  - `sheets/`: Bottom sheet components
-  - `nativewindui/`: UI components with NativeWind styling
-- `context/`: React context providers
-  - `authContext.tsx`: Authentication state
-  - `seshContext.tsx`: Current poop session state
-  - `locationContext.tsx`: User location handling
-- `hooks/api/`: API interaction hooks with React Query
-  - `usePoopSeshQueries.tsx`: Queries for poop sessions
-  - `useChatMutations.tsx`: Mutations for chat functionality
-- `lib/`: Utility functions, types and configurations
-  - `pocketbaseConfig.tsx`: PocketBase client configuration
+- **Frontend**: Expo Router (React Native) with file-based routing
+- **Backend**: PocketBase (Go) - BaaS with real-time database
+- **State Management**: React Query (@tanstack/react-query) for server state
+- **Storage**: AsyncStorage for local persistence
+- **Styling**: Vanilla React Native StyleSheets and Tamagui
 
-### Main Features
+### Core Architectural Patterns
 
-1. **Authentication**: User signup, login, account management
-2. **Poop Logging**: Record bathroom sessions with "Bristol score" and other metrics
-3. **Social Features**: Chat with friends, see friend activity
-4. **Map View**: View global, personal, or friend activity on a map
-5. **Stats**: Track personal poop statistics and history
+#### Authentication Flow
 
-## Data Models
+Authentication uses a context-based pattern with protected routes:
 
-Key models include:
+1. **PocketBaseProvider** (`lib/pocketbaseConfig.tsx`): Initializes PocketBase client with AsyncAuthStore
+2. **AuthContextProvider** (`context/authContext.tsx`): Manages auth state and provides `useAuth()` hook
+3. **useProtectedRoute**: Automatically redirects based on auth state
+   - Unauthenticated users → `/(auth)` routes
+   - Authenticated users → `/(protected)` routes
 
-- **PooProfile**: User profile data
-- **PoopSesh**: A recorded bathroom session with metadata (time, location, bristol score)
-- **Social connections**: Friend relationships between users
+The auth flow:
+- PocketBase instance initializes on app startup
+- Auth state is persisted to AsyncStorage via AsyncAuthStore
+- Navigation is blocked until PocketBase initialization completes
+- `LoadingScreen` component displays during initialization
 
-## Architecture Notes
+#### Data Layer Pattern
 
-1. The app uses Expo Router for navigation with a split between authenticated and unauthenticated routes
-2. PocketBase handles authentication, data storage, and real-time updates
-3. React Query manages server state with custom hooks in the `hooks/api/` directory
-4. Bottom sheets are used extensively for UI interactions
-5. NativeWind provides Tailwind-like styling capabilities
+All data fetching uses React Query with custom hooks in `hooks/api/`:
 
-## Development Tips
+- **Queries**: `use*Queries.tsx` files (e.g., `usePooProfileQueries.tsx`)
+- **Mutations**: `use*Mutations.tsx` files (e.g., `usePoopSeshMutations.tsx`)
 
-1. Make sure to run the PocketBase backend during development
-2. The app uses environment variables for configuration, particularly `EXPO_PUBLIC_POCKETBASE_URL` 
-3. Authentication state is managed centrally via the auth context
-4. Maps functionality requires a Mapbox account and API key
+Pattern:
+```typescript
+// Query hooks access PocketBase via usePocketBase()
+const { pb } = usePocketBase();
+return useQuery({
+  queryKey: ['collection', id],
+  queryFn: async () => await pb?.collection('name').getOne(id),
+  enabled: !!pb
+});
+```
+
+#### Route Structure
+
+Expo Router uses file-based routing with route groups:
+
+```
+app/
+  _layout.tsx              # Root layout with theme provider
+  (auth)/                  # Unauthenticated routes
+    _layout.tsx
+    index.tsx              # Landing page
+    (login)/               # Login flow
+    (create-account)/      # Signup flow
+  (protected)/             # Protected routes (requires auth)
+    (screens)/             # Main app screens
+    (tabs)/                # Tab navigation
+```
+
+Route groups (parentheses) don't appear in URL paths but provide layout nesting.
+
+### PocketBase Backend Integration
+
+#### Collections & Types
+
+Core data models defined in `lib/types.ts`:
+
+- **users**: Auth records (managed by PocketBase)
+- **poo_profiles**: User profiles (one per user, auto-created via hook)
+- **poop_seshes**: Activity records with location, Bristol score, timestamps
+- **places**: Locations/venues for rating
+- **toilet_ratings**: User ratings for places
+- **follows**: Social following relationships
+- **messages**: Chat/messaging between users
+
+#### Backend Hooks (Go)
+
+Custom logic in `pocketbase/base/main.go`:
+
+1. **OnRecordAfterCreateSuccess("users")**: Auto-creates `poo_profiles` record when user signs up
+2. **OnRecordAfterCreateSuccess("poop_seshes")**: Sends notifications to followers with active sessions
+3. **Custom API Routes**:
+   - `POST /api/delete-account`: Deletes user account with email confirmation
+   - `GET /api/geo-conversion`: Migration helper for coordinate data
+
+#### Environment Variables
+
+PocketBase URL configured via environment variable:
+- `EXPO_PUBLIC_POCKETBASE_URL` (defaults to production: `https://loglog-pocketbase-backend.fly.dev`)
+
+For local development, set in `.env`:
+```
+EXPO_PUBLIC_POCKETBASE_URL=http://127.0.0.1:8080
+```
+
+### State Management Philosophy
+
+- **Server State**: React Query (no Redux/Zustand needed)
+- **Auth State**: Context API via `AuthContextProvider`
+- **PocketBase Client**: Context API via `PocketBaseProvider`
+- **Form State**: Local component state or form libraries
+
+### Real-time Features
+
+PocketBase real-time subscriptions are supported via EventSource polyfill:
+- `react-native-sse` package provides EventSource for React Native
+- Global `EventSource` is polyfilled in `pocketbaseConfig.tsx`
+- Use `pb.collection().subscribe()` for real-time updates
+
+### Key Configuration
+
+- **Expo Config**: `app.json` - includes new architecture enabled, typed routes experiment
+- **TypeScript**: Path alias `@/*` maps to root directory
+- **Theme**: Auto-switching light/dark mode via `useColorScheme` hook
+
+## Important Notes
+
+- The app uses Expo Router v6 with file-based routing
+- New Architecture is enabled (`newArchEnabled: true`)
+- Typed routes experimental feature is enabled
+- React Compiler experimental feature is enabled
+- PocketBase migrations are in `pocketbase/base/migrations/`
+- Bristol score refers to the Bristol Stool Chart for tracking purposes
+- Use vanilla React Native StyleSheets and Tamagui for styling (not NativeWind)

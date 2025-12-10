@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 export function useUpdatePlaceRating(placeId: string) {
   const queryClient = useQueryClient();
@@ -16,13 +16,17 @@ export function useUpdatePlaceRating(placeId: string) {
     mutationFn: async ({ rating }: { rating: number }) => {
       const ratingToUpdate = await pb
         ?.collection('toilet_ratings')
-        .getFirstListItem(`user_id = "${pooProfile?.id}" && place_id = "${placeId}"`)
+        .getFirstListItem(
+          `user_id = "${pooProfile?.id}" && place_id = "${placeId}"`
+        )
         .catch(() => null);
       console.log(ratingToUpdate);
       if (ratingToUpdate) {
-        return await pb?.collection('toilet_ratings').update(ratingToUpdate.id, {
-          rating,
-        });
+        return await pb
+          ?.collection('toilet_ratings')
+          .update(ratingToUpdate.id, {
+            rating,
+          });
       }
       return await pb?.collection('toilet_ratings').create({
         user_id: pooProfile?.id,
@@ -31,7 +35,9 @@ export function useUpdatePlaceRating(placeId: string) {
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['toiletRatingForPlace', placeId] });
+      await queryClient.invalidateQueries({
+        queryKey: ['toiletRatingForPlace', placeId],
+      });
     },
   });
 }

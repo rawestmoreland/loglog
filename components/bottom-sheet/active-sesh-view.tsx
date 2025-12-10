@@ -1,0 +1,456 @@
+import CountUpTimer from '@/components/count-up-timer';
+import { useSesh } from '@/context/seshContext';
+import { toast } from 'burnt';
+import { memo, useEffect, useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Pressable,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import {
+  Button,
+  Image,
+  Input,
+  Label,
+  ListItem,
+  Separator,
+  Square,
+  Switch,
+  Text,
+  TextArea,
+  XStack,
+  YStack,
+} from 'tamagui';
+
+import { BRISTOL_SCORE_OPTIONS } from '@/constants';
+import { SheetType } from '@/constants/sheet';
+import { Colors } from '@/constants/theme';
+import { useLocation } from '@/context/locationContext';
+import { useUpdatePlaceRating } from '@/hooks/api/useToiletRatingsMutations';
+import { useToiletRatingForPlace } from '@/hooks/api/useToiletRatingsQueries';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PoopSesh } from '@/lib/types';
+import {
+  Check,
+  ChevronRight,
+  Circle,
+  CircleHelp,
+  Toilet,
+  X,
+} from '@tamagui/lucide-icons';
+import { router } from 'expo-router';
+
+function ActiveSeshViewComponent({
+  modal = false,
+  isPercent = false,
+  innerOpen = false,
+  setInnerOpen = () => {},
+  setOpen = () => {},
+  setSheetType,
+}: {
+  modal?: boolean;
+  isPercent?: boolean;
+  innerOpen?: boolean;
+  setInnerOpen?: (open: boolean) => void;
+  setOpen?: (open: boolean) => void;
+  setSheetType?: (type: SheetType) => void;
+}) {
+  const scheme = useColorScheme() ?? 'light';
+
+  const { activeSesh, endSesh, updateActiveSesh } = useSesh();
+
+  const { mutateAsync: updateToiletRating } = useUpdatePlaceRating(
+    activeSesh?.place?.id ?? ''
+  );
+  const { data: toiletRating } = useToiletRatingForPlace(
+    activeSesh?.place_id || ''
+  );
+
+  const [placeViewOpen, setPlaceViewOpen] = useState(false);
+  const [revelations, setRevelations] = useState('');
+  const [bristolScore, setBristolScore] = useState({
+    value: 0,
+    label: 'No Score Yet',
+    image: null,
+  });
+
+  const handleEndSesh = async () => {
+    await endSesh();
+    setSheetType?.(SheetType.HOME);
+    toast({
+      title: 'Sesh ended',
+      message: 'Your sesh has been ended',
+      preset: 'done',
+      haptic: 'success',
+    });
+  };
+
+  const handleRating = async (rating: number) => {
+    await updateToiletRating({ rating });
+  };
+
+  return placeViewOpen ? (
+    <PlaceView
+      activeSesh={activeSesh!}
+      onClose={() => setPlaceViewOpen(false)}
+    />
+  ) : (
+    <YStack gap='$2' mb='$4'>
+      <XStack justify='space-between'>
+        <Text fontWeight={'bold'}>Log Details</Text>
+        <XStack items='center' gap='$2'>
+          <Label size='$2' htmlFor='public-log'>
+            Public log?
+          </Label>
+          <Separator minH={20} vertical />
+          <Switch
+            id='public-log'
+            size='$2'
+            defaultChecked={activeSesh?.is_public}
+            onCheckedChange={(value) => updateActiveSesh({ is_public: value })}
+          >
+            <Switch.Thumb animation='quicker' />
+          </Switch>
+        </XStack>
+      </XStack>
+      <CountUpTimer startTime={(activeSesh?.started as string) ?? ''} />
+      <YStack>
+        <Label>Revelations</Label>
+        <TextArea
+          value={revelations}
+          onChangeText={setRevelations}
+          placeholder='How will we change the world?'
+          size='$4'
+        />
+      </YStack>
+      <YStack gap='$2'>
+        <ListItem
+          title={
+            activeSesh?.place?.name ||
+            activeSesh?.custom_place_name ||
+            'Name your toilet'
+          }
+          icon={Toilet}
+          iconAfter={ChevronRight}
+          onPress={() => setPlaceViewOpen(true)}
+        />
+        {activeSesh?.place && (
+          <XStack items='center' justify='space-between'>
+            <Label htmlFor='rate-your-toilet'>Rate your toilet</Label>
+            <XStack id='rate-your-toilet' gap='$2'>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Pressable
+                  key={index}
+                  onPress={() => {
+                    handleRating(index + 1);
+                  }}
+                >
+                  <Icon
+                    name='star'
+                    size={18}
+                    color={
+                      index < (toiletRating?.rating || 0)
+                        ? (Colors[scheme].primary as string)
+                        : (Colors[scheme].border as string)
+                    }
+                  />
+                </Pressable>
+              ))}
+            </XStack>
+          </XStack>
+        )}
+      </YStack>
+      <XStack items='center' justify='space-between'>
+        <Label htmlFor='company-time'>On company time?</Label>
+        <Switch
+          id='company-time'
+          size='$3'
+          defaultChecked={activeSesh?.company_time}
+          onCheckedChange={(value) => updateActiveSesh({ company_time: value })}
+        >
+          <Switch.Thumb animation='quicker' />
+        </Switch>
+      </XStack>
+      <YStack gap='$2'>
+        <XStack items='center' gap='$2'>
+          <Text>Bristol Score:</Text>
+          <Button
+            chromeless
+            size='$3'
+            icon={CircleHelp}
+            onPress={() => router.push('/bristol')}
+          />
+        </XStack>
+        <XStack gap='$2' flexWrap='wrap'>
+          {BRISTOL_SCORE_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() =>
+                setBristolScore({
+                  value: option.value,
+                  label: option.label,
+                  image: option.image,
+                })
+              }
+              style={{
+                borderWidth: 1,
+                padding: 5,
+                borderRadius: 10,
+                backgroundColor:
+                  bristolScore.value === option.value
+                    ? (Colors[scheme].primary as string)
+                    : 'transparent',
+              }}
+            >
+              <Image
+                source={option.image}
+                style={{
+                  width: 50,
+                  height: 35,
+                }}
+              />
+            </TouchableOpacity>
+          ))}
+        </XStack>
+      </YStack>
+      <Button mt='$4' theme='accent' onPress={handleEndSesh}>
+        Pinch it off
+      </Button>
+    </YStack>
+  );
+}
+
+const PlaceView = ({
+  activeSesh,
+  onClose,
+}: {
+  activeSesh: PoopSesh;
+  onClose: () => void;
+}) => {
+  const foreground = useThemeColor({}, 'foreground');
+
+  const [toiletName, setToiletName] = useState('');
+  const [toiletResults, setToiletResults] = useState<any>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<any>(null);
+  const [locationType, setLocationType] = useState<
+    | 'house'
+    | 'office'
+    | 'school'
+    | 'gas_station'
+    | 'gym'
+    | 'hotel'
+    | 'restaurant'
+    | 'bar'
+    | 'cafe'
+    | 'other'
+  >((activeSesh?.place?.place_type as any) || 'house');
+  const scheme = useColorScheme() ?? 'light';
+  const { userLocation } = useLocation();
+  const { updateActiveSesh } = useSesh();
+  const { pb } = usePocketBase();
+
+  const handlePlaceSelect = async (place: any) => {
+    if (!selectedPlace) {
+      if (toiletName) {
+        // Update the active sesh with the toilet name if there's no place selected
+        await updateActiveSesh({
+          place_id: null,
+          place_type: locationType,
+          custom_place_name: toiletName,
+        });
+      }
+    } else {
+      // Update the active sesh with the place
+      const existingPlace = await pb
+        ?.collection('places')
+        .getFirstListItem(`mapbox_place_id = "${place.properties?.mapbox_id}"`)
+        .catch(() => null);
+      if (!existingPlace) {
+        const newPlace = await pb
+          ?.collection('places')
+          .create({
+            mapbox_place_id: place.properties?.mapbox_id,
+            name: place.properties?.name,
+            address: place.properties?.address,
+            place_formatted: place.properties?.place_formatted,
+            location: {
+              lat: place.geometry?.coordinates[1],
+              lon: place.geometry?.coordinates[0],
+            },
+            place_type: locationType,
+          })
+          .catch(() => null);
+        if (newPlace) {
+          await updateActiveSesh({
+            place_id: newPlace.id,
+            place_type: locationType,
+          });
+        }
+      } else {
+        await updateActiveSesh({
+          custom_place_name: null,
+          place_id: existingPlace.id,
+          place_type: locationType,
+        });
+      }
+    }
+    onClose();
+  };
+
+  useEffect(() => {
+    // Debounce the toilet name before we do any searching
+    const debouncedSearch = setTimeout(async () => {
+      if (!userLocation || !toiletName) return;
+      setIsSearching(true);
+      const response = await fetch(
+        `https://api.mapbox.com/search/searchbox/v1/forward?q=${toiletName}&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}&proximity=${userLocation.lon},${userLocation.lat}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setToiletResults(data.features);
+        setIsSearching(false);
+      } else {
+        setIsSearching(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(debouncedSearch);
+  }, [toiletName]);
+
+  const screenWidth = Dimensions.get('window').width;
+  // Account for container padding (approximately 32px total) and margins between items
+  const itemWidth = (screenWidth - 40) / 3 - 2;
+  const fullWidth = screenWidth - 40 - 2; // Full width minus container padding and margins
+
+  const locationTypes = [
+    { name: 'House' },
+    { name: 'Office' },
+    { name: 'School' },
+    { name: 'Gas Station' },
+    { name: 'Gym' },
+    { name: 'Hotel' },
+    { name: 'Restaurant' },
+    { name: 'Bar' },
+    { name: 'Cafe' },
+    { name: 'Other+' },
+  ];
+
+  return (
+    <YStack gap='$2'>
+      <XStack justify='space-between' items='center'>
+        <Button onPress={onClose} icon={X} circular theme='yellow' size='$2' />
+        {(toiletName || selectedPlace) && (
+          <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
+            <Text style={{ color: foreground as string }}>Save</Text>
+          </Pressable>
+        )}
+      </XStack>
+      <FlatList
+        data={locationTypes}
+        renderItem={({ item, index }) => {
+          // Check if this is the last item and it's alone in its row
+          // If length % 3 === 1, the last row has exactly 1 item
+          const isLastItem = index === locationTypes.length - 1;
+          const isAloneInRow = isLastItem && locationTypes.length % 3 === 1;
+          const width = isAloneInRow ? fullWidth : itemWidth;
+
+          return (
+            <Pressable
+              style={{
+                width: width,
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: 1,
+                borderWidth: 1,
+                padding: 5,
+                borderRadius: 10,
+                borderColor:
+                  locationType === item.name.toLowerCase()
+                    ? (Colors[scheme].primary as string)
+                    : (Colors[scheme].border as string),
+                backgroundColor: Colors[scheme].card as string,
+              }}
+              onPress={() => setLocationType(item.name.toLowerCase() as any)}
+            >
+              <Text numberOfLines={2} adjustsFontSizeToFit>
+                {item.name}
+              </Text>
+            </Pressable>
+          );
+        }}
+        keyExtractor={(item) => item.name}
+        ItemSeparatorComponent={() => <View style={{ height: 2, width: 2 }} />}
+        numColumns={3}
+        scrollEnabled={false}
+        contentContainerStyle={{ paddingBottom: 16 }}
+      />
+      <YStack gap='$2'>
+        <Text>Toilet Name</Text>
+        <Input
+          placeholder='Toilet Name'
+          value={toiletName}
+          onChangeText={setToiletName}
+        />
+      </YStack>
+      <View style={{ height: 300 }}>
+        <FlatList
+          data={toiletResults}
+          ListEmptyComponent={
+            isSearching ? <Text>Searching...</Text> : <View />
+          }
+          ItemSeparatorComponent={() => <Square size={10} />}
+          renderItem={({ item }) => (
+            <ListItem
+              icon={() => (
+                <View
+                  style={{
+                    backgroundColor: Colors[scheme].primary as string,
+                    borderColor: Colors[scheme].primary as string,
+                    borderWidth: 1,
+                    borderRadius: 10,
+                    padding: 5,
+                  }}
+                >
+                  <Toilet size={20} />
+                </View>
+              )}
+              title={item.properties?.name}
+              subTitle={item.properties?.address}
+              onPress={() => setSelectedPlace(item)}
+              iconAfter={
+                item.properties?.mapbox_id ===
+                selectedPlace?.properties?.mapbox_id ? (
+                  <View
+                    style={{
+                      borderColor: Colors[scheme].primary as string,
+                      backgroundColor: Colors[scheme].primary as string,
+                      borderRadius: '50%',
+                      padding: 5,
+                    }}
+                  >
+                    <Check size={14} color='black' />
+                  </View>
+                ) : (
+                  <Circle size={20} />
+                )
+              }
+            />
+          )}
+          keyExtractor={(item) => item.properties?.mapbox_id}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          showsVerticalScrollIndicator
+        />
+      </View>
+    </YStack>
+  );
+};
+
+// Memoize to prevent re-renders when parent re-renders but props haven't changed
+// Note: Component will still re-render when useSesh() context changes
+export const ActiveSeshView = memo(ActiveSeshViewComponent);

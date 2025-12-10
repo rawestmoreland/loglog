@@ -6,10 +6,21 @@ export const LocationContext = createContext<{
   userLocation: { lat: number; lon: number };
   setUserLocation: (location: { lat: number; lon: number }) => void;
   isLoadingLocation: boolean;
-}>({ userLocation: { lat: 0, lon: 0 }, setUserLocation: () => {}, isLoadingLocation: false });
+}>({
+  userLocation: { lat: 0, lon: 0 },
+  setUserLocation: () => {},
+  isLoadingLocation: false,
+});
 
-export function LocationContextProvider({ children }: { children: React.ReactNode }) {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number }>({
+export function LocationContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lon: number;
+  }>({
     lat: 37.783333,
     lon: -122.416667,
   });
@@ -21,10 +32,14 @@ export function LocationContextProvider({ children }: { children: React.ReactNod
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setIsLoadingLocation(false);
-        Alert.alert('Permission not granted', 'Please grant permission to access your location');
+        Alert.alert(
+          'Permission not granted',
+          'Please grant permission to access your location'
+        );
         return;
       }
       const location = await Location.getCurrentPositionAsync();
+
       setUserLocation({
         lat: location.coords.latitude,
         lon: location.coords.longitude,
@@ -36,7 +51,9 @@ export function LocationContextProvider({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <LocationContext.Provider value={{ userLocation, setUserLocation, isLoadingLocation }}>
+    <LocationContext.Provider
+      value={{ userLocation, setUserLocation, isLoadingLocation }}
+    >
       {children}
     </LocationContext.Provider>
   );
@@ -45,7 +62,9 @@ export function LocationContextProvider({ children }: { children: React.ReactNod
 export function useLocation() {
   const context = useContext(LocationContext);
   if (!context) {
-    throw new Error('useLocation must be used within a LocationContextProvider');
+    throw new Error(
+      'useLocation must be used within a LocationContextProvider'
+    );
   }
   return context;
 }

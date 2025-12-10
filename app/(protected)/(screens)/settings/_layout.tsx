@@ -1,21 +1,17 @@
 import { Stack, useRouter } from 'expo-router';
+import { Button } from 'react-native';
 
-import { Button } from '~/components/nativewindui/Button';
-import { Text } from '~/components/nativewindui/Text';
-
-export default function ChatLayout() {
+export default function SettingsLayout() {
   const router = useRouter();
 
   return (
     <Stack>
       <Stack.Screen
-        name="index"
+        name='index'
         options={{
           title: 'Settings',
           headerRight: () => (
-            <Button variant="plain" onPress={() => router.back()} className="items-center gap-2">
-              <Text>Done</Text>
-            </Button>
+            <Button onPress={() => router.back()} title='Back' />
           ),
         }}
       />

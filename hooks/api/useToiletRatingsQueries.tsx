@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 export function useToiletRatings() {
   const { pooProfile } = useAuth();
@@ -28,7 +28,9 @@ export function useToiletRatingForPlace(placeId: string) {
     queryFn: () =>
       pb
         ?.collection('toilet_ratings')
-        .getFirstListItem(`user_id="${pooProfile?.id}" && place_id = "${placeId}"`),
+        .getFirstListItem(
+          `user_id="${pooProfile?.id}" && place_id = "${placeId}"`
+        ),
     enabled: !!pooProfile?.id && !!placeId,
   });
 }

@@ -1,15 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createContext, useContext, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import { Alert } from 'react-native';
 import { z } from 'zod';
 
-import { useLocation } from './locationContext';
-import { useNotification } from './notificationContext';
+import { useLocation } from '@/context/locationContext';
+import { useNotification } from '@/context/notificationContext';
 
-import { useStartPoopSesh, useUpdatePoopSesh } from '~/hooks/api/usePoopSeshMutations';
-import { useActivePoopSesh } from '~/hooks/api/usePoopSeshQueries';
-import { PoopSesh } from '~/lib/types';
+import {
+  useStartPoopSesh,
+  useUpdatePoopSesh,
+} from '@/hooks/api/usePoopSeshMutations';
+import { useActivePoopSesh } from '@/hooks/api/usePoopSeshQueries';
+import { PoopSesh } from '@/lib/types';
 
 export const SeshContext = createContext<{
   activeSesh: PoopSesh | null | undefined;
@@ -22,17 +31,7 @@ export const SeshContext = createContext<{
   updateActiveSesh: (payload: Partial<PoopSesh>) => Promise<void>;
   isSeshPending: boolean;
 }>({
-  activeSesh: {
-    is_public: false,
-    location: {
-      coordinates: {
-        lat: 0,
-        lon: 0,
-      },
-    },
-    started: new Date(),
-    company_time: false,
-  },
+  activeSesh: null,
   selectedSesh: null,
   setSelectedSesh: () => {},
   isLoadingActiveSesh: false,
@@ -43,10 +42,15 @@ export const SeshContext = createContext<{
   isSeshPending: false,
 });
 
-export const SeshContextProvider = ({ children }: { children: React.ReactNode }) => {
+export const SeshContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const startSeshMutation = useStartPoopSesh();
   const updateSeshMutation = useUpdatePoopSesh();
-  const { data: activeSesh, isLoading: isLoadingActiveSesh } = useActivePoopSesh();
+  const { data: activeSesh, isLoading: isLoadingActiveSesh } =
+    useActivePoopSesh();
 
   const { scheduleNotification, cancelNotification } = useNotification();
 
@@ -67,7 +71,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
 
   const { userLocation } = useLocation();
 
-  const startSesh = async () => {
+  const startSesh = useCallback(async () => {
     try {
       await startSeshMutation.mutateAsync({
         is_public: true,
@@ -89,7 +93,7 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
       const sendAt = new Date(Date.now() + 1000 * 60 * 10);
 
       console.log('About to schedule notification for:', sendAt);
-      
+
       // Schedule a notification for 10 minutes from now
       try {
         const notificationId = await scheduleNotification({
@@ -98,7 +102,10 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
           title: 'Are you ok?',
           body: "You've been sitting there for a while. Are you ok?",
         });
-        console.log('Notification scheduled successfully with ID:', notificationId);
+        console.log(
+          'Notification scheduled successfully with ID:',
+          notificationId
+        );
       } catch (notificationError) {
         console.error('Failed to schedule notification:', notificationError);
       }
@@ -110,25 +117,28 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
         Alert.alert('We had trouble starting the poop sesh');
       }
     }
-  };
+  }, [startSeshMutation, userLocation, scheduleNotification]);
 
-  const updateActiveSesh = async (payload: Partial<PoopSesh>) => {
-    if (!activeSesh) return;
+  const updateActiveSesh = useCallback(
+    async (payload: Partial<PoopSesh>) => {
+      if (!activeSesh) return;
 
-    try {
-      await updateSeshMutation.mutateAsync({
-        poopSesh: {
-          ...activeSesh,
-          ...payload,
-        },
-      });
-    } catch (error) {
-      console.error(error);
-      Alert.alert('We had trouble updating the poop sesh');
-    }
-  };
+      try {
+        await updateSeshMutation.mutateAsync({
+          poopSesh: {
+            ...activeSesh,
+            ...payload,
+          },
+        });
+      } catch (error) {
+        console.error(error);
+        Alert.alert('We had trouble updating the poop sesh');
+      }
+    },
+    [activeSesh, updateSeshMutation]
+  );
 
-  const endSesh = async () => {
+  const endSesh = useCallback(async () => {
     if (!activeSesh) return;
 
     try {
@@ -146,23 +156,37 @@ export const SeshContextProvider = ({ children }: { children: React.ReactNode })
       console.error(error);
       Alert.alert('We had trouble ending the poop sesh');
     }
-  };
+  }, [activeSesh, updateSeshMutation, cancelNotification, poopForm]);
+
+  const contextValue = useMemo(
+    () => ({
+      activeSesh,
+      isLoadingActiveSesh,
+      startSesh,
+      endSesh,
+      poopForm,
+      updateActiveSesh,
+      selectedSesh,
+      setSelectedSesh,
+      isSeshPending:
+        startSeshMutation.isPending || updateSeshMutation.isPending,
+    }),
+    [
+      activeSesh,
+      isLoadingActiveSesh,
+      startSesh,
+      endSesh,
+      poopForm,
+      updateActiveSesh,
+      selectedSesh,
+      setSelectedSesh,
+      startSeshMutation.isPending,
+      updateSeshMutation.isPending,
+    ]
+  );
 
   return (
-    <SeshContext.Provider
-      value={{
-        activeSesh,
-        isLoadingActiveSesh,
-        startSesh,
-        endSesh,
-        poopForm,
-        updateActiveSesh,
-        selectedSesh,
-        setSelectedSesh,
-        isSeshPending: startSeshMutation.isPending || updateSeshMutation.isPending,
-      }}>
-      {children}
-    </SeshContext.Provider>
+    <SeshContext.Provider value={contextValue}>{children}</SeshContext.Provider>
   );
 };
 

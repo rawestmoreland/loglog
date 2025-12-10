@@ -1,34 +1,34 @@
-import MapboxGL, { Camera, MapView } from '@rnmapbox/maps';
-import * as Location from 'expo-location';
+import { useAuth } from '@/context/authContext';
+import { useLocation } from '@/context/locationContext';
+import { useMapViewContext } from '@/context/mapViewContext';
+import { useSesh } from '@/context/seshContext';
+import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
+import { usePublicPoopSeshHistory } from '@/hooks/api/usePoopSeshQueries';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import MapboxGL from '@rnmapbox/maps';
 import { isEmpty } from 'lodash';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, View } from 'react-native';
-import { FAB } from 'react-native-paper';
+import { useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { useAuth } from '~/context/authContext';
-import { useLocation } from '~/context/locationContext';
-import { useMapViewContext } from '~/context/mapViewContext';
-import { useSesh } from '~/context/seshContext';
-import { useFollowing } from '~/hooks/api/usePoopPalsQueries';
-import { usePublicPoopSeshHistory } from '~/hooks/api/usePoopSeshQueries';
-import { useColorScheme } from '~/lib/useColorScheme';
-import { COLORS } from '~/theme/colors';
+const POOP_MARKER = require('@/assets/images/poo-pile.png');
 
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-const pixelSnapPoint = SCREEN_HEIGHT * 0.2;
-
-const POOP_MARKER = require('~/assets/poo-pile.png');
-
-export default function HomeScreen() {
-  const { colors } = useColorScheme();
+export default function ProtectedIndexScreen() {
+  const primary = useThemeColor({}, 'primary');
 
   const { pooProfile } = useAuth();
 
   const { poopsToView, palSelected } = useMapViewContext();
+  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
-  const [cameraCenter, setCameraCenter] = useState<{ lon: number; lat: number } | null>(null);
+  const { setSelectedSesh } = useSesh();
+
+  const mapRef = useRef<MapboxGL.MapView>(null);
+  const cameraRef = useRef<MapboxGL.Camera>(null);
+  const [cameraCenter, setCameraCenter] = useState<{
+    lon: number;
+    lat: number;
+  } | null>(null);
   const [cameraZoom, setCameraZoom] = useState<number | null>(null);
-  const [hasInitialBounds, setHasInitialBounds] = useState(false);
 
   const [viewportBounds, setViewportBounds] = useState<{
     minLon: number;
@@ -37,18 +37,18 @@ export default function HomeScreen() {
     maxLat: number;
   } | null>(null);
 
-  const { setSelectedSesh } = useSesh();
+  const { userLocation, isLoadingLocation } = useLocation();
 
-  const {
-    data: publicHistory,
-    isLoading: isLoadingPublicHistory,
-    refetch: refetchPublicHistory,
-  } = usePublicPoopSeshHistory({
-    enabled: !!viewportBounds,
-    viewportBounds: viewportBounds ?? undefined,
-  });
+  const { data: publicHistory, isLoading: isLoadingPublicHistory } =
+    usePublicPoopSeshHistory();
 
-  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
+  const palHistory = useMemo(() => {
+    if (!palSelected || !viewportBounds || !publicHistory) {
+      return [];
+    }
+
+    return publicHistory.filter((poop) => poop.poo_profile === palSelected);
+  }, [palSelected, viewportBounds, publicHistory]);
 
   const myHistory = useMemo(() => {
     if (!viewportBounds || !publicHistory || !pooProfile) {
@@ -65,27 +65,16 @@ export default function HomeScreen() {
 
     const followingIds = following.map((friend) => friend.following);
 
-    return publicHistory.filter((poop) => followingIds.includes(poop.poo_profile!));
+    return publicHistory.filter((poop) =>
+      followingIds.includes(poop.poo_profile!)
+    );
   }, [isLoadingFollowing, following, publicHistory]);
-
-  const palHistory = useMemo(() => {
-    if (!palSelected || !viewportBounds || !publicHistory) {
-      return [];
-    }
-
-    return publicHistory.filter((poop) => poop.poo_profile === palSelected);
-  }, [palSelected, viewportBounds, publicHistory]);
-
-  const cameraRef = useRef<Camera>(null);
-  const mapRef = useRef<MapView>(null);
-
-  const { userLocation, isLoadingLocation, setUserLocation } = useLocation();
 
   const allHistory = useMemo(() => {
     const combined = [...(myHistory ?? []), ...(publicHistory ?? [])];
     const uniqueMap = new Map(combined.map((item) => [item.id, item]));
     return Array.from(uniqueMap.values());
-  }, [myHistory, publicHistory, poopsToView]);
+  }, [myHistory, publicHistory]);
 
   const historyToMap = useMemo(() => {
     switch (poopsToView) {
@@ -99,7 +88,14 @@ export default function HomeScreen() {
       default:
         return allHistory;
     }
-  }, [myHistory, publicHistory, poopsToView, allHistory, palSelected]);
+  }, [
+    poopsToView,
+    myHistory,
+    palSelected,
+    friendsHistory,
+    palHistory,
+    allHistory,
+  ]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {
@@ -115,44 +111,8 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    const setBounds = async () => {
-      // Set the bounds based on 20km radius from the user's location
-      setViewportBounds({
-        minLon: userLocation.lon - 0.1,
-        minLat: userLocation.lat - 0.1,
-        maxLon: userLocation.lon + 0.1,
-        maxLat: userLocation.lat + 0.1,
-      });
-      setHasInitialBounds(true);
-    };
-    if (userLocation) {
-      setBounds();
-    }
-  }, [userLocation]);
-
-  if (isLoadingLocation || isLoadingPublicHistory || !hasInitialBounds || !pooProfile) {
-    return (
-      <View
-        style={[StyleSheet.absoluteFillObject, styles.loadingContainer]}
-        className="bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  const handleCenterCamera = (location?: { lat: number; lon: number }) => {
-    if (userLocation && cameraRef.current) {
-      cameraRef.current?.setCamera({
-        centerCoordinate: [location?.lon ?? userLocation.lon, location?.lat ?? userLocation.lat],
-        zoomLevel: 15,
-        animationDuration: 1000,
-      });
-    }
-  };
-
   return (
-    <View style={[styles.page, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
       <MapboxGL.MapView
         ref={mapRef}
         style={styles.map}
@@ -179,9 +139,10 @@ export default function HomeScreen() {
         rotateEnabled={false}
         pitchEnabled={false}
         compassEnabled={false}
-        projection="globe"
-        styleURL="mapbox://styles/westmorelandcreative/cm7t35gm4003k01s06j3ubktu"
-        onLongPress={() => console.log('long press')}>
+        projection='globe'
+        styleURL='mapbox://styles/westmorelandcreative/cm7t35gm4003k01s06j3ubktu'
+        onLongPress={() => console.log('long press')}
+      >
         <MapboxGL.Images
           images={{
             'poo-pile': POOP_MARKER,
@@ -197,9 +158,9 @@ export default function HomeScreen() {
           }
           animationDuration={2000}
         />
-        <MapboxGL.LocationPuck puckBearing="heading" puckBearingEnabled />
+        <MapboxGL.LocationPuck puckBearing='heading' puckBearingEnabled />
         <MapboxGL.ShapeSource
-          id="poopSource"
+          id='poopSource'
           cluster
           clusterMaxZoomLevel={14}
           clusterRadius={50}
@@ -208,7 +169,9 @@ export default function HomeScreen() {
             type: 'FeatureCollection',
             features:
               historyToMap
-                ?.filter((poop) => !isEmpty(poop.coords) && poop.started && poop.ended)
+                ?.filter(
+                  (poop) => !isEmpty(poop.coords) && poop.started && poop.ended
+                )
                 .map((poop) => ({
                   type: 'Feature',
                   geometry: {
@@ -219,21 +182,23 @@ export default function HomeScreen() {
                     ...poop,
                   },
                 })) || [],
-          }}>
+          }}
+        >
           {/* White circle background for clusters */}
           <MapboxGL.CircleLayer
-            id="clustersBackground"
+            id='clustersBackground'
             filter={['has', 'point_count']}
             style={{
               circleColor: 'white',
               circleRadius: 30,
               circleStrokeWidth: 2,
-              circleStrokeColor: colors.primary,
+              // @ts-ignore
+              circleStrokeColor: primary,
             }}
           />
           {/* Poop emoji for clusters */}
           <MapboxGL.SymbolLayer
-            id="clusteredPoints"
+            id='clusteredPoints'
             filter={['has', 'point_count']}
             style={{
               iconImage: 'poo-pile',
@@ -247,7 +212,7 @@ export default function HomeScreen() {
             }}
           />
           <MapboxGL.SymbolLayer
-            id="singlePoint"
+            id='singlePoint'
             filter={['!', ['has', 'point_count']]}
             style={{
               iconImage: 'poo-pile',
@@ -256,50 +221,12 @@ export default function HomeScreen() {
           />
         </MapboxGL.ShapeSource>
       </MapboxGL.MapView>
-      <FAB
-        size="small"
-        style={{
-          position: 'absolute',
-          top: SCREEN_HEIGHT - pixelSnapPoint - 130,
-          right: 16,
-          margin: 16,
-          backgroundColor: colors.primary,
-        }}
-        icon="refresh"
-        color={COLORS.light.foreground}
-        onPress={async () => {
-          refetchPublicHistory();
-        }}
-      />
-      <FAB
-        size="small"
-        style={{
-          position: 'absolute',
-          top: SCREEN_HEIGHT - pixelSnapPoint - 80,
-          right: 16,
-          margin: 16,
-          backgroundColor: colors.primary,
-        }}
-        icon="crosshairs-gps"
-        color={COLORS.light.foreground}
-        onPress={async () => {
-          const currentLocation = await Location.getCurrentPositionAsync();
-          setUserLocation({
-            lat: currentLocation.coords.latitude,
-            lon: currentLocation.coords.longitude,
-          });
-          handleCenterCamera({
-            lat: currentLocation.coords.latitude,
-            lon: currentLocation.coords.longitude,
-          });
-        }}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  page: {
+  container: {
     flex: 1,
     position: 'relative',
     justifyContent: 'center',
@@ -309,22 +236,5 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     width: '100%',
-  },
-  callout: {
-    padding: 16,
-    borderRadius: 8,
-    minWidth: 200,
-    maxWidth: 200,
-    transform: [{ translateX: -75 }, { translateY: 75 }],
-  },
-  fab: {
-    position: 'absolute',
-    top: 48,
-    right: 16,
-    margin: 16,
-  },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

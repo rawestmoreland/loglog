@@ -1,179 +1,379 @@
-import { useLocalSearchParams } from 'expo-router';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Image, Platform, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Alert, Image, Platform, StyleSheet, Text, View } from 'react-native';
 import {
   KeyboardAwareScrollView,
   KeyboardController,
   KeyboardStickyView,
 } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { z } from 'zod';
+
+import { TextInput } from '@/components/ui/text-input';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { Button as TamaguiButton } from 'tamagui';
 
 import useSignUp from './hook/useSignUp';
 
-import { Button } from '~/components/nativewindui/Button';
-import { Form, FormItem, FormSection } from '~/components/nativewindui/Form';
-import { Text } from '~/components/nativewindui/Text';
-import { TextField } from '~/components/nativewindui/TextField';
+const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
-const LOGO_SOURCE = {
-  uri: 'https://nativewindui.com/_next/image?url=/_next/static/media/logo.28276aeb.png&w=2048&q=75',
-};
+const signUpSchema = z
+  .object({
+    email: z.email('A valid email is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters long'),
+    passwordConfirm: z
+      .string()
+      .min(8, 'Password must be at least 8 characters long'),
+    codeName: z.string().min(1, 'Code name is required'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.passwordConfirm) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Passwords do not match',
+        path: ['passwordConfirm'],
+      });
+    }
+  });
 
 export default function CredentialsScreen() {
   const insets = useSafeAreaInsets();
+  const backgroundColor = useThemeColor({}, 'background');
+  const cardBackground = useThemeColor({}, 'card');
+  const textColor = useThemeColor({}, 'foreground');
+  const mutedForeground = useThemeColor({}, 'mutedForeground');
+
+  const { codeName } = useLocalSearchParams();
+
   const [focusedTextField, setFocusedTextField] = React.useState<
     'email' | 'password' | 'confirm-password' | null
   >(null);
 
-  const { codeName } = useLocalSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      passwordConfirm: '',
+      codeName: (codeName as string) || '',
+    },
+  });
 
   const { signUp } = useSignUp();
 
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
+  useEffect(() => {
+    if (codeName) {
+      form.setValue('codeName', codeName as string);
+    }
+  }, [codeName, form]);
 
-  const handleCreateAccount = async () => {
+  const handleCreateAccount = async (data: z.infer<typeof signUpSchema>) => {
+    if (!form.formState.isValid) {
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      const response = await signUp({
-        email,
-        password,
-        passwordConfirm: confirmPassword,
-        codeName: codeName as string,
+      await signUp({
+        email: data.email,
+        password: data.password,
+        passwordConfirm: data.passwordConfirm,
+        codeName: data.codeName,
       });
     } catch (error) {
-      console.error('Create account error:', error);
+      if (error instanceof Error) {
+        Alert.alert(
+          'There was an issue while creating your account. Please try again.'
+        );
+      } else {
+        Alert.alert(
+          'There was an issue while creating your account. Please try again.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <View className="ios:bg-card flex-1" style={{ paddingBottom: insets.bottom }}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: Platform.select({
+            ios: cardBackground,
+            default: backgroundColor,
+          }),
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
+      <Stack.Screen
+        options={{
+          title: 'Create Account',
+          headerShadowVisible: false,
+        }}
+      />
       <KeyboardAwareScrollView
-        bottomOffset={Platform.select({ ios: 8 })}
+        bottomOffset={Platform.select({ ios: 175 })}
         bounces={false}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="ios:pt-12 pt-20">
-        <View className="ios:px-12 flex-1 px-8">
-          <View className="items-center pb-1">
+        keyboardDismissMode='interactive'
+        keyboardShouldPersistTaps='handled'
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
             <Image
               source={LOGO_SOURCE}
-              className="ios:h-12 ios:w-12 h-8 w-8"
-              resizeMode="contain"
+              style={styles.logo}
+              resizeMode='contain'
             />
-            <Text variant="title1" className="ios:font-bold pb-1 pt-4 text-center">
-              {Platform.select({ ios: 'Set up your credentials', default: 'Create Account' })}
+            <Text style={[styles.title, { color: textColor }]}>
+              {Platform.select({
+                ios: 'Set up your credentials',
+                default: 'Create Account',
+              })}
             </Text>
             {Platform.OS !== 'ios' && (
-              <Text className="ios:text-sm text-center text-muted-foreground">
+              <Text style={[styles.subtitle, { color: mutedForeground }]}>
                 Set up your credentials
               </Text>
             )}
           </View>
-          <View className="ios:pt-4 pt-6">
-            <Form className="gap-2">
-              <FormSection className="ios:bg-background">
-                <FormItem>
-                  <TextField
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder={Platform.select({ ios: 'Email', default: '' })}
-                    label={Platform.select({ ios: undefined, default: 'Email' })}
-                    onSubmitEditing={() => KeyboardController.setFocusTo('next')}
-                    submitBehavior="submit"
-                    autoFocus
-                    onFocus={() => setFocusedTextField('email')}
-                    onBlur={() => setFocusedTextField(null)}
-                    keyboardType="email-address"
-                    textContentType="emailAddress"
-                    autoCapitalize="none"
-                    returnKeyType="next"
-                  />
-                </FormItem>
-                <FormItem>
-                  <TextField
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder={Platform.select({ ios: 'Password', default: '' })}
-                    label={Platform.select({ ios: undefined, default: 'Password' })}
-                    onSubmitEditing={() => KeyboardController.setFocusTo('next')}
-                    onFocus={() => setFocusedTextField('password')}
-                    onBlur={() => setFocusedTextField(null)}
-                    submitBehavior="submit"
-                    secureTextEntry
-                    returnKeyType="next"
-                    textContentType="newPassword"
-                  />
-                </FormItem>
-                <FormItem>
-                  <TextField
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder={Platform.select({ ios: 'Confirm password', default: '' })}
-                    label={Platform.select({ ios: undefined, default: 'Confirm password' })}
-                    onFocus={() => setFocusedTextField('confirm-password')}
-                    onBlur={() => setFocusedTextField(null)}
-                    onSubmitEditing={async () => {
-                      if (!email || !password || !confirmPassword) {
-                        return;
+          <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
+              {Platform.OS !== 'ios' && (
+                <Text style={[styles.label, { color: mutedForeground }]}>
+                  Email
+                </Text>
+              )}
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: Platform.select({
+                      ios: cardBackground,
+                      default: backgroundColor,
+                    }),
+                  },
+                ]}
+              >
+                <Controller
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={Platform.select({
+                        ios: 'Email',
+                        default: '',
+                      })}
+                      placeholderTextColor={mutedForeground}
+                      onSubmitEditing={() =>
+                        KeyboardController.setFocusTo('next')
                       }
-
-                      if (password !== confirmPassword) {
-                        return;
+                      autoCapitalize='none'
+                      autoFocus
+                      onFocus={() => setFocusedTextField('email')}
+                      onBlur={() => setFocusedTextField(null)}
+                      keyboardType='email-address'
+                      textContentType='emailAddress'
+                      returnKeyType='next'
+                    />
+                  )}
+                />
+              </View>
+            </View>
+            <View style={styles.inputGroup}>
+              {Platform.OS !== 'ios' && (
+                <Text style={[styles.label, { color: mutedForeground }]}>
+                  Password
+                </Text>
+              )}
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: Platform.select({
+                      ios: cardBackground,
+                      default: backgroundColor,
+                    }),
+                  },
+                ]}
+              >
+                <Controller
+                  control={form.control}
+                  name='password'
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={Platform.select({
+                        ios: 'Password',
+                        default: '',
+                      })}
+                      placeholderTextColor={mutedForeground}
+                      onSubmitEditing={() =>
+                        KeyboardController.setFocusTo('next')
                       }
-
-                      await handleCreateAccount();
-                    }}
-                    secureTextEntry
-                    returnKeyType="done"
-                    textContentType="newPassword"
-                  />
-                </FormItem>
-              </FormSection>
-            </Form>
+                      onFocus={() => setFocusedTextField('password')}
+                      onBlur={() => setFocusedTextField(null)}
+                      secureTextEntry
+                      returnKeyType='next'
+                      textContentType='newPassword'
+                    />
+                  )}
+                />
+              </View>
+            </View>
+            <View style={styles.inputGroup}>
+              {Platform.OS !== 'ios' && (
+                <Text style={[styles.label, { color: mutedForeground }]}>
+                  Confirm Password
+                </Text>
+              )}
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: Platform.select({
+                      ios: cardBackground,
+                      default: backgroundColor,
+                    }),
+                  },
+                ]}
+              >
+                <Controller
+                  control={form.control}
+                  name='passwordConfirm'
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={Platform.select({
+                        ios: 'Confirm password',
+                        default: '',
+                      })}
+                      placeholderTextColor={mutedForeground}
+                      onFocus={() => setFocusedTextField('confirm-password')}
+                      onBlur={() => setFocusedTextField(null)}
+                      secureTextEntry
+                      returnKeyType='done'
+                      textContentType='newPassword'
+                      onSubmitEditing={form.handleSubmit(handleCreateAccount)}
+                    />
+                  )}
+                />
+              </View>
+            </View>
           </View>
         </View>
       </KeyboardAwareScrollView>
-      <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+      <KeyboardStickyView
+        offset={{
+          closed: 0,
+          opened: Platform.select({
+            ios: insets.bottom + 30,
+            default: insets.bottom,
+          }),
+        }}
+      >
         {Platform.OS === 'ios' ? (
-          <View className=" px-12 py-4">
-            <Button
-              disabled={!email || !password || !confirmPassword || password !== confirmPassword}
-              size="lg"
-              onPress={async () => {
-                if (!email || !password || !confirmPassword || password !== confirmPassword) {
-                  return;
-                }
-
-                await handleCreateAccount();
-              }}>
-              <Text>Submit</Text>
-            </Button>
+          <View style={[styles.buttonContainer, { paddingBottom: 8 }]}>
+            <TamaguiButton
+              disabled={!form.formState.isValid || isLoading}
+              onPress={form.handleSubmit(handleCreateAccount)}
+            >
+              {isLoading ? 'Creating account...' : 'Continue'}
+            </TamaguiButton>
           </View>
         ) : (
-          <View className="flex-row justify-end py-4 pl-6 pr-8">
-            <Button
-              onPress={async () => {
-                if (focusedTextField !== 'confirm-password') {
+          <View style={styles.androidButtonContainer}>
+            <TamaguiButton
+              disabled={isLoading}
+              onPress={() => {
+                if (focusedTextField === 'email') {
                   KeyboardController.setFocusTo('next');
                   return;
                 }
-
-                if (!email || !password || !confirmPassword || password !== confirmPassword) {
+                if (focusedTextField === 'password') {
+                  KeyboardController.setFocusTo('next');
                   return;
                 }
-
                 KeyboardController.dismiss();
-
-                await handleCreateAccount();
-              }}>
-              <Text className="text-sm">
-                {focusedTextField !== 'confirm-password' ? 'Next' : 'Submit'}
-              </Text>
-            </Button>
+                form.handleSubmit(handleCreateAccount)();
+              }}
+            >
+              {focusedTextField === 'confirm-password' ? 'Submit' : 'Next'}
+            </TamaguiButton>
           </View>
         )}
       </KeyboardStickyView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: Platform.select({ ios: 48, default: 80 }),
+  },
+  content: {
+    paddingHorizontal: Platform.select({ ios: 48, default: 32 }),
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    paddingBottom: 4,
+  },
+  logo: {
+    height: Platform.select({ ios: 48, default: 32 }),
+    width: Platform.select({ ios: 48, default: 32 }),
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: Platform.select({ ios: 34, default: 24 }),
+    fontWeight: Platform.select({ ios: 'bold', default: 'normal' }),
+    paddingBottom: 4,
+    paddingTop: 16,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  formContainer: {
+    paddingTop: Platform.select({ ios: 16, default: 24 }),
+  },
+  inputGroup: {
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    borderRadius: Platform.select({ ios: 10, default: 8 }),
+    paddingVertical: Platform.select({ ios: 12, default: 8 }),
+    paddingHorizontal: Platform.select({ ios: 16, default: 12 }),
+  },
+  buttonContainer: {
+    paddingHorizontal: Platform.select({ ios: 48, default: 32 }),
+  },
+  androidButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+});

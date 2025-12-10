@@ -1,21 +1,30 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { router, useNavigationContainerRef, useRouter, useSegments } from 'expo-router';
+import {
+  router,
+  useNavigationContainerRef,
+  useRouter,
+  useSegments,
+} from 'expo-router';
 import { AuthRecord } from 'pocketbase';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { useConnection } from './connectionContext';
-
-import { LoadingScreen } from '~/components/LoadingScreen';
-import { usePooProfile } from '~/hooks/api/usePooProfileQueries';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
-import { PooProfile } from '~/lib/types';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { usePooProfile } from '@/hooks/api/usePooProfileQueries';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PooProfile } from '@/lib/types';
 
 export type AuthContextProps = {
   user: AuthRecord | null;
   pooProfile: PooProfile | undefined;
   isLoggedIn: boolean;
   isLoadingUserData: boolean;
-  signIn: ({ email, password }: { email: string; password: string }) => Promise<void>;
+  signIn: ({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -35,8 +44,6 @@ export const AuthContext = createContext<AuthContextProps>({
 function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
   const router = useRouter();
   const segments = useSegments();
-
-  const { isConnected } = useConnection();
 
   // Check that navigation is all good
   const [isNavigationReady, setIsNavigationReady] = useState(false);
@@ -58,11 +65,6 @@ function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
     // Navigation isn't set up or we're still loading. Do nothing.
     if (!isNavigationReady || isLoadingUserData) return;
 
-    if (!isConnected) {
-      router.replace('/no-connection');
-      return;
-    }
-
     const inAuthGroup = segments[0] === '(auth)';
 
     if (
@@ -76,7 +78,7 @@ function useProtectedRoute(isLoggedIn: boolean, isLoadingUserData: boolean) {
       // Redirect away from the sign-in page.
       router.replace('/(protected)');
     }
-  }, [isLoggedIn, segments, isNavigationReady, isLoadingUserData, isConnected]);
+  }, [isLoggedIn, segments, isNavigationReady, isLoadingUserData]);
 }
 
 export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
@@ -132,7 +134,13 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     queryClient.clear();
   };
 
-  const handleSignIn = async ({ email, password }: { email: string; password: string }) => {
+  const handleSignIn = async ({
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  }) => {
     if (isPocketBaseLoading) {
       throw new Error('PocketBase is still initializing');
     }
@@ -142,7 +150,9 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
     }
 
     try {
-      const { record } = await pb.collection('users').authWithPassword(email, password);
+      const { record } = await pb
+        .collection('users')
+        .authWithPassword(email, password);
 
       refetchPooProfile();
       setUser(record);
@@ -170,7 +180,8 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
         isLoggedIn,
         signIn: handleSignIn,
         signOut: handleSignOut,
-      }}>
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

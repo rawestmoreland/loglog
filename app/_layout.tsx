@@ -1,35 +1,35 @@
-import '../global.css';
-import 'expo-dev-client';
-import { ActionSheetProvider } from '@expo/react-native-action-sheet';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { ThemeProvider as NavThemeProvider } from '@react-navigation/native';
-import { PortalHost } from '@rn-primitives/portal';
-import MapboxGL from '@rnmapbox/maps';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { PaperProvider, Portal } from 'react-native-paper';
+import 'react-native-reanimated';
 
-import { AuthContextProvider } from '~/context/authContext';
-import { ConnectionContextProvider } from '~/context/connectionContext';
-import { LocationContextProvider } from '~/context/locationContext';
-import { NotificationProvider } from '~/context/notificationContext';
-import { SeshContextProvider } from '~/context/seshContext';
-import { PocketBaseProvider } from '~/lib/pocketbaseConfig';
-import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme';
-import { NAV_THEME } from '~/theme';
+import MapboxGL from '@rnmapbox/maps';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+import { AuthContextProvider } from '@/context/authContext';
+import { LocationContextProvider } from '@/context/locationContext';
+import { MapViewContextProvider } from '@/context/mapViewContext';
+import { NotificationProvider } from '@/context/notificationContext';
+import { SeshContextProvider } from '@/context/seshContext';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { PocketBaseProvider } from '@/lib/pocketbaseConfig';
+import tamaguiConfig from '@/tamagui.config';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
+import { PortalProvider } from '@tamagui/portal';
+import { ToastProvider, ToastViewport } from '@tamagui/toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { TamaguiProvider } from 'tamagui';
+
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
 
 export default function RootLayout() {
-  useInitialAndroidBarSync();
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
+  const colorScheme = useColorScheme();
 
   const queryClient = new QueryClient();
 
@@ -40,53 +40,48 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
-      <StatusBar
-        key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
-        style={isDarkColorScheme ? 'light' : 'dark'}
-      />
-      {/* WRAP YOUR APP WITH ANY ADDITIONAL PROVIDERS HERE */}
-      {/* <ExampleProvider> */}
-      <ConnectionContextProvider>
-        <PocketBaseProvider>
-          <QueryClientProvider client={queryClient}>
-            <LocationContextProvider>
-              <AuthContextProvider>
-                <NotificationProvider>
-                  <SeshContextProvider>
-                  <PaperProvider>
-                    <Portal>
-                      <ActionSheetProvider>
-                        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-                          <GestureHandlerRootView style={{ flex: 1 }}>
-                            <BottomSheetModalProvider>
-                              <NavThemeProvider value={NAV_THEME[colorScheme]}>
-                                <Stack screenOptions={SCREEN_OPTIONS}>
-                                  <Stack.Screen name="(auth)" />
-                                  <Stack.Screen name="(protected)" />
-                                </Stack>
-                                <PortalHost />
-                              </NavThemeProvider>
-                            </BottomSheetModalProvider>
-                          </GestureHandlerRootView>
-                        </KeyboardProvider>
-                      </ActionSheetProvider>
-                    </Portal>
-                  </PaperProvider>
-                  </SeshContextProvider>
-                </NotificationProvider>
-              </AuthContextProvider>
-            </LocationContextProvider>
-          </QueryClientProvider>
-        </PocketBaseProvider>
-      </ConnectionContextProvider>
-
-      {/* </ExampleProvider> */}
-    </>
+    <PocketBaseProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthContextProvider>
+          <ActionSheetProvider>
+            <NotificationProvider>
+              <LocationContextProvider>
+                <SeshContextProvider>
+                  <MapViewContextProvider>
+                    <TamaguiProvider
+                      config={tamaguiConfig}
+                      defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
+                    >
+                      <ThemeProvider
+                        value={
+                          colorScheme === 'dark' ? DarkTheme : DefaultTheme
+                        }
+                      >
+                        <PortalProvider shouldAddRootHost>
+                          <ToastProvider>
+                            <Stack>
+                              <Stack.Screen
+                                name='(auth)'
+                                options={{ headerShown: false }}
+                              />
+                              <Stack.Screen
+                                name='(protected)'
+                                options={{ headerShown: false }}
+                              />
+                            </Stack>
+                            <StatusBar style='auto' />
+                            <ToastViewport />
+                          </ToastProvider>
+                        </PortalProvider>
+                      </ThemeProvider>
+                    </TamaguiProvider>
+                  </MapViewContextProvider>
+                </SeshContextProvider>
+              </LocationContextProvider>
+            </NotificationProvider>
+          </ActionSheetProvider>
+        </AuthContextProvider>
+      </QueryClientProvider>
+    </PocketBaseProvider>
   );
 }
-
-const SCREEN_OPTIONS = {
-  headerShown: false,
-  animation: 'ios_from_right', // for android
-} as const;

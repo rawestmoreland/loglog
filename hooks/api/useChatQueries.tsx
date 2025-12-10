@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 export function useChat(participant1: string, participant2: string) {
   const { pb } = usePocketBase();
@@ -41,7 +41,10 @@ export function useChat(participant1: string, participant2: string) {
   });
 }
 
-export function useChatMessages(chatId?: string, options?: { page?: number; perPage?: number }) {
+export function useChatMessages(
+  chatId?: string,
+  options?: { page?: number; perPage?: number }
+) {
   const { pb } = usePocketBase();
   const queryClient = useQueryClient();
 
@@ -86,7 +89,9 @@ export function useChatMessages(chatId?: string, options?: { page?: number; perP
               if (!old) return old;
               return {
                 ...old,
-                items: old.items.filter((item: any) => item.id !== data.record.id),
+                items: old.items.filter(
+                  (item: any) => item.id !== data.record.id
+                ),
                 totalItems: old.totalItems - 1,
               };
             }
@@ -108,10 +113,12 @@ export function useChatMessages(chatId?: string, options?: { page?: number; perP
   return useQuery({
     queryKey: ['chat-messages', chatId, options?.page, options?.perPage],
     queryFn: () =>
-      pb?.collection('poo_messages').getList(options?.page ?? 1, options?.perPage ?? 50, {
-        filter: `chat = "${chatId}"`,
-        order: 'created',
-      }),
+      pb
+        ?.collection('poo_messages')
+        .getList(options?.page ?? 1, options?.perPage ?? 50, {
+          filter: `chat = "${chatId}"`,
+          order: 'created',
+        }),
     enabled: !!chatId && !!pb,
     staleTime: 1000 * 60 * 5,
   });

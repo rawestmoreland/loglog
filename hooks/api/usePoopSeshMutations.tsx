@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { getCityFromCoords } from '~/lib/geo-helpers';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
-import { PoopSesh } from '~/lib/types';
+import { useAuth } from '@/context/authContext';
+import { getCityFromCoords } from '@/lib/geo-helpers';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PoopSesh } from '@/lib/types';
 
 export function useStartPoopSesh() {
   const { pb } = usePocketBase();
@@ -16,7 +16,11 @@ export function useStartPoopSesh() {
       const lastSesh = await pb
         ?.collection('poop_seshes')
         .getFirstListItem(
-          `poo_profile = "${pooProfile?.id}" && started >= "${new Date(Date.now() - 5 * 60 * 1000).toISOString().replace('T', ' ')}"`
+          `poo_profile = "${pooProfile?.id}" && started >= "${new Date(
+            Date.now() - 5 * 60 * 1000
+          )
+            .toISOString()
+            .replace('T', ' ')}"`
         )
         .catch((e) => console.log('sesherror', e));
 
@@ -64,26 +68,36 @@ export function useUpdatePoopSesh() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ poopSesh }: { poopSesh: PoopSesh }) => {
-      const sesh = await pb?.collection('poop_seshes').update(poopSesh.id!, poopSesh);
+      let sesh = await pb
+        ?.collection('poop_seshes')
+        .update(poopSesh.id!, poopSesh)
+        .catch(() => poopSesh);
+
+      if (!sesh) {
+        sesh = poopSesh;
+      }
 
       return {
-        id: sesh?.id!,
-        location: sesh?.location,
-        coords: sesh?.coords,
-        started: sesh?.started,
-        ended: sesh?.ended,
-        revelations: sesh?.revelations,
-        user: sesh?.user,
-        poo_profile: sesh?.poo_profile,
-        is_public: sesh?.is_public,
-        company_time: sesh?.company_time,
-        bristol_score: sesh?.bristol_score,
+        id: sesh.id,
+        location: sesh.location,
+        coords: sesh.coords,
+        started: sesh.started,
+        ended: sesh.ended,
+        revelations: sesh.revelations,
+        user: sesh.user,
+        poo_profile: sesh.poo_profile,
+        is_public: sesh.is_public,
+        company_time: sesh.company_time,
+        bristol_score: sesh.bristol_score,
       };
     },
-    onSuccess: () => {
+    onSuccess: (sesh) => {
       queryClient.removeQueries({ queryKey: ['active-poop-sesh'] });
       queryClient.invalidateQueries({ queryKey: ['poop-sesh-history'] });
       queryClient.invalidateQueries({ queryKey: ['time-on-toilet'] });
+      queryClient.invalidateQueries({
+        queryKey: ['poop-sesh', { poopId: sesh.id }],
+      });
     },
   });
 }

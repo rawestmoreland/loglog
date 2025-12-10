@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, router, Stack } from 'expo-router';
 import * as React from 'react';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Image, Platform, View } from 'react-native';
+import { Alert, Image, Platform, StyleSheet, Text, View } from 'react-native';
 import {
   KeyboardAwareScrollView,
   KeyboardController,
@@ -12,16 +12,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
-import { Button } from '~/components/nativewindui/Button';
-import { Form, FormItem, FormSection } from '~/components/nativewindui/Form';
-import { Text } from '~/components/nativewindui/Text';
-import { TextField } from '~/components/nativewindui/TextField';
-import { AuthContext } from '~/context/authContext';
+import { TextInput } from '@/components/ui/text-input';
+import { AuthContext } from '@/context/authContext';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { Button as TamaguiButton } from 'tamagui';
 
-const LOGO_SOURCE = require('~/assets/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
+  const backgroundColor = useThemeColor({}, 'background');
+  const cardBackground = useThemeColor({}, 'card');
+  const textColor = useThemeColor({}, 'foreground');
+  const mutedForeground = useThemeColor({}, 'mutedForeground');
+  const primaryColor = useThemeColor({}, 'primary');
 
   const signInSchema = z.object({
     email: z.string().email(),
@@ -36,15 +40,13 @@ export default function LoginScreen() {
     },
   });
 
-  const [focusedTextField, setFocusedTextField] = React.useState<'email' | 'password' | null>(null);
+  const [focusedTextField, setFocusedTextField] = React.useState<
+    'email' | 'password' | null
+  >(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { signIn, signOut } = useContext(AuthContext);
-
-  useEffect(() => {
-    signOut();
-  }, []);
+  const { signIn } = useContext(AuthContext);
 
   const handleLogin = async (data: z.infer<typeof signInSchema>) => {
     if (!form.formState.isValid) {
@@ -60,7 +62,9 @@ export default function LoginScreen() {
         if (error.message === 'Failed to authenticate.') {
           Alert.alert('Incorrect username or password.');
         } else {
-          Alert.alert('There was an issue while signing in. Pleaase try again.');
+          Alert.alert(
+            'There was an issue while signing in. Pleaase try again.'
+          );
         }
       }
     } finally {
@@ -69,124 +73,171 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="ios:bg-card flex-1" style={{ paddingBottom: insets.bottom }}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: Platform.select({
+            ios: cardBackground,
+            default: backgroundColor,
+          }),
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <Stack.Screen
         options={{
           title: 'Log in',
           headerShadowVisible: false,
-          headerLeft() {
-            return (
-              <Button variant="plain" className="ios:px-0" onPress={() => router.back()}>
-                <Text className="text-primary">Cancel</Text>
-              </Button>
-            );
-          },
         }}
       />
       <KeyboardAwareScrollView
         bottomOffset={Platform.select({ ios: 175 })}
         bounces={false}
-        keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="ios:pt-12 pt-20">
-        <View className="ios:px-12 flex-1 px-8">
-          <View className="items-center pb-1">
+        keyboardDismissMode='interactive'
+        keyboardShouldPersistTaps='handled'
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
             <Image
               source={LOGO_SOURCE}
-              className="ios:h-12 ios:w-12 h-8 w-8 rounded-lg"
-              resizeMode="contain"
+              style={styles.logo}
+              resizeMode='contain'
             />
-            <Text variant="title1" className="ios:font-bold pb-1 pt-4 text-center">
+            <Text style={[styles.title, { color: textColor }]}>
               {Platform.select({ ios: 'Welcome back!', default: 'Log in' })}
             </Text>
             {Platform.OS !== 'ios' && (
-              <Text className="ios:text-sm text-center text-muted-foreground">Welcome back!</Text>
+              <Text style={[styles.subtitle, { color: mutedForeground }]}>
+                Welcome back!
+              </Text>
             )}
           </View>
-          <View className="ios:pt-4 pt-6">
-            <Form className="gap-2">
-              <FormSection className="ios:bg-background">
-                <FormItem>
-                  <Controller
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <TextField
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        placeholder={Platform.select({ ios: 'Email', default: '' })}
-                        label={Platform.select({ ios: undefined, default: 'Email' })}
-                        onSubmitEditing={() => KeyboardController.setFocusTo('next')}
-                        submitBehavior="submit"
-                        autoCapitalize="none"
-                        autoFocus
-                        onFocus={() => setFocusedTextField('email')}
-                        onBlur={() => setFocusedTextField(null)}
-                        keyboardType="email-address"
-                        textContentType="emailAddress"
-                        returnKeyType="next"
-                      />
-                    )}
-                  />
-                </FormItem>
-                <FormItem>
-                  <Controller
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <TextField
-                        value={field.value}
-                        onChangeText={field.onChange}
-                        placeholder={Platform.select({ ios: 'Password', default: '' })}
-                        label={Platform.select({ ios: undefined, default: 'Password' })}
-                        onFocus={() => setFocusedTextField('password')}
-                        onBlur={() => setFocusedTextField(null)}
-                        secureTextEntry
-                        returnKeyType="done"
-                        textContentType="password"
-                        onSubmitEditing={form.handleSubmit(handleLogin)}
-                      />
-                    )}
-                  />
-                </FormItem>
-              </FormSection>
-              <View className="flex-row">
-                <Link asChild href="/(auth)/(login)/forgot-password">
-                  <Button disabled={isLoading} size="sm" variant="plain" className="px-0.5">
-                    <Text className="text-sm text-primary">Forgot password?</Text>
-                  </Button>
-                </Link>
+          <View style={styles.formContainer}>
+            <View style={styles.inputGroup}>
+              {Platform.OS !== 'ios' && (
+                <Text style={[styles.label, { color: mutedForeground }]}>
+                  Email
+                </Text>
+              )}
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: Platform.select({
+                      ios: cardBackground,
+                      default: backgroundColor,
+                    }),
+                  },
+                ]}
+              >
+                <Controller
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={Platform.select({
+                        ios: 'Email',
+                        default: '',
+                      })}
+                      placeholderTextColor={mutedForeground}
+                      onSubmitEditing={() =>
+                        KeyboardController.setFocusTo('next')
+                      }
+                      autoCapitalize='none'
+                      autoFocus
+                      onFocus={() => setFocusedTextField('email')}
+                      onBlur={() => setFocusedTextField(null)}
+                      keyboardType='email-address'
+                      textContentType='emailAddress'
+                      returnKeyType='next'
+                    />
+                  )}
+                />
               </View>
-            </Form>
+            </View>
+            <View style={styles.inputGroup}>
+              {Platform.OS !== 'ios' && (
+                <Text style={[styles.label, { color: mutedForeground }]}>
+                  Password
+                </Text>
+              )}
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: Platform.select({
+                      ios: cardBackground,
+                      default: backgroundColor,
+                    }),
+                  },
+                ]}
+              >
+                <Controller
+                  control={form.control}
+                  name='password'
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      placeholder={Platform.select({
+                        ios: 'Password',
+                        default: '',
+                      })}
+                      placeholderTextColor={mutedForeground}
+                      onFocus={() => setFocusedTextField('password')}
+                      onBlur={() => setFocusedTextField(null)}
+                      secureTextEntry
+                      returnKeyType='done'
+                      textContentType='password'
+                      onSubmitEditing={form.handleSubmit(handleLogin)}
+                    />
+                  )}
+                />
+              </View>
+            </View>
+            <View style={styles.forgotPasswordContainer}>
+              <Link asChild href='/(auth)/(login)/forgot-password'>
+                <TamaguiButton chromeless disabled={isLoading}>
+                  Forgot password?
+                </TamaguiButton>
+              </Link>
+            </View>
           </View>
         </View>
       </KeyboardAwareScrollView>
       <KeyboardStickyView
         offset={{
           closed: 0,
-          opened: Platform.select({ ios: insets.bottom + 30, default: insets.bottom }),
-        }}>
+          opened: Platform.select({
+            ios: insets.bottom + 30,
+            default: insets.bottom,
+          }),
+        }}
+      >
         {Platform.OS === 'ios' ? (
-          <View className=" px-12 py-4">
-            <Button
+          <View style={[styles.buttonContainer, { paddingBottom: 8 }]}>
+            <TamaguiButton
               disabled={!form.formState.isValid || isLoading}
-              size="lg"
-              onPress={form.handleSubmit(handleLogin)}>
-              <Text>{isLoading ? 'Signing in...' : 'Continue'}</Text>
-            </Button>
+              onPress={form.handleSubmit(handleLogin)}
+            >
+              {isLoading ? 'Signing in...' : 'Continue'}
+            </TamaguiButton>
           </View>
         ) : (
-          <View className="flex-row justify-between py-4 pl-6 pr-8">
-            <Button
+          <View style={styles.androidButtonContainer}>
+            <TamaguiButton
               disabled={isLoading}
-              variant="plain"
-              className="px-2"
               onPress={() => {
                 router.replace('/(auth)/(create-account)');
-              }}>
-              <Text className="px-0.5 text-sm text-primary">Create Account</Text>
-            </Button>
-            <Button
+              }}
+            >
+              Create Account
+            </TamaguiButton>
+            <TamaguiButton
               disabled={isLoading}
               onPress={() => {
                 if (focusedTextField === 'email') {
@@ -195,22 +246,112 @@ export default function LoginScreen() {
                 }
                 KeyboardController.dismiss();
                 form.handleSubmit(handleLogin)();
-              }}>
-              <Text className="text-sm">{focusedTextField === 'email' ? 'Next' : 'Submit'}</Text>
-            </Button>
+              }}
+            >
+              {focusedTextField === 'email' ? 'Next' : 'Submit'}
+            </TamaguiButton>
           </View>
         )}
       </KeyboardStickyView>
       {Platform.OS === 'ios' && (
-        <Button
-          disabled={isLoading}
-          variant="plain"
-          onPress={() => {
-            router.replace('/(auth)/(create-account)');
-          }}>
-          <Text className="text-sm text-primary">Create Account</Text>
-        </Button>
+        <View style={[styles.buttonContainer, { paddingBottom: 24 }]}>
+          <TamaguiButton
+            disabled={isLoading}
+            themeInverse
+            onPress={() => {
+              router.replace('/(auth)/(create-account)');
+            }}
+          >
+            Create Account
+          </TamaguiButton>
+        </View>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: Platform.select({ ios: 48, default: 80 }),
+  },
+  content: {
+    paddingHorizontal: Platform.select({ ios: 48, default: 32 }),
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    paddingBottom: 4,
+  },
+  logo: {
+    height: Platform.select({ ios: 48, default: 32 }),
+    width: Platform.select({ ios: 48, default: 32 }),
+    borderRadius: 8,
+  },
+  title: {
+    fontSize: Platform.select({ ios: 34, default: 24 }),
+    fontWeight: Platform.select({ ios: 'bold', default: 'normal' }),
+    paddingBottom: 4,
+    paddingTop: 16,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  formContainer: {
+    paddingTop: Platform.select({ ios: 16, default: 24 }),
+  },
+  inputGroup: {
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  inputContainer: {
+    borderRadius: Platform.select({ ios: 10, default: 8 }),
+    paddingVertical: Platform.select({ ios: 12, default: 8 }),
+    paddingHorizontal: Platform.select({ ios: 16, default: 12 }),
+  },
+  input: {
+    fontSize: Platform.select({ ios: 17, default: 16 }),
+    padding: 0,
+  },
+  forgotPasswordContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+  },
+  buttonContainer: {
+    paddingHorizontal: Platform.select({ ios: 48, default: 32 }),
+  },
+  androidButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  iosCreateAccountContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    paddingBottom: 16,
+  },
+  createAccountText: {
+    fontSize: 14,
+  },
+  cancelButton: {
+    paddingHorizontal: Platform.select({ ios: 0, default: 16 }),
+    paddingVertical: 8,
+  },
+  cancelButtonText: {
+    fontSize: 17,
+  },
+});

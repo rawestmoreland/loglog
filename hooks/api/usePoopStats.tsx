@@ -1,23 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
-import { PoopSesh } from '~/lib/types';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PoopSesh } from '@/lib/types';
 
 /**
  * Returns the total time spent on the toilet
  * @returns total time in milliseconds
  */
-export function useTimeOnToilet(params: { enabled?: boolean } = { enabled: true }) {
+export function useTimeOnToilet(
+  params: { enabled?: boolean } = { enabled: true }
+) {
   const { pb } = usePocketBase();
   const { pooProfile } = useAuth();
 
   return useQuery({
     queryKey: ['time-on-toilet'],
     queryFn: async () => {
-      const records = await pb?.collection('poop_seshes').getFullList<PoopSesh>({
-        filter: `poo_profile = "${pooProfile?.id}" && ended != null`,
-      });
+      const records = await pb
+        ?.collection('poop_seshes')
+        .getFullList<PoopSesh>({
+          filter: `poo_profile = "${pooProfile?.id}" && ended != null`,
+        });
 
       if (!records) return { formatted: '0s', millis: 0, count: 0 };
 
@@ -43,12 +47,11 @@ export function useTimeOnToilet(params: { enabled?: boolean } = { enabled: true 
 
       const hours = Math.floor(totalTime / (1000 * 60 * 60));
       const minutes = Math.floor((totalTime % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((totalTime % (1000 * 60)) / 1000);
 
-      const formattedTime = `${hours}h ${minutes}m ${seconds}s`;
-      const formattedCompanyTime = `${Math.floor(companyTime / (1000 * 60 * 60))}h ${Math.floor(
-        (companyTime % (1000 * 60 * 60)) / (1000 * 60)
-      )}m ${Math.floor((companyTime % (1000 * 60)) / 1000)}s`;
+      const formattedTime = `${hours}h ${minutes}m`;
+      const formattedCompanyTime = `${Math.floor(
+        companyTime / (1000 * 60 * 60)
+      )}h ${Math.floor((companyTime % (1000 * 60 * 60)) / (1000 * 60))}m`;
 
       return {
         totalTime: formattedTime,

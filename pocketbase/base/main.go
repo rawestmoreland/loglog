@@ -76,7 +76,7 @@ func main() {
 			followersIds = append(followersIds, follower.GetString("follower"))
 		}
 
-		// Get all poo seshes from the above followers. The should be started and not ended
+		// Get all poo seshes from the above followers. They should be started and not ended
 		var conditions []string
 		for _, id := range followersIds {
 			conditions = append(conditions, fmt.Sprintf("poo_profile ~ '%s'", id))

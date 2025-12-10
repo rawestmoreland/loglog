@@ -1,45 +1,73 @@
-import { Link } from 'expo-router';
-import * as React from 'react';
-import { Image, Platform, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, Platform, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AlertAnchor } from '~/components/nativewindui/Alert';
-import { AlertRef } from '~/components/nativewindui/Alert/types';
-import { Button } from '~/components/nativewindui/Button';
-import { Text } from '~/components/nativewindui/Text';
+import { Button as TamaguiButton } from 'tamagui';
 
-const LOGO_SOURCE = require('~/assets/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
 const GOOGLE_SOURCE = {
   uri: 'https://www.pngall.com/wp-content/uploads/13/Google-Logo.png',
 };
 
 export default function AuthIndexScreen() {
-  const alertRef = React.useRef<AlertRef>(null);
+  const router = useRouter();
   return (
     <>
       <SafeAreaView style={{ flex: 1 }}>
-        <View className="ios:justify-end flex-1 justify-center gap-4 px-8 py-4">
-          <View className="items-center">
+        <View
+          style={{
+            justifyContent: 'flex-end',
+            flex: 1,
+            gap: 16,
+            paddingHorizontal: 32,
+            paddingVertical: 16,
+          }}
+        >
+          <View style={{ alignItems: 'center' }}>
             <Image
               source={LOGO_SOURCE}
-              className="ios:h-12 ios:w-12 h-8 w-8 rounded-lg"
-              resizeMode="contain"
+              style={{
+                height: Platform.select({ ios: 48, default: 32 }),
+                width: Platform.select({ ios: 48, default: 32 }),
+                borderRadius: 8,
+              }}
+              resizeMode='contain'
             />
           </View>
-          <View className="ios:pb-5 ios:pt-2 pb-2">
-            <Text className="ios:font-extrabold text-center text-3xl font-medium">
+          <View
+            style={{
+              paddingBottom: Platform.select({ ios: 20, default: 8 }),
+              paddingTop: Platform.select({ ios: 8, default: 4 }),
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: 'bold',
+                textAlign: 'center',
+                fontSize: 24,
+              }}
+            >
               Brace Yourself
             </Text>
-            <Text className="ios:font-extrabold text-center text-3xl font-medium">
-              for What's Next
+            <Text
+              style={{
+                fontWeight: 'bold',
+                textAlign: 'center',
+                fontSize: 24,
+              }}
+            >
+              for What&apos;s Next
             </Text>
           </View>
-          <Link href="/(auth)/(create-account)" asChild>
-            <Button size={Platform.select({ ios: 'lg', default: 'md' })}>
-              <Text>Sign up free</Text>
-            </Button>
-          </Link>
+          <TamaguiButton
+            onPress={() => {
+              router.push('/(auth)/(create-account)');
+            }}
+          >
+            Sign up free
+          </TamaguiButton>
           {/* <Button
             variant="secondary"
             className="ios:border-foreground/60"
@@ -74,14 +102,16 @@ export default function AuthIndexScreen() {
               <Text className="ios:text-foreground">Continue with Apple</Text>
             </Button>
           )} */}
-          <Link href="/(auth)/(login)" asChild>
-            <Button variant="plain" size={Platform.select({ ios: 'lg', default: 'md' })}>
-              <Text className="text-primary">Log in</Text>
-            </Button>
-          </Link>
+          <TamaguiButton
+            onPress={() => {
+              router.push('/(auth)/(login)');
+            }}
+            themeInverse
+          >
+            Log in
+          </TamaguiButton>
         </View>
       </SafeAreaView>
-      <AlertAnchor ref={alertRef} />
     </>
   );
 }

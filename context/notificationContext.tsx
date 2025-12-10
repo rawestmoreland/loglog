@@ -4,10 +4,10 @@ import * as Notifications from 'expo-notifications';
 import { usePathname, useRouter } from 'expo-router';
 import Client from 'pocketbase';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Platform, AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 export enum NotificationTypeEnum {
   PoopSesh = 'poop_sesh',
@@ -16,9 +16,10 @@ export type NotificationType = NotificationTypeEnum.PoopSesh;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -64,7 +65,10 @@ function handleRegistrationError(errorMessage: string) {
   throw new Error(errorMessage);
 }
 
-async function registerForPushNotificationsAsync(pb: Client, pooProfileId: string) {
+async function registerForPushNotificationsAsync(
+  pb: Client,
+  pooProfileId: string
+) {
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -75,14 +79,17 @@ async function registerForPushNotificationsAsync(pb: Client, pooProfileId: strin
   }
 
   if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      handleRegistrationError('Permission not granted to get push token for push notification!');
+      handleRegistrationError(
+        'Permission not granted to get push token for push notification!'
+      );
       // Remove the token from the user's profile
       await pb.collection('poo_profiles').update(pooProfileId, {
         expo_push_token: null,
@@ -90,7 +97,8 @@ async function registerForPushNotificationsAsync(pb: Client, pooProfileId: strin
       return;
     }
     const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      Constants?.expoConfig?.extra?.eas?.projectId ??
+      Constants?.easConfig?.projectId;
     if (!projectId) {
       handleRegistrationError('Project ID not found');
     }
@@ -118,7 +126,9 @@ async function registerForPushNotificationsAsync(pb: Client, pooProfileId: strin
 export const NotificationContext = createContext<{
   expoPushToken: string;
   notification: Notifications.Notification | undefined;
-  setNotification: (notification: Notifications.Notification | undefined) => void;
+  setNotification: (
+    notification: Notifications.Notification | undefined
+  ) => void;
   sendNotification: ({
     pb,
     pooProfileId,
@@ -157,7 +167,11 @@ export const NotificationContext = createContext<{
   cancelNotification: async () => {},
 });
 
-export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
+export const NotificationProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const { pooProfile } = useAuth();
@@ -165,12 +179,12 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   const hasRegistered = useRef(false);
 
   const [expoPushToken, setExpoPushToken] = useState('');
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
+  const [notification, setNotification] = useState<
+    Notifications.Notification | undefined
+  >(undefined);
 
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  const notificationListener = useRef<Notifications.EventSubscription>(null);
+  const responseListener = useRef<Notifications.EventSubscription>(null);
 
   // Add this function to check permissions and register if granted
   const checkAndRegisterForNotifications = async () => {
@@ -181,7 +195,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     const { status } = await Notifications.getPermissionsAsync();
     console.log('📱 Current notification permission status:', status);
-    console.log('📱 Current expoPushToken:', expoPushToken ? 'exists' : 'missing');
+    console.log(
+      '📱 Current expoPushToken:',
+      expoPushToken ? 'exists' : 'missing'
+    );
 
     if (status === 'granted' && !expoPushToken) {
       console.log('📱 Permissions granted but no token, registering...');
@@ -204,13 +221,19 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       return;
     }
 
-    console.log('📱 Starting initial notification registration for profile:', pooProfile.id);
+    console.log(
+      '📱 Starting initial notification registration for profile:',
+      pooProfile.id
+    );
     hasRegistered.current = true;
 
     // Initial registration attempt
     registerForPushNotificationsAsync(pb, pooProfile?.id)
       .then((token) => {
-        console.log('📱 Initial registration success, token:', token ? 'received' : 'none');
+        console.log(
+          '📱 Initial registration success, token:',
+          token ? 'received' : 'none'
+        );
         setExpoPushToken(token ?? '');
       })
       .catch((error: any) => {
@@ -225,33 +248,33 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }
     });
 
-    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
-      // Don't show notifications if the user is in the chat screen
-      if (pathname.includes('chat')) {
-        return null;
-      }
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        // Don't show notifications if the user is in the chat screen
+        if (pathname.includes('chat')) {
+          return null;
+        }
 
-      setNotification(notification);
+        setNotification(notification);
 
-      updateBadgeCount();
-    });
+        updateBadgeCount();
+      });
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data ?? {};
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data ?? {};
 
-      resetBadgeCount();
+        resetBadgeCount();
 
-      if (data.screen) {
-        router.push(data.screen);
-      }
-    });
+        if (data.screen) {
+          router.push(data.screen as any);
+        }
+      });
 
     return () => {
       subscription.remove();
-      notificationListener.current &&
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      responseListener.current &&
-        Notifications.removeNotificationSubscription(responseListener.current);
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
     };
   }, [pooProfile]);
 
@@ -282,7 +305,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     if (status !== 'granted') {
       console.log('🔔 Requesting notification permissions...');
-      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      const { status: newStatus } =
+        await Notifications.requestPermissionsAsync();
       console.log('🔔 Permission request result:', newStatus);
 
       if (newStatus !== 'granted') {
@@ -291,8 +315,12 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }
 
     // Check existing scheduled notifications
-    const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
-    console.log('📋 Existing scheduled notifications:', existingNotifications.length);
+    const existingNotifications =
+      await Notifications.getAllScheduledNotificationsAsync();
+    console.log(
+      '📋 Existing scheduled notifications:',
+      existingNotifications.length
+    );
 
     try {
       const id = await Notifications.scheduleNotificationAsync({
@@ -316,7 +344,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const handleCancelNotification = async ({ identifier }: { identifier: string }) => {
+  const handleCancelNotification = async ({
+    identifier,
+  }: {
+    identifier: string;
+  }) => {
     console.log('🚫 Cancelling notification with identifier:', identifier);
     try {
       await Notifications.cancelScheduledNotificationAsync(identifier);
@@ -414,11 +446,18 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           console.log(
             '📨 scheduleNotification context method called, forwarding to handleScheduleNotification'
           );
-          return handleScheduleNotification({ identifier, sendAt, title, body, data });
+          return handleScheduleNotification({
+            identifier,
+            sendAt,
+            title,
+            body,
+            data,
+          });
         },
         cancelNotification: async ({ identifier }: { identifier: string }) =>
           handleCancelNotification({ identifier }),
-      }}>
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -429,7 +468,9 @@ export const useNotification = () => {
 
   // Throw an error if not used in a NotificationProvider
   if (!context) {
-    throw new Error('useNotification must be used within a NotificationProvider');
+    throw new Error(
+      'useNotification must be used within a NotificationProvider'
+    );
   }
 
   return context;

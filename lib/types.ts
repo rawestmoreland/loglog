@@ -33,7 +33,7 @@ export interface PoopSesh {
   };
   company_time: boolean;
   revelations?: string;
-  started: Date;
+  started: Date | string;
   ended?: Date;
   place_id?: string | null;
   place?: {

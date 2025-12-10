@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 export function useAddPal() {
   const queryClient = useQueryClient();
@@ -17,7 +17,11 @@ export function useAddPal() {
     mutationFn: async (palId: string) =>
       await pb
         ?.collection('follows')
-        .create({ follower: pooProfile?.id, following: palId, status: 'pending' }),
+        .create({
+          follower: pooProfile?.id,
+          following: palId,
+          status: 'pending',
+        }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['follow-me-requests'] });
       queryClient.invalidateQueries({ queryKey: ['my-followers'] });
@@ -31,7 +35,8 @@ export function useRemovePoopPal() {
   const { pb } = usePocketBase();
 
   return useMutation({
-    mutationFn: async (palId: string) => await pb?.collection('follows').delete(`${palId}`),
+    mutationFn: async (palId: string) =>
+      await pb?.collection('follows').delete(`${palId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-followers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });

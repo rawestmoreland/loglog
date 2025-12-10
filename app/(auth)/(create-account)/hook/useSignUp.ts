@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 
 type ISignUp = {
   email: string;
@@ -18,7 +18,7 @@ export default function useSignUp() {
 
   const signUpSchema = z
     .object({
-      email: z.string().email(),
+      email: z.email(),
       password: z.string().min(8),
       passwordConfirm: z.string().min(8),
       codeName: z.string().min(1),

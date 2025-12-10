@@ -9,7 +9,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/loggie.png",
+          "icon": "./assets/images/loggie.png",
           "color": "#ffffff",
           "defaultChannel": "default",
           "iosDisplayInForeground": true
@@ -33,10 +33,10 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/loggie.png",
+    "icon": "./assets/images/loggie.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -53,7 +53,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.westmorelandcreative.dropspot",

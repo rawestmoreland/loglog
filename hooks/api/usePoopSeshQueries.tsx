@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useFollowing } from './usePoopPalsQueries';
 
-import { useAuth } from '~/context/authContext';
-import { useMapViewContext } from '~/context/mapViewContext';
-import { shiftCoords } from '~/lib/geo-helpers';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
-import { PoopSesh } from '~/lib/types';
+import { useAuth } from '@/context/authContext';
+import { useMapViewContext } from '@/context/mapViewContext';
+import { shiftCoords } from '@/lib/geo-helpers';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PoopSesh } from '@/lib/types';
 
 export function useActivePoopSesh() {
   const { pb } = usePocketBase();
@@ -118,12 +118,16 @@ export function usePublicPoopSeshHistory(
   });
 }
 
-export function usePoopSesh(poopId: string, params: { enabled?: boolean } = { enabled: true }) {
+export function usePoopSesh(
+  poopId: string | null,
+  params: { enabled?: boolean } = { enabled: true }
+) {
   const { pb } = usePocketBase();
 
   return useQuery({
     queryKey: ['poop-sesh', { poopId }],
     queryFn: async (): Promise<PoopSesh | null> => {
+      if (!poopId) return null;
       const expand = `user`;
       try {
         const sesh = await pb?.collection('poop_seshes').getOne(poopId, {
@@ -184,7 +188,15 @@ export function useFriendsPoopSeshHistory(
         return [];
       }
 
-      const filter = `is_public = true && started != null && ended != null && (${followingIds.map((id) => `poo_profile="${id}"`).join('||')}) && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      const filter = `is_public = true && started != null && ended != null && (${followingIds
+        .map((id) => `poo_profile="${id}"`)
+        .join('||')}) && location.coordinates.lat >= ${
+        params.viewportBounds.minLat
+      } && location.coordinates.lat <= ${
+        params.viewportBounds.maxLat
+      } && location.coordinates.lon >= ${
+        params.viewportBounds.minLon
+      } && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 

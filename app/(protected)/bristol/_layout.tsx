@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
 
-import { Button } from '~/components/nativewindui/Button';
-import { Text } from '~/components/nativewindui/Text';
+import { Text } from 'tamagui';
 
 export default function ChatLayout() {
   const router = useRouter();
@@ -9,13 +9,13 @@ export default function ChatLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="index"
+        name='index'
         options={{
           title: 'Bristol Scale',
           headerRight: () => (
-            <Button variant="plain" onPress={() => router.back()} className="items-center gap-2">
+            <TouchableOpacity onPress={() => router.back()}>
               <Text>Done</Text>
-            </Button>
+            </TouchableOpacity>
           ),
         }}
       />

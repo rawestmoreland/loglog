@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useAuth } from '~/context/authContext';
-import { usePocketBase } from '~/lib/pocketbaseConfig';
-import { PooProfile } from '~/lib/types';
+import { useAuth } from '@/context/authContext';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { PooProfile } from '@/lib/types';
 
 export function useUpdatePooProfile() {
   const { pb } = usePocketBase();
