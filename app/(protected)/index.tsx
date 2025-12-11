@@ -81,21 +81,11 @@ export default function ProtectedIndexScreen() {
       case 'yours':
         return myHistory;
       case 'friends':
-        if (palSelected !== 'all') {
-          return palHistory;
-        }
         return friendsHistory;
       default:
         return allHistory;
     }
-  }, [
-    poopsToView,
-    myHistory,
-    palSelected,
-    friendsHistory,
-    palHistory,
-    allHistory,
-  ]);
+  }, [poopsToView, myHistory, friendsHistory, allHistory]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {

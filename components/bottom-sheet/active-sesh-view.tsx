@@ -5,6 +5,8 @@ import { memo, useEffect, useState } from 'react';
 import {
   Dimensions,
   FlatList,
+  Keyboard,
+  Platform,
   Pressable,
   TouchableOpacity,
   useColorScheme,
@@ -40,10 +42,12 @@ import {
   ChevronRight,
   Circle,
   CircleHelp,
+  KeyboardOff,
   Toilet,
   X,
 } from '@tamagui/lucide-icons';
 import { router } from 'expo-router';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 function ActiveSeshViewComponent({
   modal = false,
@@ -62,7 +66,9 @@ function ActiveSeshViewComponent({
 }) {
   const scheme = useColorScheme() ?? 'light';
 
-  const { activeSesh, endSesh, updateActiveSesh } = useSesh();
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  const { activeSesh, endSesh, updateActiveSesh, poopForm } = useSesh();
 
   const { mutateAsync: updateToiletRating } = useUpdatePlaceRating(
     activeSesh?.place?.id ?? ''
@@ -79,6 +85,15 @@ function ActiveSeshViewComponent({
     image: null,
   });
 
+  useEffect(() => {
+    if (revelations !== poopForm.getValues('revelations')) {
+      poopForm.setValue('revelations', revelations);
+    }
+    if (bristolScore.value !== poopForm.getValues('bristol_score')) {
+      poopForm.setValue('bristol_score', bristolScore.value);
+    }
+  }, [bristolScore, revelations, poopForm]);
+
   const handleEndSesh = async () => {
     await endSesh();
     setSheetType?.(SheetType.HOME);
@@ -93,6 +108,25 @@ function ActiveSeshViewComponent({
   const handleRating = async (rating: number) => {
     await updateToiletRating({ rating });
   };
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setIsKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+      }
+    );
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   return placeViewOpen ? (
     <PlaceView
@@ -120,7 +154,18 @@ function ActiveSeshViewComponent({
       </XStack>
       <CountUpTimer startTime={(activeSesh?.started as string) ?? ''} />
       <YStack>
-        <Label>Revelations</Label>
+        <XStack justify='space-between' items='center'>
+          <Label>Revelations</Label>
+          {isKeyboardVisible && (
+            <Button
+              size='$2'
+              bg={Colors[scheme].primary as any}
+              onPress={() => Keyboard.dismiss()}
+            >
+              <KeyboardOff size={18} pointerEvents='none' />
+            </Button>
+          )}
+        </XStack>
         <TextArea
           value={revelations}
           onChangeText={setRevelations}
@@ -251,9 +296,29 @@ const PlaceView = ({
     | 'other'
   >((activeSesh?.place?.place_type as any) || 'house');
   const scheme = useColorScheme() ?? 'light';
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const { userLocation } = useLocation();
   const { updateActiveSesh } = useSesh();
   const { pb } = usePocketBase();
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setIsKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+      }
+    );
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const handlePlaceSelect = async (place: any) => {
     if (!selectedPlace) {
@@ -342,112 +407,149 @@ const PlaceView = ({
   ];
 
   return (
-    <YStack gap='$2'>
-      <XStack justify='space-between' items='center'>
-        <Button onPress={onClose} icon={X} circular theme='yellow' size='$2' />
-        {(toiletName || selectedPlace) && (
-          <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
-            <Text style={{ color: foreground as string }}>Save</Text>
-          </Pressable>
-        )}
-      </XStack>
-      <FlatList
-        data={locationTypes}
-        renderItem={({ item, index }) => {
-          // Check if this is the last item and it's alone in its row
-          // If length % 3 === 1, the last row has exactly 1 item
-          const isLastItem = index === locationTypes.length - 1;
-          const isAloneInRow = isLastItem && locationTypes.length % 3 === 1;
-          const width = isAloneInRow ? fullWidth : itemWidth;
-
-          return (
-            <Pressable
-              style={{
-                width: width,
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: 1,
-                borderWidth: 1,
-                padding: 5,
-                borderRadius: 10,
-                borderColor:
-                  locationType === item.name.toLowerCase()
-                    ? (Colors[scheme].primary as string)
-                    : (Colors[scheme].border as string),
-                backgroundColor: Colors[scheme].card as string,
-              }}
-              onPress={() => setLocationType(item.name.toLowerCase() as any)}
-            >
-              <Text numberOfLines={2} adjustsFontSizeToFit>
-                {item.name}
-              </Text>
-            </Pressable>
-          );
-        }}
-        keyExtractor={(item) => item.name}
-        ItemSeparatorComponent={() => <View style={{ height: 2, width: 2 }} />}
-        numColumns={3}
-        scrollEnabled={false}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <YStack gap='$2'>
-        <Text>Toilet Name</Text>
-        <Input
-          placeholder='Toilet Name'
-          value={toiletName}
-          onChangeText={setToiletName}
-        />
-      </YStack>
-      <View style={{ height: 300 }}>
+        <XStack justify='space-between' items='center'>
+          <Pressable
+            aria-label='Close'
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.8 : 1,
+              scale: pressed ? 0.95 : 1,
+              backgroundColor: Colors[scheme].primary as any,
+              color: Colors[scheme].primaryForeground as any,
+              padding: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+            })}
+            onPress={onClose}
+          >
+            <X
+              size={14}
+              pointerEvents='none'
+              color={Colors[scheme].primaryForeground as any}
+            />
+          </Pressable>
+          {(toiletName || selectedPlace) && (
+            <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
+              <Text style={{ color: foreground as string }}>Save</Text>
+            </Pressable>
+          )}
+        </XStack>
         <FlatList
-          data={toiletResults}
-          ListEmptyComponent={
-            isSearching ? <Text>Searching...</Text> : <View />
-          }
-          ItemSeparatorComponent={() => <Square size={10} />}
-          renderItem={({ item }) => (
-            <ListItem
-              icon={() => (
-                <View
-                  style={{
-                    backgroundColor: Colors[scheme].primary as string,
-                    borderColor: Colors[scheme].primary as string,
-                    borderWidth: 1,
-                    borderRadius: 10,
-                    padding: 5,
-                  }}
-                >
-                  <Toilet size={20} />
-                </View>
-              )}
-              title={item.properties?.name}
-              subTitle={item.properties?.address}
-              onPress={() => setSelectedPlace(item)}
-              iconAfter={
-                item.properties?.mapbox_id ===
-                selectedPlace?.properties?.mapbox_id ? (
+          data={locationTypes}
+          renderItem={({ item, index }) => {
+            // Check if this is the last item and it's alone in its row
+            // If length % 3 === 1, the last row has exactly 1 item
+            const isLastItem = index === locationTypes.length - 1;
+            const isAloneInRow = isLastItem && locationTypes.length % 3 === 1;
+            const width = isAloneInRow ? fullWidth : itemWidth;
+
+            return (
+              <Pressable
+                style={{
+                  width: width,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: 1,
+                  borderWidth: 1,
+                  padding: 5,
+                  borderRadius: 10,
+                  borderColor:
+                    locationType === item.name.toLowerCase()
+                      ? (Colors[scheme].primary as string)
+                      : (Colors[scheme].border as string),
+                  backgroundColor: Colors[scheme].card as string,
+                }}
+                onPress={() => setLocationType(item.name.toLowerCase() as any)}
+              >
+                <Text numberOfLines={2} adjustsFontSizeToFit>
+                  {item.name}
+                </Text>
+              </Pressable>
+            );
+          }}
+          keyExtractor={(item) => item.name}
+          ItemSeparatorComponent={() => (
+            <View style={{ height: 2, width: 2 }} />
+          )}
+          numColumns={3}
+          scrollEnabled={false}
+          contentContainerStyle={{ paddingBottom: 16 }}
+        />
+        <YStack gap='$2'>
+          <XStack items='center' justify='space-between'>
+            <Label htmlFor='toilet-name'>Toilet Name</Label>
+            {isKeyboardVisible && (
+              <Button
+                size='$2'
+                bg={Colors[scheme].primary as any}
+                onPress={() => Keyboard.dismiss()}
+              >
+                <KeyboardOff size={18} pointerEvents='none' />
+              </Button>
+            )}
+          </XStack>
+          <Input
+            id='toilet-name'
+            placeholder='Name your toilet'
+            value={toiletName}
+            onChangeText={setToiletName}
+          />
+        </YStack>
+        <View style={{ height: 300 }}>
+          <FlatList
+            data={toiletResults}
+            ListEmptyComponent={
+              isSearching ? <Text>Searching...</Text> : <View />
+            }
+            ItemSeparatorComponent={() => <Square size={10} />}
+            renderItem={({ item }) => (
+              <ListItem
+                icon={() => (
                   <View
                     style={{
-                      borderColor: Colors[scheme].primary as string,
                       backgroundColor: Colors[scheme].primary as string,
-                      borderRadius: '50%',
+                      borderColor: Colors[scheme].primary as string,
+                      borderWidth: 1,
+                      borderRadius: 10,
                       padding: 5,
                     }}
                   >
-                    <Check size={14} color='black' />
+                    <Toilet size={20} />
                   </View>
-                ) : (
-                  <Circle size={20} />
-                )
-              }
-            />
-          )}
-          keyExtractor={(item) => item.properties?.mapbox_id}
-          contentContainerStyle={{ paddingBottom: 16 }}
-          showsVerticalScrollIndicator
-        />
-      </View>
-    </YStack>
+                )}
+                title={item.properties?.name}
+                subTitle={item.properties?.address}
+                onPress={() => setSelectedPlace(item)}
+                iconAfter={
+                  item.properties?.mapbox_id ===
+                  selectedPlace?.properties?.mapbox_id ? (
+                    <View
+                      style={{
+                        borderColor: Colors[scheme].primary as string,
+                        backgroundColor: Colors[scheme].primary as string,
+                        borderRadius: '50%',
+                        padding: 5,
+                      }}
+                    >
+                      <Check size={14} color='black' />
+                    </View>
+                  ) : (
+                    <Circle size={20} />
+                  )
+                }
+              />
+            )}
+            keyExtractor={(item) => item.properties?.mapbox_id}
+            contentContainerStyle={{ paddingBottom: 16 }}
+            showsVerticalScrollIndicator
+          />
+        </View>
+      </YStack>
+    </KeyboardAvoidingView>
   );
 };
 

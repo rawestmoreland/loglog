@@ -2,10 +2,13 @@ import { SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
 import { useMapViewContext } from '@/context/mapViewContext';
 import { useSesh } from '@/context/seshContext';
+import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
+import { FlashList } from '@shopify/flash-list';
 import { BookOpen, ChevronDown, UserCog2 } from '@tamagui/lucide-icons';
+import { useState } from 'react';
 import { Pressable, useColorScheme } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
-import { Button, XStack, YStack } from 'tamagui';
+import { Button, Square, XStack, YStack } from 'tamagui';
 
 export function HomeView({
   modal = false,
@@ -26,6 +29,9 @@ export function HomeView({
   const { poopsToView, setPoopsToView } = useMapViewContext();
   const scheme = useColorScheme() ?? 'light';
 
+  const { data: poopPals } = useFollowing();
+  const [selectedPal, setSelectedPal] = useState<string | null>(null);
+
   const handleStartSesh = async () => {
     if (!!activeSesh) return;
     await startSesh();
@@ -42,6 +48,7 @@ export function HomeView({
             { title: 'All', selected: poopsToView === 'all' },
           ]}
           onPress={(e) => {
+            setSelectedPal(null);
             setPoopsToView(
               e.nativeEvent.name.toLocaleLowerCase() as
                 | 'friends'
@@ -105,6 +112,21 @@ export function HomeView({
           </Pressable>
         </XStack>
       </XStack>
+      {poopsToView === 'friends' && (
+        <FlashList
+          keyExtractor={(item) => item.id}
+          data={poopPals ?? []}
+          horizontal
+          ItemSeparatorComponent={() => <Square size={10} />}
+          renderItem={({ item }) => {
+            return (
+              <Button size='$2' variant='outlined'>
+                {item.expand?.following?.codeName}
+              </Button>
+            );
+          }}
+        />
+      )}
       <Button
         size='$5'
         bg={Colors[scheme].accent as any}

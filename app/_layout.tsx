@@ -22,6 +22,7 @@ import { PortalProvider } from '@tamagui/portal';
 import { ToastProvider, ToastViewport } from '@tamagui/toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { TamaguiProvider } from 'tamagui';
 
 export const unstable_settings = {
@@ -40,48 +41,50 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <PocketBaseProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthContextProvider>
-          <ActionSheetProvider>
-            <NotificationProvider>
-              <LocationContextProvider>
-                <SeshContextProvider>
-                  <MapViewContextProvider>
-                    <TamaguiProvider
-                      config={tamaguiConfig}
-                      defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
-                    >
-                      <ThemeProvider
-                        value={
-                          colorScheme === 'dark' ? DarkTheme : DefaultTheme
-                        }
+    <KeyboardProvider>
+      <PocketBaseProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthContextProvider>
+            <ActionSheetProvider>
+              <NotificationProvider>
+                <LocationContextProvider>
+                  <SeshContextProvider>
+                    <MapViewContextProvider>
+                      <TamaguiProvider
+                        config={tamaguiConfig}
+                        defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
                       >
-                        <PortalProvider shouldAddRootHost>
-                          <ToastProvider>
-                            <Stack>
-                              <Stack.Screen
-                                name='(auth)'
-                                options={{ headerShown: false }}
-                              />
-                              <Stack.Screen
-                                name='(protected)'
-                                options={{ headerShown: false }}
-                              />
-                            </Stack>
-                            <StatusBar style='auto' />
-                            <ToastViewport />
-                          </ToastProvider>
-                        </PortalProvider>
-                      </ThemeProvider>
-                    </TamaguiProvider>
-                  </MapViewContextProvider>
-                </SeshContextProvider>
-              </LocationContextProvider>
-            </NotificationProvider>
-          </ActionSheetProvider>
-        </AuthContextProvider>
-      </QueryClientProvider>
-    </PocketBaseProvider>
+                        <ThemeProvider
+                          value={
+                            colorScheme === 'dark' ? DarkTheme : DefaultTheme
+                          }
+                        >
+                          <PortalProvider shouldAddRootHost>
+                            <ToastProvider>
+                              <Stack>
+                                <Stack.Screen
+                                  name='(auth)'
+                                  options={{ headerShown: false }}
+                                />
+                                <Stack.Screen
+                                  name='(protected)'
+                                  options={{ headerShown: false }}
+                                />
+                              </Stack>
+                              <StatusBar style='auto' />
+                              <ToastViewport />
+                            </ToastProvider>
+                          </PortalProvider>
+                        </ThemeProvider>
+                      </TamaguiProvider>
+                    </MapViewContextProvider>
+                  </SeshContextProvider>
+                </LocationContextProvider>
+              </NotificationProvider>
+            </ActionSheetProvider>
+          </AuthContextProvider>
+        </QueryClientProvider>
+      </PocketBaseProvider>
+    </KeyboardProvider>
   );
 }
