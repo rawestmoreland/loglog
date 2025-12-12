@@ -21,13 +21,13 @@ import {
   ListItem,
   Separator,
   Square,
-  Switch,
   Text,
   TextArea,
   XStack,
   YStack,
 } from 'tamagui';
 
+import { LogSwitch } from '@/components/ui/log-switch';
 import { BRISTOL_SCORE_OPTIONS } from '@/constants';
 import { SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
@@ -142,14 +142,14 @@ function ActiveSeshViewComponent({
             Public log?
           </Label>
           <Separator minH={20} vertical />
-          <Switch
+          <LogSwitch
             id='public-log'
+            key='public-log'
             size='$2'
+            checked={activeSesh?.is_public}
             defaultChecked={activeSesh?.is_public}
             onCheckedChange={(value) => updateActiveSesh({ is_public: value })}
-          >
-            <Switch.Thumb animation='quicker' />
-          </Switch>
+          />
         </XStack>
       </XStack>
       <CountUpTimer startTime={(activeSesh?.started as string) ?? ''} />
@@ -212,14 +212,14 @@ function ActiveSeshViewComponent({
       </YStack>
       <XStack items='center' justify='space-between'>
         <Label htmlFor='company-time'>On company time?</Label>
-        <Switch
+        <LogSwitch
           id='company-time'
+          key='company-time'
           size='$3'
+          checked={activeSesh?.company_time}
           defaultChecked={activeSesh?.company_time}
           onCheckedChange={(value) => updateActiveSesh({ company_time: value })}
-        >
-          <Switch.Thumb animation='quicker' />
-        </Switch>
+        />
       </XStack>
       <YStack gap='$2'>
         <XStack items='center' gap='$2'>

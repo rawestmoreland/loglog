@@ -1,3 +1,4 @@
+import { LogSwitch } from '@/components/ui/log-switch';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/authContext';
 import { useNotification } from '@/context/notificationContext';
@@ -15,16 +16,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Button,
-  Card,
-  Label,
-  Separator,
-  Switch,
-  Text,
-  XStack,
-  YStack,
-} from 'tamagui';
+import { Button, Card, Label, Separator, Text, XStack, YStack } from 'tamagui';
 
 export default function SettingsPage() {
   const insets = useSafeAreaInsets();
@@ -202,15 +194,15 @@ export default function SettingsPage() {
                   exact location private
                 </Text>
               </YStack>
-              <Switch
+              <LogSwitch
                 id='shift-logs-switch'
+                key='shift-logs-switch'
                 size='$4'
+                checked={pooProfile?.shift_logs ?? false}
                 defaultChecked={pooProfile?.shift_logs ?? false}
                 onCheckedChange={(checked) => handleShiftLogsChange(checked)}
                 disabled={updatePooProfile.isPending}
-              >
-                <Switch.Thumb animation='quicker' />
-              </Switch>
+              />
             </XStack>
           </Card>
         </YStack>

@@ -1,3 +1,4 @@
+import { LogSwitch } from '@/components/ui/log-switch';
 import { BRISTOL_SCORE_OPTIONS } from '@/constants';
 import { SheetContentProps, SheetType } from '@/constants/sheet';
 import {
@@ -19,7 +20,6 @@ import {
   Image,
   Label,
   Spinner,
-  Switch,
   Text,
   TextArea,
   XStack,
@@ -196,29 +196,29 @@ export function PoopDetailsView({
         </YStack>
         <XStack items='center' justify='space-between'>
           <Label htmlFor='is-public-switch'>Is public?</Label>
-          <Switch
+          <LogSwitch
             id='is-public-switch'
+            key='is-public-switch'
             size='$3'
+            checked={poopDetails?.is_public}
             defaultChecked={poopDetails?.is_public}
             onCheckedChange={(checked) => {
               handleUpdateSesh({ is_public: checked });
             }}
-          >
-            <Switch.Thumb animation='quicker' />
-          </Switch>
+          />
         </XStack>
         <XStack items='center' justify='space-between'>
           <Label htmlFor='is-company-time-switch'>Is company time?</Label>
-          <Switch
+          <LogSwitch
             id='is-company-time-switch'
+            key='is-company-time-switch'
             size='$3'
+            checked={poopDetails?.company_time}
             defaultChecked={poopDetails?.company_time}
             onCheckedChange={(checked) => {
               handleUpdateSesh({ company_time: checked });
             }}
-          >
-            <Switch.Thumb animation='quicker' />
-          </Switch>
+          />
         </XStack>
         <YStack gap='$2'>
           <XStack items='center' gap='$2'>
