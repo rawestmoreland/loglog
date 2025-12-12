@@ -1,0 +1,199 @@
+import { RoundButton } from '@/components/ui/round-button';
+import { SheetContentProps, SheetType } from '@/constants/sheet';
+import { Colors } from '@/constants/theme';
+import { useSesh } from '@/context/seshContext';
+import { bristolScoreToImage } from '@/lib/helpers';
+import { X } from '@tamagui/lucide-icons';
+import { differenceInMinutes, format } from 'date-fns';
+import { useMemo } from 'react';
+import { useColorScheme } from 'react-native';
+import {
+  Card,
+  Image,
+  Separator,
+  Text,
+  TextArea,
+  XStack,
+  YStack,
+} from 'tamagui';
+
+function toDate(value: unknown): Date | null {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value as any);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatDurationMinutes(start: Date | null, end: Date | null) {
+  if (!start || !end) return null;
+  const minutes = differenceInMinutes(end, start);
+  if (minutes < 1) return '< 1 min';
+  if (minutes === 1) return '1 min';
+  return `${minutes} mins`;
+}
+
+export function SelectedSeshView({
+  modal = false,
+  isPercent = false,
+  innerOpen = false,
+  setInnerOpen = () => {},
+  setOpen = () => {},
+  setSheetType,
+  poopDetailsId = null,
+  setPoopDetailsId,
+}: SheetContentProps) {
+  const scheme = useColorScheme() ?? 'light';
+  const { selectedSesh, setSelectedSesh } = useSesh();
+
+  const {
+    nickname,
+    startedAt,
+    endedAt,
+    durationLabel,
+    revelations,
+    bristolScore,
+  } = useMemo(() => {
+    const sesh: any = selectedSesh;
+
+    const nickname =
+      sesh?.expand?.poo_profile?.codeName ||
+      sesh?.expand?.user?.codeName ||
+      sesh?.expand?.user?.username ||
+      sesh?.expand?.user?.name ||
+      'Mystery Pooper';
+
+    const startedAt = toDate(sesh?.started);
+    const endedAt = toDate(sesh?.ended);
+    const durationLabel = formatDurationMinutes(startedAt, endedAt);
+
+    return {
+      nickname,
+      startedAt,
+      endedAt,
+      durationLabel,
+      revelations: sesh?.revelations || '',
+      bristolScore:
+        typeof sesh?.bristol_score === 'number'
+          ? sesh.bristol_score
+          : undefined,
+    };
+  }, [selectedSesh]);
+
+  const bristolEmoji = useMemo(() => {
+    if (!bristolScore) return '💩';
+    const emojis = ['', '🥜', '🌭', '🍫', '🌊', '💧', '☕'];
+    return emojis[bristolScore] || '💩';
+  }, [bristolScore]);
+
+  return (
+    <YStack flex={1} gap='$4' mb='$4'>
+      <XStack justify='space-between' items='center'>
+        <Text fontWeight='bold'>{`${nickname}'s Sesh`}</Text>
+        <RoundButton
+          icon={X}
+          onPress={() => {
+            setSelectedSesh(null);
+            setSheetType?.(SheetType.HOME);
+          }}
+        />
+      </XStack>
+
+      {/* Fun banner */}
+      <Card
+        backgroundColor={Colors[scheme].primary as any}
+        padding='$4'
+        borderRadius='$4'
+        elevate
+      >
+        <XStack items='center' justify='space-between'>
+          <YStack gap='$1'>
+            {bristolScore ? (
+              <Image
+                source={bristolScoreToImage(bristolScore)}
+                height={28}
+                width={38}
+              />
+            ) : (
+              <Text
+                fontSize='$8'
+                fontWeight='900'
+                color={Colors[scheme].primaryForeground as any}
+              >
+                💩
+              </Text>
+            )}
+            <Text
+              fontSize='$2'
+              fontWeight='700'
+              opacity={0.85}
+              color={Colors[scheme].primaryForeground as any}
+            >
+              SESSION SNAPSHOT
+            </Text>
+          </YStack>
+
+          <YStack items='flex-end' gap='$1'>
+            <Text
+              fontSize='$6'
+              fontWeight='900'
+              color={Colors[scheme].primaryForeground as any}
+            >
+              {durationLabel ?? '—'}
+            </Text>
+            <Text
+              fontSize='$1'
+              fontWeight='700'
+              opacity={0.85}
+              color={Colors[scheme].primaryForeground as any}
+            >
+              TOTAL TIME
+            </Text>
+          </YStack>
+        </XStack>
+      </Card>
+
+      {/* Time details */}
+      <Card
+        padding='$3.5'
+        borderRadius='$4'
+        borderWidth={2}
+        borderColor={Colors[scheme].border as any}
+        bg={Colors[scheme].background as any}
+        elevate
+      >
+        <XStack justify='space-around' items='center'>
+          <YStack items='center' gap='$1' flex={1}>
+            <Text fontSize='$2' fontWeight='800'>
+              Start
+            </Text>
+            <Text fontSize='$2' color='$color11'>
+              {startedAt ? format(startedAt, 'dd/MM/yyyy h:mm a') : '—'}
+            </Text>
+          </YStack>
+          <Separator vertical bg={Colors[scheme].border as any} opacity={0.6} />
+          <YStack items='center' gap='$1' flex={1}>
+            <Text fontSize='$2' fontWeight='800'>
+              End
+            </Text>
+            <Text fontSize='$2' color='$color11'>
+              {endedAt
+                ? format(endedAt, 'dd/MM/yyyy h:mm a')
+                : 'Still cookin’…'}
+            </Text>
+          </YStack>
+        </XStack>
+      </Card>
+
+      {/* Revelations */}
+      <YStack gap='$2'>
+        <Text fontWeight='700'>Revelations</Text>
+        <TextArea
+          value={revelations}
+          editable={false}
+          placeholder='No revelations were recorded. Tragic.'
+          size='$4'
+          opacity={revelations ? 1 : 0.8}
+        />
+      </YStack>
+    </YStack>
+  );
+}

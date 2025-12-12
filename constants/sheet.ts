@@ -1,8 +1,10 @@
+import { PoopSeshesRecord } from '@/lib/pocketbase-types';
 import type { ComponentType } from 'react';
 
 export enum SheetType {
   HOME = 'home',
   ACTIVE_SESH = 'active-sesh',
+  SELECTED_SESH = 'selected-sesh',
   POOP_DETAILS = 'poop-details',
   USER_SETTINGS = 'user-settings',
   POOP_PALS = 'poop-pals',
@@ -20,6 +22,7 @@ export type SheetContentProps = {
   sheetType?: SheetType;
   poopDetailsId?: string | null;
   setPoopDetailsId?: (id: string | null) => void;
+  selectedSesh?: PoopSeshesRecord;
 };
 
 export type SheetContentComponent = ComponentType<SheetContentProps>;
@@ -28,6 +31,7 @@ export type SheetContentComponent = ComponentType<SheetContentProps>;
 export const SHEET_SNAP_POINTS: Record<SheetType, number[] | undefined> = {
   [SheetType.HOME]: undefined,
   [SheetType.ACTIVE_SESH]: undefined,
+  [SheetType.SELECTED_SESH]: undefined,
   [SheetType.POOP_DETAILS]: undefined,
   [SheetType.USER_SETTINGS]: undefined,
   [SheetType.POOP_PALS]: [75],
@@ -38,6 +42,7 @@ export const SHEET_SNAP_POINTS: Record<SheetType, number[] | undefined> = {
 export const SHEET_SNAP_POINTS_MODE: Record<SheetType, 'percent' | 'fit'> = {
   [SheetType.HOME]: 'fit',
   [SheetType.ACTIVE_SESH]: 'fit',
+  [SheetType.SELECTED_SESH]: 'fit',
   [SheetType.POOP_DETAILS]: 'fit',
   [SheetType.USER_SETTINGS]: 'fit',
   [SheetType.POOP_PALS]: 'percent',
@@ -48,6 +53,7 @@ export const SHEET_SNAP_POINTS_MODE: Record<SheetType, 'percent' | 'fit'> = {
 export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {
   [SheetType.HOME]: false,
   [SheetType.ACTIVE_SESH]: false,
+  [SheetType.SELECTED_SESH]: false,
   [SheetType.POOP_DETAILS]: false,
   [SheetType.USER_SETTINGS]: true,
   [SheetType.POOP_PALS]: false,

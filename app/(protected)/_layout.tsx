@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 export default function ProtectedLayout() {
   const pathname = usePathname();
-  const { activeSesh } = useSesh();
+  const { activeSesh, selectedSesh } = useSesh();
   const [sheetType, setSheetType] = useState<SheetType>(SheetType.HOME);
   const [poopDetailsId, setPoopDetailsId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(true);
@@ -14,8 +14,12 @@ export default function ProtectedLayout() {
   useEffect(() => {
     if (!!activeSesh) {
       setSheetType(SheetType.ACTIVE_SESH);
+      return;
     }
-  }, [activeSesh]);
+    if (!!selectedSesh) {
+      setSheetType(SheetType.SELECTED_SESH);
+    }
+  }, [activeSesh, selectedSesh]);
 
   useEffect(() => {
     setSheetOpen(pathname !== '/bristol' && pathname !== '/settings');
