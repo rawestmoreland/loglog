@@ -3,7 +3,10 @@ import { useLocation } from '@/context/locationContext';
 import { useMapViewContext } from '@/context/mapViewContext';
 import { useSesh } from '@/context/seshContext';
 import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
-import { usePublicPoopSeshHistory } from '@/hooks/api/usePoopSeshQueries';
+import {
+  usePalPoopSeshHistory,
+  usePublicPoopSeshHistory,
+} from '@/hooks/api/usePoopSeshQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import MapboxGL from '@rnmapbox/maps';
 import { isEmpty } from 'lodash';
@@ -37,18 +40,11 @@ export default function ProtectedIndexScreen() {
     maxLat: number;
   } | null>(null);
 
-  const { userLocation, isLoadingLocation } = useLocation();
+  const { userLocation } = useLocation();
 
-  const { data: publicHistory, isLoading: isLoadingPublicHistory } =
-    usePublicPoopSeshHistory();
+  const { data: publicHistory } = usePublicPoopSeshHistory();
 
-  const palHistory = useMemo(() => {
-    if (!palSelected || !viewportBounds || !publicHistory) {
-      return [];
-    }
-
-    return publicHistory.filter((poop) => poop.poo_profile === palSelected);
-  }, [palSelected, viewportBounds, publicHistory]);
+  const { data: palHistory } = usePalPoopSeshHistory();
 
   const myHistory = useMemo(() => {
     if (!viewportBounds || !publicHistory || !pooProfile) {
@@ -81,11 +77,21 @@ export default function ProtectedIndexScreen() {
       case 'yours':
         return myHistory;
       case 'friends':
+        if (!!palSelected) {
+          return palHistory;
+        }
         return friendsHistory;
       default:
         return allHistory;
     }
-  }, [poopsToView, myHistory, friendsHistory, allHistory]);
+  }, [
+    poopsToView,
+    palSelected,
+    palHistory,
+    myHistory,
+    friendsHistory,
+    allHistory,
+  ]);
 
   const handleClusterPress = (feature: any) => {
     if (feature.properties?.cluster) {

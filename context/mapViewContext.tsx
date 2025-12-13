@@ -20,7 +20,7 @@ export const MapViewContextProvider = ({
   const [poopsToView, setPoopsToViewState] = useState<
     'friends' | 'yours' | 'all'
   >('yours');
-  const [palSelected, setPalSelectedState] = useState<string | null>('your');
+  const [palSelected, setPalSelectedState] = useState<string | null>(null);
 
   const setPoopsToView = useCallback(
     (newValue: 'friends' | 'yours' | 'all') => {
@@ -30,7 +30,6 @@ export const MapViewContextProvider = ({
   );
 
   const setPalSelected = useCallback((newValue: string | null) => {
-    console.log('Setting palSelected to:', newValue);
     setPalSelectedState(newValue);
   }, []);
 

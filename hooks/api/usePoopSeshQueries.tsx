@@ -228,7 +228,7 @@ export function usePalPoopSeshHistory(
   const { palSelected } = useMapViewContext();
 
   return useQuery({
-    queryKey: ['poop-sesh-history', { palId: palSelected }],
+    queryKey: ['pal-poop-sesh-history', { palId: palSelected }],
     queryFn: async () => {
       let filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}'`;
       if (params.viewportBounds) {
@@ -244,6 +244,6 @@ export function usePalPoopSeshHistory(
       });
       return sesh ?? [];
     },
-    enabled: palSelected !== 'all' && params.enabled,
+    enabled: !!palSelected && params.enabled,
   });
 }

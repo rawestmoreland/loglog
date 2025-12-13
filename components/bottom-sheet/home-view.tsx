@@ -5,7 +5,6 @@ import { useSesh } from '@/context/seshContext';
 import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
 import { FlashList } from '@shopify/flash-list';
 import { BookOpen, ChevronDown, UserCog2 } from '@tamagui/lucide-icons';
-import { useState } from 'react';
 import { Pressable, useColorScheme } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import { Button, Square, XStack, YStack } from 'tamagui';
@@ -26,11 +25,11 @@ export function HomeView({
   setSheetType?: (type: SheetType) => void;
 }) {
   const { activeSesh, startSesh } = useSesh();
-  const { poopsToView, setPoopsToView } = useMapViewContext();
+  const { poopsToView, setPoopsToView, palSelected, setPalSelected } =
+    useMapViewContext();
   const scheme = useColorScheme() ?? 'light';
 
   const { data: poopPals } = useFollowing();
-  const [selectedPal, setSelectedPal] = useState<string | null>(null);
 
   const handleStartSesh = async () => {
     if (!!activeSesh) return;
@@ -48,7 +47,7 @@ export function HomeView({
             { title: 'All', selected: poopsToView === 'all' },
           ]}
           onPress={(e) => {
-            setSelectedPal(null);
+            setPalSelected(null);
             setPoopsToView(
               e.nativeEvent.name.toLocaleLowerCase() as
                 | 'friends'
@@ -120,7 +119,22 @@ export function HomeView({
           ItemSeparatorComponent={() => <Square size={10} />}
           renderItem={({ item }) => {
             return (
-              <Button size='$2' variant='outlined'>
+              <Button
+                size='$2'
+                theme={
+                  palSelected === item.expand?.following?.id
+                    ? 'yellow'
+                    : undefined
+                }
+                variant={
+                  palSelected === item.expand?.following?.id
+                    ? undefined
+                    : 'outlined'
+                }
+                onPress={() =>
+                  setPalSelected(item.expand?.following?.id ?? null)
+                }
+              >
                 {item.expand?.following?.codeName}
               </Button>
             );
