@@ -9,6 +9,8 @@ import {
 } from '@/hooks/api/usePoopSeshQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import MapboxGL from '@rnmapbox/maps';
+import { WifiOff } from '@tamagui/lucide-icons';
+import { useNetworkState } from 'expo-network';
 import { isEmpty } from 'lodash';
 import { useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -16,6 +18,8 @@ import { StyleSheet, View } from 'react-native';
 const POOP_MARKER = require('@/assets/images/poo-pile.png');
 
 export default function ProtectedIndexScreen() {
+  const network = useNetworkState();
+
   const primary = useThemeColor({}, 'primary');
 
   const { pooProfile } = useAuth();
@@ -109,114 +113,121 @@ export default function ProtectedIndexScreen() {
 
   return (
     <View style={styles.container}>
-      <MapboxGL.MapView
-        ref={mapRef}
-        style={styles.map}
-        onMapIdle={async () => {
-          const center = await mapRef.current?.getCenter();
-          const zoom = await mapRef.current?.getZoom();
-          const bounds = await mapRef.current?.getVisibleBounds();
-          if (center && zoom) {
-            setCameraCenter({ lon: center[0], lat: center[1] });
-            setCameraZoom(zoom);
-          }
-          if (bounds) {
-            setViewportBounds({
-              minLon: Math.min(bounds[0][0], bounds[1][0]),
-              minLat: Math.min(bounds[0][1], bounds[1][1]),
-              maxLon: Math.max(bounds[0][0], bounds[1][0]),
-              maxLat: Math.max(bounds[0][1], bounds[1][1]),
-            });
-          }
-        }}
-        logoEnabled={false}
-        scaleBarEnabled={false}
-        attributionEnabled={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        compassEnabled={false}
-        projection='globe'
-        styleURL='mapbox://styles/westmorelandcreative/cm7t35gm4003k01s06j3ubktu'
-        onLongPress={() => console.log('long press')}
-      >
-        <MapboxGL.Images
-          images={{
-            'poo-pile': POOP_MARKER,
+      {network.isConnected ? (
+        <MapboxGL.MapView
+          ref={mapRef}
+          style={styles.map}
+          onMapIdle={async () => {
+            const center = await mapRef.current?.getCenter();
+            const zoom = await mapRef.current?.getZoom();
+            const bounds = await mapRef.current?.getVisibleBounds();
+            if (center && zoom) {
+              setCameraCenter({ lon: center[0], lat: center[1] });
+              setCameraZoom(zoom);
+            }
+            if (bounds) {
+              setViewportBounds({
+                minLon: Math.min(bounds[0][0], bounds[1][0]),
+                minLat: Math.min(bounds[0][1], bounds[1][1]),
+                maxLon: Math.max(bounds[0][0], bounds[1][0]),
+                maxLat: Math.max(bounds[0][1], bounds[1][1]),
+              });
+            }
           }}
-        />
-        <MapboxGL.Camera
-          ref={cameraRef}
-          zoomLevel={cameraZoom ?? 15}
-          centerCoordinate={
-            cameraCenter
-              ? [cameraCenter.lon, cameraCenter.lat]
-              : [userLocation.lon, userLocation.lat]
-          }
-          animationDuration={2000}
-        />
-        <MapboxGL.LocationPuck puckBearing='heading' puckBearingEnabled />
-        <MapboxGL.ShapeSource
-          id='poopSource'
-          cluster
-          clusterMaxZoomLevel={14}
-          clusterRadius={50}
-          onPress={(e) => handleClusterPress(e.features[0])}
-          shape={{
-            type: 'FeatureCollection',
-            features:
-              historyToMap
-                ?.filter(
-                  (poop) => !isEmpty(poop.coords) && poop.started && poop.ended
-                )
-                .map((poop) => ({
-                  type: 'Feature',
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [poop.coords?.lon!, poop.coords?.lat!],
-                  },
-                  properties: {
-                    ...poop,
-                  },
-                })) || [],
-          }}
+          logoEnabled={false}
+          scaleBarEnabled={false}
+          attributionEnabled={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
+          compassEnabled={false}
+          projection='globe'
+          styleURL='mapbox://styles/westmorelandcreative/cm7t35gm4003k01s06j3ubktu'
+          onLongPress={() => console.log('long press')}
         >
-          {/* White circle background for clusters */}
-          <MapboxGL.CircleLayer
-            id='clustersBackground'
-            filter={['has', 'point_count']}
-            style={{
-              circleColor: 'white',
-              circleRadius: 30,
-              circleStrokeWidth: 2,
-              // @ts-ignore
-              circleStrokeColor: primary,
+          <MapboxGL.Images
+            images={{
+              'poo-pile': POOP_MARKER,
             }}
           />
-          {/* Poop emoji for clusters */}
-          <MapboxGL.SymbolLayer
-            id='clusteredPoints'
-            filter={['has', 'point_count']}
-            style={{
-              iconImage: 'poo-pile',
-              iconSize: 0.15,
-              iconAllowOverlap: true,
-              iconOffset: [0, -40], // Move the emoji up slightly
-              textField: ['get', 'point_count_abbreviated'],
-              textSize: 14,
-              textColor: '#000',
-              textOffset: [0, 1], // Move the text down below the emoji
-            }}
+          <MapboxGL.Camera
+            ref={cameraRef}
+            zoomLevel={cameraZoom ?? 15}
+            centerCoordinate={
+              cameraCenter
+                ? [cameraCenter.lon, cameraCenter.lat]
+                : [userLocation.lon, userLocation.lat]
+            }
+            animationDuration={2000}
           />
-          <MapboxGL.SymbolLayer
-            id='singlePoint'
-            filter={['!', ['has', 'point_count']]}
-            style={{
-              iconImage: 'poo-pile',
-              iconSize: 0.2,
+          <MapboxGL.LocationPuck puckBearing='heading' puckBearingEnabled />
+          <MapboxGL.ShapeSource
+            id='poopSource'
+            cluster
+            clusterMaxZoomLevel={14}
+            clusterRadius={50}
+            onPress={(e) => handleClusterPress(e.features[0])}
+            shape={{
+              type: 'FeatureCollection',
+              features:
+                historyToMap
+                  ?.filter(
+                    (poop) =>
+                      !isEmpty(poop.coords) && poop.started && poop.ended
+                  )
+                  .map((poop) => ({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [poop.coords?.lon!, poop.coords?.lat!],
+                    },
+                    properties: {
+                      ...poop,
+                    },
+                  })) || [],
             }}
-          />
-        </MapboxGL.ShapeSource>
-      </MapboxGL.MapView>
+          >
+            {/* White circle background for clusters */}
+            <MapboxGL.CircleLayer
+              id='clustersBackground'
+              filter={['has', 'point_count']}
+              style={{
+                circleColor: 'white',
+                circleRadius: 30,
+                circleStrokeWidth: 2,
+                // @ts-ignore
+                circleStrokeColor: primary,
+              }}
+            />
+            {/* Poop emoji for clusters */}
+            <MapboxGL.SymbolLayer
+              id='clusteredPoints'
+              filter={['has', 'point_count']}
+              style={{
+                iconImage: 'poo-pile',
+                iconSize: 0.15,
+                iconAllowOverlap: true,
+                iconOffset: [0, -40], // Move the emoji up slightly
+                textField: ['get', 'point_count_abbreviated'],
+                textSize: 14,
+                textColor: '#000',
+                textOffset: [0, 1], // Move the text down below the emoji
+              }}
+            />
+            <MapboxGL.SymbolLayer
+              id='singlePoint'
+              filter={['!', ['has', 'point_count']]}
+              style={{
+                iconImage: 'poo-pile',
+                iconSize: 0.2,
+              }}
+            />
+          </MapboxGL.ShapeSource>
+        </MapboxGL.MapView>
+      ) : (
+        <View style={styles.container}>
+          <WifiOff size={40} />
+        </View>
+      )}
     </View>
   );
 }

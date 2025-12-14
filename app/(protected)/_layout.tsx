@@ -1,15 +1,24 @@
 import { UnifiedSheet } from '@/components/unified-sheet';
 import { SheetType } from '@/constants/sheet';
 import { useSesh } from '@/context/seshContext';
+import { useNetworkState } from 'expo-network';
 import { Stack, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 export default function ProtectedLayout() {
+  const { isConnected } = useNetworkState();
   const pathname = usePathname();
   const { activeSesh, selectedSesh } = useSesh();
   const [sheetType, setSheetType] = useState<SheetType>(SheetType.HOME);
   const [poopDetailsId, setPoopDetailsId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(true);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setSheetType(SheetType.NO_CONNECTION);
+      return;
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     if (!!activeSesh) {
