@@ -28,6 +28,7 @@
     "@tamagui/toast": "1.139.2",
     "@tanstack/react-query": "^5.90.12",
     "axios": "^1.13.2",
+    "bad-words": "^4.0.0",
     "burnt": "^0.13.0",
     "date-fns": "^4.1.0",
     "expo": "~54.0.27",

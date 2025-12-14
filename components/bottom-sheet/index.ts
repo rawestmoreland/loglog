@@ -1,6 +1,7 @@
 export * from './active-sesh-view';
 export * from './home-view';
 export * from './loading-view';
+export * from './poop-comment-view';
 export * from './poop-details-view';
 export * from './poop-history-view';
 export * from './poop-pals-view';

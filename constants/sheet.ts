@@ -9,6 +9,7 @@ export enum SheetType {
   USER_SETTINGS = 'user-settings',
   POOP_PALS = 'poop-pals',
   POOP_HISTORY = 'poop-history',
+  POOP_COMMENT = 'poop-comment',
   LOADING = 'loading',
 }
 
@@ -28,22 +29,30 @@ export type SheetContentProps = {
 export type SheetContentComponent = ComponentType<SheetContentProps>;
 
 // Map sheet types to snap points
-export const SHEET_SNAP_POINTS: Record<SheetType, number[] | undefined> = {
+export const SHEET_SNAP_POINTS: Record<
+  SheetType,
+  (number | 'fit')[] | undefined
+> = {
   [SheetType.HOME]: undefined,
   [SheetType.ACTIVE_SESH]: undefined,
   [SheetType.SELECTED_SESH]: undefined,
   [SheetType.POOP_DETAILS]: undefined,
+  [SheetType.POOP_COMMENT]: [90],
   [SheetType.USER_SETTINGS]: undefined,
   [SheetType.POOP_PALS]: [75],
   [SheetType.POOP_HISTORY]: [75],
   [SheetType.LOADING]: [0],
 };
 
-export const SHEET_SNAP_POINTS_MODE: Record<SheetType, 'percent' | 'fit'> = {
+export const SHEET_SNAP_POINTS_MODE: Record<
+  SheetType,
+  'percent' | 'fit' | 'mixed'
+> = {
   [SheetType.HOME]: 'fit',
   [SheetType.ACTIVE_SESH]: 'fit',
   [SheetType.SELECTED_SESH]: 'fit',
   [SheetType.POOP_DETAILS]: 'fit',
+  [SheetType.POOP_COMMENT]: 'percent',
   [SheetType.USER_SETTINGS]: 'fit',
   [SheetType.POOP_PALS]: 'percent',
   [SheetType.POOP_HISTORY]: 'percent',
@@ -55,6 +64,7 @@ export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {
   [SheetType.ACTIVE_SESH]: false,
   [SheetType.SELECTED_SESH]: false,
   [SheetType.POOP_DETAILS]: false,
+  [SheetType.POOP_COMMENT]: false,
   [SheetType.USER_SETTINGS]: true,
   [SheetType.POOP_PALS]: false,
   [SheetType.POOP_HISTORY]: true,

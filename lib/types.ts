@@ -60,3 +60,19 @@ export interface PoopSesh {
     };
   };
 }
+
+export interface PoopComment {
+  id: string;
+  sesh: string;
+  user: string;
+  content: string;
+  created: string;
+  expand?: {
+    user?: {
+      id: string;
+      codeName: string;
+      username?: string;
+      name?: string;
+    };
+  };
+}
