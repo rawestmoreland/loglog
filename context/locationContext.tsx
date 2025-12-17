@@ -6,10 +6,12 @@ export const LocationContext = createContext<{
   userLocation: { lat: number; lon: number };
   setUserLocation: (location: { lat: number; lon: number }) => void;
   isLoadingLocation: boolean;
+  hasLocation: boolean | undefined;
 }>({
   userLocation: { lat: 0, lon: 0 },
   setUserLocation: () => {},
   isLoadingLocation: false,
+  hasLocation: undefined,
 });
 
 export function LocationContextProvider({
@@ -21,10 +23,13 @@ export function LocationContextProvider({
     lat: number;
     lon: number;
   }>({
-    lat: 37.783333,
-    lon: -122.416667,
+    lat: 0,
+    lon: 0,
   });
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [hasLocation, setHasLocation] = useState<boolean | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     const getCurrentLocation = async () => {
@@ -40,6 +45,10 @@ export function LocationContextProvider({
       }
       const location = await Location.getCurrentPositionAsync();
 
+      if (location.coords.latitude && location.coords.longitude) {
+        setHasLocation(true);
+      }
+
       setUserLocation({
         lat: location.coords.latitude,
         lon: location.coords.longitude,
@@ -52,7 +61,7 @@ export function LocationContextProvider({
 
   return (
     <LocationContext.Provider
-      value={{ userLocation, setUserLocation, isLoadingLocation }}
+      value={{ userLocation, setUserLocation, isLoadingLocation, hasLocation }}
     >
       {children}
     </LocationContext.Provider>

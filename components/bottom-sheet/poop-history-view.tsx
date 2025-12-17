@@ -2,8 +2,9 @@ import { SheetContentProps, SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
 import { useMyPoopSeshHistory } from '@/hooks/api/usePoopSeshQueries';
 import { bristolScoreToImage } from '@/lib/helpers';
+import { formatFlightRoute } from '@/lib/flight-helpers';
 import { FlashList } from '@shopify/flash-list';
-import { Globe, Lock, X } from '@tamagui/lucide-icons';
+import { Globe, Lock, Plane, X } from '@tamagui/lucide-icons';
 import { differenceInMinutes, formatDistanceToNow } from 'date-fns';
 import { useMemo } from 'react';
 import { Pressable, useColorScheme } from 'react-native';
@@ -209,22 +210,33 @@ export function PoopHistoryView({
                       />
                     ) : (
                       <Text fontSize='$6' fontWeight='800'>
-                        💩
+                        {item.is_airplane ? '✈️' : '💩'}
                       </Text>
                     )}
                     <YStack gap='$2'>
                       <XStack items='center' gap='$1'>
-                        {item.is_public ? (
+                        {item.is_airplane ? (
+                          <Plane size={14} />
+                        ) : item.is_public ? (
                           <Globe size={14} />
                         ) : (
                           <Lock size={14} />
                         )}
                         <Text fontSize='$2' fontWeight='600'>
-                          {`${item.is_public ? 'Public' : 'Private'} Session`}
+                          {item.is_airplane
+                            ? `Flight ${item.flight_number || 'N/A'}`
+                            : `${item.is_public ? 'Public' : 'Private'} Session`}
                         </Text>
                       </XStack>
                       <Text fontSize='$2' fontWeight='600'>
-                        {timeAgo}
+                        {item.is_airplane &&
+                        item.departure_airport &&
+                        item.arrival_airport
+                          ? formatFlightRoute(
+                              item.departure_airport,
+                              item.arrival_airport
+                            )
+                          : timeAgo}
                       </Text>
                     </YStack>
                   </XStack>

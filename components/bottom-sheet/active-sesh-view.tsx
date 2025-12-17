@@ -1,4 +1,5 @@
 import CountUpTimer from '@/components/count-up-timer';
+import { FlightInfoForm } from '@/components/flight-info-form';
 import { useSesh } from '@/context/seshContext';
 import { toast } from 'burnt';
 import { memo, useEffect, useState } from 'react';
@@ -32,9 +33,11 @@ import { BRISTOL_SCORE_OPTIONS } from '@/constants';
 import { SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
 import { useLocation } from '@/context/locationContext';
+import { useNetwork } from '@/context/networkContext';
 import { useUpdatePlaceRating } from '@/hooks/api/useToiletRatingsMutations';
 import { useToiletRatingForPlace } from '@/hooks/api/useToiletRatingsQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { formatFlightRoute } from '@/lib/flight-helpers';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
 import {
@@ -43,6 +46,7 @@ import {
   Circle,
   CircleHelp,
   KeyboardOff,
+  Plane,
   Toilet,
   X,
 } from '@tamagui/lucide-icons';
@@ -64,6 +68,7 @@ function ActiveSeshViewComponent({
   setOpen?: (open: boolean) => void;
   setSheetType?: (type: SheetType) => void;
 }) {
+  const { isConnected } = useNetwork();
   const scheme = useColorScheme() ?? 'light';
 
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -78,6 +83,7 @@ function ActiveSeshViewComponent({
   );
 
   const [placeViewOpen, setPlaceViewOpen] = useState(false);
+  const [flightInfoOpen, setFlightInfoOpen] = useState(false);
   const [revelations, setRevelations] = useState('');
   const [bristolScore, setBristolScore] = useState({
     value: 0,
@@ -109,6 +115,15 @@ function ActiveSeshViewComponent({
     await updateToiletRating({ rating });
   };
 
+  const handleSaveFlightInfo = async (flightData: {
+    flight_number: string;
+    airline: string;
+    departure_airport: string;
+    arrival_airport: string;
+  }) => {
+    await updateActiveSesh(flightData);
+  };
+
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
@@ -128,7 +143,18 @@ function ActiveSeshViewComponent({
     };
   }, []);
 
-  return placeViewOpen ? (
+  return flightInfoOpen ? (
+    <FlightInfoForm
+      onSave={handleSaveFlightInfo}
+      onClose={() => setFlightInfoOpen(false)}
+      initialData={{
+        flight_number: activeSesh?.flight_number,
+        airline: activeSesh?.airline,
+        departure_airport: activeSesh?.departure_airport,
+        arrival_airport: activeSesh?.arrival_airport,
+      }}
+    />
+  ) : placeViewOpen ? (
     <PlaceView
       activeSesh={activeSesh!}
       onClose={() => setPlaceViewOpen(false)}
@@ -180,40 +206,65 @@ function ActiveSeshViewComponent({
           />
         </YStack>
         <YStack gap='$2'>
-          <ListItem
-            title={
-              activeSesh?.place?.name ||
-              activeSesh?.custom_place_name ||
-              'Name your toilet'
-            }
-            icon={Toilet}
-            iconAfter={ChevronRight}
-            onPress={() => setPlaceViewOpen(true)}
-          />
-          {activeSesh?.place && (
-            <XStack items='center' justify='space-between'>
-              <Label htmlFor='rate-your-toilet'>Rate your toilet</Label>
-              <XStack id='rate-your-toilet' gap='$2'>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Pressable
-                    key={index}
-                    onPress={() => {
-                      handleRating(index + 1);
-                    }}
-                  >
-                    <Icon
-                      name='star'
-                      size={18}
-                      color={
-                        index < (toiletRating?.rating || 0)
-                          ? (Colors[scheme].primary as string)
-                          : (Colors[scheme].border as string)
-                      }
-                    />
-                  </Pressable>
-                ))}
-              </XStack>
-            </XStack>
+          {activeSesh?.is_airplane ? (
+            <ListItem
+              title={
+                activeSesh?.flight_number
+                  ? `Flight ${activeSesh.flight_number}`
+                  : 'Add flight details'
+              }
+              subTitle={
+                activeSesh?.airline
+                  ? `${activeSesh.airline} • ${formatFlightRoute(
+                      activeSesh.departure_airport,
+                      activeSesh.arrival_airport
+                    )}`
+                  : undefined
+              }
+              icon={Plane}
+              iconAfter={ChevronRight}
+              onPress={() => setFlightInfoOpen(true)}
+            />
+          ) : (
+            <>
+              {isConnected && (
+                <ListItem
+                  title={
+                    activeSesh?.place?.name ||
+                    activeSesh?.custom_place_name ||
+                    'Name your toilet'
+                  }
+                  icon={Toilet}
+                  iconAfter={ChevronRight}
+                  onPress={() => setPlaceViewOpen(true)}
+                />
+              )}
+              {activeSesh?.place && (
+                <XStack items='center' justify='space-between'>
+                  <Label htmlFor='rate-your-toilet'>Rate your toilet</Label>
+                  <XStack id='rate-your-toilet' gap='$2'>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Pressable
+                        key={index}
+                        onPress={() => {
+                          handleRating(index + 1);
+                        }}
+                      >
+                        <Icon
+                          name='star'
+                          size={18}
+                          color={
+                            index < (toiletRating?.rating || 0)
+                              ? (Colors[scheme].primary as string)
+                              : (Colors[scheme].border as string)
+                          }
+                        />
+                      </Pressable>
+                    ))}
+                  </XStack>
+                </XStack>
+              )}
+            </>
           )}
         </YStack>
         <XStack items='center' justify='space-between'>

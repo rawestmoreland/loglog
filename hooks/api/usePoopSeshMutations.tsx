@@ -28,13 +28,16 @@ export function useStartPoopSesh() {
         throw new Error('rate-limit');
       }
 
-      const city = await getCityFromCoords({
-        latitude: poopSesh?.location?.coordinates.lat!,
-        longitude: poopSesh?.location?.coordinates.lon!,
-      });
+      // Skip geocoding for airplane sessions
+      if (!poopSesh.is_airplane && poopSesh.location?.coordinates) {
+        const city = await getCityFromCoords({
+          latitude: poopSesh.location.coordinates.lat,
+          longitude: poopSesh.location.coordinates.lon,
+        });
 
-      if (city && poopSesh.location) {
-        poopSesh.location.city = city;
+        if (city && poopSesh.location) {
+          poopSesh.location.city = city;
+        }
       }
 
       const sesh = await pb?.collection('poop_seshes').create({
@@ -71,7 +74,10 @@ export function useUpdatePoopSesh() {
       let sesh = await pb
         ?.collection('poop_seshes')
         .update(poopSesh.id!, poopSesh)
-        .catch(() => poopSesh);
+        .catch(() => {
+          console.error('error updating poop sesh', poopSesh);
+          return poopSesh;
+        });
 
       if (!sesh) {
         sesh = poopSesh;

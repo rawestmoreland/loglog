@@ -4,11 +4,14 @@ import { useFollowing } from './usePoopPalsQueries';
 
 import { useAuth } from '@/context/authContext';
 import { useMapViewContext } from '@/context/mapViewContext';
+import { useNetwork } from '@/context/networkContext';
 import { shiftCoords } from '@/lib/geo-helpers';
+import { getOfflineSessions } from '@/lib/helpers';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
 
 export function useActivePoopSesh() {
+  const { isConnected } = useNetwork();
   const { pb } = usePocketBase();
 
   const { user, pooProfile } = useAuth();
@@ -17,6 +20,18 @@ export function useActivePoopSesh() {
     queryKey: ['active-poop-sesh'],
     queryFn: async (): Promise<PoopSesh | null> => {
       try {
+        if (!isConnected) {
+          const offline = await getOfflineSessions();
+          const newestOffline = offline
+            .filter((s) => !!s.started && !Boolean(s.ended))
+            .sort(
+              (a, b) =>
+                new Date(b.started).getTime() - new Date(a.started).getTime()
+            )[0];
+          console.log('newestOffline', newestOffline);
+          return newestOffline ?? null;
+        }
+
         const sesh = await pb
           ?.collection('poop_seshes')
           .getFirstListItem(
@@ -34,7 +49,12 @@ export function useActivePoopSesh() {
           user: sesh?.user,
           poo_profile: sesh?.poo_profile,
           is_public: sesh?.is_public,
+          is_airplane: sesh?.is_airplane,
           company_time: sesh?.company_time,
+          flight_number: sesh?.flight_number,
+          airline: sesh?.airline,
+          departure_airport: sesh?.departure_airport,
+          arrival_airport: sesh?.arrival_airport,
           place_id: sesh?.place_id,
           place: sesh?.expand?.place_id,
           custom_place_name: sesh?.custom_place_name,

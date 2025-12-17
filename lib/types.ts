@@ -48,6 +48,11 @@ export interface PoopSesh {
   };
   custom_place_name?: string | null;
   place_type?: string;
+  is_airplane?: boolean;
+  flight_number?: string;
+  airline?: string;
+  departure_airport?: string;
+  arrival_airport?: string;
   expand?: {
     user?: {
       id: string;

@@ -1,6 +1,7 @@
 import { useAuth } from '@/context/authContext';
 import { useLocation } from '@/context/locationContext';
 import { useMapViewContext } from '@/context/mapViewContext';
+import { useNetwork } from '@/context/networkContext';
 import { useSesh } from '@/context/seshContext';
 import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
 import {
@@ -9,22 +10,22 @@ import {
 } from '@/hooks/api/usePoopSeshQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import MapboxGL from '@rnmapbox/maps';
-import { WifiOff } from '@tamagui/lucide-icons';
-import { useNetworkState } from 'expo-network';
+import { MapPinOff, WifiOff } from '@tamagui/lucide-icons';
 import { isEmpty } from 'lodash';
-import { useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 const POOP_MARKER = require('@/assets/images/poo-pile.png');
 
 export default function ProtectedIndexScreen() {
-  const network = useNetworkState();
+  const { isConnected, isNetworkInitialized } = useNetwork();
 
   const primary = useThemeColor({}, 'primary');
 
   const { pooProfile } = useAuth();
 
-  const { poopsToView, palSelected } = useMapViewContext();
+  const { poopsToView, palSelected, registerRecenterCallback } =
+    useMapViewContext();
   const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
   const { setSelectedSesh } = useSesh();
@@ -44,7 +45,7 @@ export default function ProtectedIndexScreen() {
     maxLat: number;
   } | null>(null);
 
-  const { userLocation } = useLocation();
+  const { userLocation, hasLocation } = useLocation();
 
   const { data: publicHistory } = usePublicPoopSeshHistory();
 
@@ -111,9 +112,27 @@ export default function ProtectedIndexScreen() {
     }
   };
 
+  const handleRecenterCamera = useCallback(() => {
+    if (cameraRef.current && userLocation) {
+      cameraRef.current.setCamera({
+        centerCoordinate: [userLocation.lon, userLocation.lat],
+        zoomLevel: 15,
+        animationDuration: 1000,
+      });
+    }
+  }, [userLocation]);
+
+  useEffect(() => {
+    registerRecenterCallback(handleRecenterCamera);
+  }, [registerRecenterCallback, handleRecenterCamera]);
+
   return (
     <View style={styles.container}>
-      {network.isConnected ? (
+      {!isNetworkInitialized ||
+      typeof isConnected === 'undefined' ||
+      typeof hasLocation === 'undefined' ? (
+        <ActivityIndicator size='large' color={String(primary)} />
+      ) : isConnected && hasLocation ? (
         <MapboxGL.MapView
           ref={mapRef}
           style={styles.map}
@@ -172,7 +191,10 @@ export default function ProtectedIndexScreen() {
                 historyToMap
                   ?.filter(
                     (poop) =>
-                      !isEmpty(poop.coords) && poop.started && poop.ended
+                      !isEmpty(poop.coords) &&
+                      poop.started &&
+                      poop.ended &&
+                      !poop.is_airplane
                   )
                   .map((poop) => ({
                     type: 'Feature',
@@ -223,11 +245,15 @@ export default function ProtectedIndexScreen() {
             />
           </MapboxGL.ShapeSource>
         </MapboxGL.MapView>
-      ) : (
+      ) : hasLocation === false ? (
+        <View style={styles.container}>
+          <MapPinOff size={40} />
+        </View>
+      ) : isConnected === false ? (
         <View style={styles.container}>
           <WifiOff size={40} />
         </View>
-      )}
+      ) : null}
     </View>
   );
 }

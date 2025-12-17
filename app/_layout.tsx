@@ -12,6 +12,7 @@ import MapboxGL from '@rnmapbox/maps';
 import { AuthContextProvider } from '@/context/authContext';
 import { LocationContextProvider } from '@/context/locationContext';
 import { MapViewContextProvider } from '@/context/mapViewContext';
+import { NetworkContextProvider } from '@/context/networkContext';
 import { NotificationProvider } from '@/context/notificationContext';
 import { SeshContextProvider } from '@/context/seshContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -45,10 +46,11 @@ export default function RootLayout() {
       <PocketBaseProvider>
         <QueryClientProvider client={queryClient}>
           <AuthContextProvider>
-            <ActionSheetProvider>
-              <NotificationProvider>
-                <LocationContextProvider>
-                  <SeshContextProvider>
+            <NetworkContextProvider>
+              <ActionSheetProvider>
+                <NotificationProvider>
+                  <LocationContextProvider>
+                    <SeshContextProvider>
                     <MapViewContextProvider>
                       <TamaguiProvider
                         config={tamaguiConfig}
@@ -82,6 +84,7 @@ export default function RootLayout() {
                 </LocationContextProvider>
               </NotificationProvider>
             </ActionSheetProvider>
+            </NetworkContextProvider>
           </AuthContextProvider>
         </QueryClientProvider>
       </PocketBaseProvider>

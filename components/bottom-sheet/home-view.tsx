@@ -4,7 +4,12 @@ import { useMapViewContext } from '@/context/mapViewContext';
 import { useSesh } from '@/context/seshContext';
 import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
 import { FlashList } from '@shopify/flash-list';
-import { BookOpen, ChevronDown, UserCog2 } from '@tamagui/lucide-icons';
+import {
+  BookOpen,
+  ChevronDown,
+  Crosshair,
+  UserCog2,
+} from '@tamagui/lucide-icons';
 import { Pressable, useColorScheme } from 'react-native';
 import ContextMenu from 'react-native-context-menu-view';
 import { Button, Square, XStack, YStack } from 'tamagui';
@@ -25,8 +30,13 @@ export function HomeView({
   setSheetType?: (type: SheetType) => void;
 }) {
   const { activeSesh, startSesh } = useSesh();
-  const { poopsToView, setPoopsToView, palSelected, setPalSelected } =
-    useMapViewContext();
+  const {
+    poopsToView,
+    setPoopsToView,
+    palSelected,
+    setPalSelected,
+    recenterCamera,
+  } = useMapViewContext();
   const scheme = useColorScheme() ?? 'light';
 
   const { data: poopPals } = useFollowing();
@@ -65,6 +75,28 @@ export function HomeView({
           </Button>
         </ContextMenu>
         <XStack items='center' gap='$2'>
+          <Pressable
+            aria-label='Recenter Map'
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.8 : 1,
+              scale: pressed ? 0.95 : 1,
+              backgroundColor: Colors[scheme].primary as any,
+              color: Colors[scheme].primaryForeground as any,
+              padding: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+            })}
+            onPress={() => {
+              recenterCamera();
+            }}
+          >
+            <Crosshair
+              size={14}
+              pointerEvents='none'
+              color={Colors[scheme].primaryForeground as any}
+            />
+          </Pressable>
           <Pressable
             aria-label='Poop History'
             style={({ pressed }) => ({

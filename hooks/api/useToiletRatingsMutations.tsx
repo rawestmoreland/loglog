@@ -8,12 +8,11 @@ export function useUpdatePlaceRating(placeId: string) {
   const { pooProfile } = useAuth();
   const { pb } = usePocketBase();
 
-  if (!pooProfile?.id) {
-    throw new Error('Poo profile or place ID is missing');
-  }
-
   return useMutation({
     mutationFn: async ({ rating }: { rating: number }) => {
+      if (!pooProfile?.id || !placeId) {
+        return;
+      }
       const ratingToUpdate = await pb
         ?.collection('toilet_ratings')
         .getFirstListItem(

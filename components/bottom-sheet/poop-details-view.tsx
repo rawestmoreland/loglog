@@ -6,8 +6,12 @@ import {
   useUpdatePoopSesh,
 } from '@/hooks/api/usePoopSeshMutations';
 import { usePoopSesh } from '@/hooks/api/usePoopSeshQueries';
+import {
+  validateAirportCode,
+  validateFlightNumber,
+} from '@/lib/flight-helpers';
 import { PoopSesh } from '@/lib/types';
-import { CircleHelp, X } from '@tamagui/lucide-icons';
+import { CircleHelp, Plane, X } from '@tamagui/lucide-icons';
 import { toast } from 'burnt';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
@@ -18,6 +22,7 @@ import {
   AlertDialog,
   Button,
   Image,
+  Input,
   Label,
   Spinner,
   Text,
@@ -42,6 +47,10 @@ export function PoopDetailsView({
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
 
   const [revelations, setRevelations] = useState('');
+  const [flightNumber, setFlightNumber] = useState('');
+  const [airline, setAirline] = useState('');
+  const [departureAirport, setDepartureAirport] = useState('');
+  const [arrivalAirport, setArrivalAirport] = useState('');
 
   const { data: poopDetails, isLoading } = usePoopSesh(poopDetailsId ?? null, {
     enabled: !!poopDetailsId,
@@ -68,7 +77,25 @@ export function PoopDetailsView({
     if (poopDetails?.revelations) {
       setRevelations(poopDetails.revelations);
     }
-  }, [poopDetails?.revelations]);
+    if (poopDetails?.flight_number) {
+      setFlightNumber(poopDetails.flight_number);
+    }
+    if (poopDetails?.airline) {
+      setAirline(poopDetails.airline);
+    }
+    if (poopDetails?.departure_airport) {
+      setDepartureAirport(poopDetails.departure_airport);
+    }
+    if (poopDetails?.arrival_airport) {
+      setArrivalAirport(poopDetails.arrival_airport);
+    }
+  }, [
+    poopDetails?.revelations,
+    poopDetails?.flight_number,
+    poopDetails?.airline,
+    poopDetails?.departure_airport,
+    poopDetails?.arrival_airport,
+  ]);
 
   useEffect(() => {
     if (timeoutRef.current) {
@@ -220,6 +247,86 @@ export function PoopDetailsView({
             }}
           />
         </XStack>
+        {poopDetails?.is_airplane && (
+          <YStack
+            gap='$3'
+            p='$3'
+            borderWidth={1}
+            style={{ borderRadius: 16 }}
+            borderColor='$borderColor'
+          >
+            <XStack items='center' gap='$2'>
+              <Plane size={16} />
+              <Text fontWeight='bold'>Flight Information</Text>
+            </XStack>
+            <YStack gap='$2'>
+              <Label htmlFor='flight-number'>Flight Number</Label>
+              <Input
+                id='flight-number'
+                value={flightNumber}
+                onChangeText={(text) => setFlightNumber(text.toUpperCase())}
+                onBlur={() => {
+                  if (flightNumber && !validateFlightNumber(flightNumber)) {
+                    Alert.alert('Invalid flight number format (e.g., AA123)');
+                  } else {
+                    handleUpdateSesh({ flight_number: flightNumber });
+                  }
+                }}
+                placeholder='e.g., AA123'
+                autoCapitalize='characters'
+              />
+            </YStack>
+            <YStack gap='$2'>
+              <Label htmlFor='airline'>Airline</Label>
+              <Input
+                id='airline'
+                value={airline}
+                onChangeText={setAirline}
+                onBlur={() => handleUpdateSesh({ airline })}
+                placeholder='e.g., American Airlines'
+              />
+            </YStack>
+            <YStack gap='$2'>
+              <Label htmlFor='departure-airport'>Departure Airport</Label>
+              <Input
+                id='departure-airport'
+                value={departureAirport}
+                onChangeText={(text) => setDepartureAirport(text.toUpperCase())}
+                onBlur={() => {
+                  if (
+                    departureAirport &&
+                    !validateAirportCode(departureAirport)
+                  ) {
+                    Alert.alert('Must be 3 uppercase letters (e.g., LAX)');
+                  } else {
+                    handleUpdateSesh({ departure_airport: departureAirport });
+                  }
+                }}
+                placeholder='e.g., LAX'
+                maxLength={3}
+                autoCapitalize='characters'
+              />
+            </YStack>
+            <YStack gap='$2'>
+              <Label htmlFor='arrival-airport'>Arrival Airport</Label>
+              <Input
+                id='arrival-airport'
+                value={arrivalAirport}
+                onChangeText={(text) => setArrivalAirport(text.toUpperCase())}
+                onBlur={() => {
+                  if (arrivalAirport && !validateAirportCode(arrivalAirport)) {
+                    Alert.alert('Must be 3 uppercase letters (e.g., JFK)');
+                  } else {
+                    handleUpdateSesh({ arrival_airport: arrivalAirport });
+                  }
+                }}
+                placeholder='e.g., JFK'
+                maxLength={3}
+                autoCapitalize='characters'
+              />
+            </YStack>
+          </YStack>
+        )}
         <YStack gap='$2'>
           <XStack items='center' gap='$2'>
             <Text>Bristol Score:</Text>
