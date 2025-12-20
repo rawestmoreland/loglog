@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/context/authContext';
+import { useNetwork } from '@/context/networkContext';
 import { getCityFromCoords } from '@/lib/geo-helpers';
+import { getOfflineSessions } from '@/lib/helpers';
+import { PoopSeshesResponse } from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
 
@@ -9,22 +12,48 @@ export function useStartPoopSesh() {
   const { pb } = usePocketBase();
   const queryClient = useQueryClient();
   const { user, pooProfile } = useAuth();
+  const { isConnected, isNetworkInitialized } = useNetwork();
 
   return useMutation({
     mutationFn: async (poopSesh: PoopSesh): Promise<PoopSesh> => {
       // Check for a sesh made within the last 5 minutes for rate limiting
-      const lastSesh = await pb
-        ?.collection('poop_seshes')
-        .getFirstListItem(
-          `poo_profile = "${pooProfile?.id}" && started >= "${new Date(
-            Date.now() - 5 * 60 * 1000
+      let shouldLimit = false;
+      if (isConnected === false && isNetworkInitialized) {
+        const offline = await getOfflineSessions();
+        const lastOfflineSesh = offline
+          .filter((s) => s.poo_profile === pooProfile?.id)
+          .sort(
+            (a, b) =>
+              new Date(b.started).getTime() - new Date(a.started).getTime()
+          )[0];
+        if (
+          lastOfflineSesh &&
+          new Date(lastOfflineSesh.started).getTime() >
+            new Date(Date.now() - 5 * 60 * 1000).getTime()
+        ) {
+          shouldLimit = true;
+        }
+      } else {
+        const lastSesh = await pb
+          ?.collection('poop_seshes')
+          .getFirstListItem<PoopSeshesResponse>(
+            `poo_profile = "${pooProfile?.id}" && started >= "${new Date(
+              Date.now() - 5 * 60 * 1000
+            )
+              .toISOString()
+              .replace('T', ' ')}"`
           )
-            .toISOString()
-            .replace('T', ' ')}"`
-        )
-        .catch((e) => console.log('sesherror', e));
+          .catch((e) => {
+            console.log('sesherror', e);
+            return null;
+          });
 
-      if (lastSesh && !__DEV__) {
+        if (lastSesh && !__DEV__) {
+          shouldLimit = true;
+        }
+      }
+
+      if (shouldLimit) {
         throw new Error('rate-limit');
       }
 
@@ -122,6 +151,7 @@ export function useDeletePoop() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poop-sesh-history'] });
+      queryClient.invalidateQueries({ queryKey: ['active-poop-sesh'] });
     },
   });
 }

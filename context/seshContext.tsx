@@ -17,12 +17,18 @@ import { useNotification } from '@/context/notificationContext';
 import { isValidLocation } from '@/lib/location-helpers';
 
 import {
+  useDeletePoop,
   useStartPoopSesh,
   useUpdatePoopSesh,
 } from '@/hooks/api/usePoopSeshMutations';
 import { useActivePoopSesh } from '@/hooks/api/usePoopSeshQueries';
-import { startOfflineSession, updateOfflineSession } from '@/lib/helpers';
+import {
+  deleteOfflineSession,
+  startOfflineSession,
+  updateOfflineSession,
+} from '@/lib/helpers';
 import { PoopSesh } from '@/lib/types';
+import { toast } from 'burnt';
 import { v4 as uuid } from 'uuid';
 
 export const SeshContext = createContext<{
@@ -32,6 +38,7 @@ export const SeshContext = createContext<{
   isLoadingActiveSesh: boolean;
   startSesh: () => Promise<void>;
   endSesh: () => Promise<void>;
+  cancelActiveSesh: () => Promise<void>;
   poopForm: any;
   updateActiveSesh: (payload: Partial<PoopSesh>) => Promise<void>;
   isSeshPending: boolean;
@@ -42,6 +49,7 @@ export const SeshContext = createContext<{
   isLoadingActiveSesh: false,
   startSesh: () => Promise.resolve(),
   endSesh: () => Promise.resolve(),
+  cancelActiveSesh: () => Promise.resolve(),
   poopForm: {},
   updateActiveSesh: () => Promise.resolve(),
   isSeshPending: false,
@@ -54,6 +62,7 @@ export const SeshContextProvider = ({
 }) => {
   const startSeshMutation = useStartPoopSesh();
   const updateSeshMutation = useUpdatePoopSesh();
+  const deleteSeshMutation = useDeletePoop();
   const {
     data: activeSesh,
     isLoading: isLoadingActiveSesh,
@@ -78,7 +87,7 @@ export const SeshContextProvider = ({
   });
 
   const { userLocation, setUserLocation } = useLocation();
-  const { isConnected } = useNetwork();
+  const { isConnected, isNetworkInitialized } = useNetwork();
 
   const startSesh = useCallback(async () => {
     // Check if location is valid
@@ -298,12 +307,52 @@ export const SeshContextProvider = ({
     }
   }, [activeSesh, updateSeshMutation, cancelNotification, poopForm]);
 
+  const cancelActiveSesh = useCallback(async () => {
+    if (!isNetworkInitialized || !activeSesh) return;
+
+    try {
+      if (isConnected === false) {
+        await deleteOfflineSession(activeSesh.id!);
+        await refetchActiveSesh();
+        toast({
+          title: 'Success',
+          preset: 'done',
+          message: 'Poop sesh canceled successfully',
+        });
+      } else {
+        await deleteSeshMutation.mutateAsync({ poopId: activeSesh.id! });
+        toast({
+          title: 'Success',
+          preset: 'done',
+          message: 'Poop sesh canceled successfully',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Error',
+        preset: 'error',
+        message: 'We had trouble canceling the poop sesh',
+      });
+    } finally {
+      await cancelNotification({ identifier: 'poop-sesh-started' });
+    }
+  }, [
+    isNetworkInitialized,
+    activeSesh,
+    isConnected,
+    refetchActiveSesh,
+    deleteSeshMutation,
+    cancelNotification,
+  ]);
+
   const contextValue = useMemo(
     () => ({
       activeSesh,
       isLoadingActiveSesh,
       startSesh,
       endSesh,
+      cancelActiveSesh,
       poopForm,
       updateActiveSesh,
       selectedSesh,
@@ -316,6 +365,7 @@ export const SeshContextProvider = ({
       isLoadingActiveSesh,
       startSesh,
       endSesh,
+      cancelActiveSesh,
       poopForm,
       updateActiveSesh,
       selectedSesh,

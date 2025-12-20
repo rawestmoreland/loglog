@@ -1,4 +1,5 @@
 import { LogSwitch } from '@/components/ui/log-switch';
+import { RoundButton } from '@/components/ui/round-button';
 import { BRISTOL_SCORE_OPTIONS } from '@/constants';
 import { SheetContentProps, SheetType } from '@/constants/sheet';
 import {
@@ -136,11 +137,8 @@ export function PoopDetailsView({
     <YStack flex={1} gap='$4' mb='$4'>
       <XStack justify='space-between' items='center'>
         <Text fontWeight={'bold'}>Poop Details</Text>
-        <Button
+        <RoundButton
           icon={X}
-          circular
-          theme='yellow'
-          size='$2'
           onPress={() => setSheetType?.(SheetType.POOP_HISTORY)}
         />
       </XStack>

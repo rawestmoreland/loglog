@@ -36,9 +36,9 @@
     "icon": "./assets/images/loggie.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/loggie.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFCC00"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -53,8 +53,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/loggie.png",
+        "backgroundColor": "#FFCC00"
       },
       "package": "com.westmorelandcreative.dropspot",
       "permissions": [

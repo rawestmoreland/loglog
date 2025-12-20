@@ -42,12 +42,18 @@ export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) 
         const pbInstance = new PocketBase(baseUrl, store);
         pbInstance.autoCancellation(false);
 
-        // Test the connection
-        await pbInstance.health.check();
-        console.log('PocketBase connection successful');
-
+        // Always set the instance, even if offline - this allows auth state to be read from AsyncStorage
         setPb(pbInstance);
-        setError(null);
+
+        // Test the connection, but don't fail initialization if offline
+        try {
+          await pbInstance.health.check();
+          console.log('PocketBase connection successful');
+          setError(null);
+        } catch (healthErr) {
+          console.warn('PocketBase health check failed (offline mode):', healthErr);
+          setError('Offline mode - some features may be limited');
+        }
       } catch (err) {
         console.error('Failed to initialize PocketBase:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize PocketBase');

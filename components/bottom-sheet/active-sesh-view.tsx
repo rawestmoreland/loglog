@@ -73,7 +73,8 @@ function ActiveSeshViewComponent({
 
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
-  const { activeSesh, endSesh, updateActiveSesh, poopForm } = useSesh();
+  const { activeSesh, endSesh, updateActiveSesh, cancelActiveSesh, poopForm } =
+    useSesh();
 
   const { mutateAsync: updateToiletRating } = useUpdatePlaceRating(
     activeSesh?.place?.id ?? ''
@@ -109,6 +110,11 @@ function ActiveSeshViewComponent({
       preset: 'done',
       haptic: 'success',
     });
+  };
+
+  const handleDeleteSesh = async () => {
+    await cancelActiveSesh();
+    setSheetType?.(SheetType.HOME);
   };
 
   const handleRating = async (rating: number) => {
@@ -167,6 +173,7 @@ function ActiveSeshViewComponent({
       <YStack gap='$2' mb='$4'>
         <XStack justify='space-between'>
           <Text fontWeight={'bold'}>Log Details</Text>
+          {activeSesh?.is_local && <Text theme='red'>Local log</Text>}
           <XStack items='center' gap='$2'>
             <Label size='$2' htmlFor='public-log'>
               Public log?
@@ -227,7 +234,7 @@ function ActiveSeshViewComponent({
             />
           ) : (
             <>
-              {isConnected && (
+              {isConnected === true && (
                 <ListItem
                   title={
                     activeSesh?.place?.name ||
@@ -267,6 +274,19 @@ function ActiveSeshViewComponent({
             </>
           )}
         </YStack>
+        <XStack items='center' justify='space-between'>
+          <Label htmlFor='is-airplane'>Airplane?</Label>
+          <LogSwitch
+            id='is-airplane'
+            key='is-airplane'
+            size='$3'
+            checked={activeSesh?.is_airplane}
+            defaultChecked={activeSesh?.is_airplane}
+            onCheckedChange={(value) =>
+              updateActiveSesh({ is_airplane: value })
+            }
+          />
+        </XStack>
         <XStack items='center' justify='space-between'>
           <Label htmlFor='company-time'>On company time?</Label>
           <LogSwitch
@@ -324,6 +344,9 @@ function ActiveSeshViewComponent({
         </YStack>
         <Button mt='$4' theme='accent' onPress={handleEndSesh}>
           Pinch it off
+        </Button>
+        <Button mt='$2' theme='red' onPress={handleDeleteSesh}>
+          Cancel
         </Button>
       </YStack>
     </KeyboardAvoidingView>

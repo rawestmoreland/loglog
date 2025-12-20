@@ -104,24 +104,34 @@ export const AuthContextProvider = ({ children }: AuthContextProviderProps) => {
 
       try {
         setIsLoadingUserData(true);
+        // Check auth state from AsyncAuthStore - this works offline
         const isLoggedIn = pb.authStore.isValid;
         setIsLoggedIn(isLoggedIn);
         setUser(isLoggedIn ? pb.authStore.record : null);
 
         if (isLoggedIn) {
+          // Attempt to refetch profile, but this may fail if offline
+          // React Query will handle the error and use cached data if available
           refetchPooProfile();
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
-        setIsLoggedIn(false);
-        setUser(null);
+        // Don't clear auth state on error - user might be offline
+        // Only clear if auth is actually invalid
+        if (pb.authStore.isValid) {
+          setIsLoggedIn(true);
+          setUser(pb.authStore.record);
+        } else {
+          setIsLoggedIn(false);
+          setUser(null);
+        }
       } finally {
         setIsLoadingUserData(false);
       }
     };
 
     checkAuthStatus();
-  }, [pb, isPocketBaseLoading]);
+  }, [pb, isPocketBaseLoading, refetchPooProfile]);
 
   const handleSignOut = async () => {
     if (!pb) {

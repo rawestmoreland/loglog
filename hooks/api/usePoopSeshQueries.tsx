@@ -11,7 +11,7 @@ import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
 
 export function useActivePoopSesh() {
-  const { isConnected } = useNetwork();
+  const { isConnected, isNetworkInitialized } = useNetwork();
   const { pb } = usePocketBase();
 
   const { user, pooProfile } = useAuth();
@@ -20,7 +20,7 @@ export function useActivePoopSesh() {
     queryKey: ['active-poop-sesh'],
     queryFn: async (): Promise<PoopSesh | null> => {
       try {
-        if (!isConnected) {
+        if (isConnected === false && isNetworkInitialized) {
           const offline = await getOfflineSessions();
           const newestOffline = offline
             .filter((s) => !!s.started && !Boolean(s.ended))
@@ -28,8 +28,7 @@ export function useActivePoopSesh() {
               (a, b) =>
                 new Date(b.started).getTime() - new Date(a.started).getTime()
             )[0];
-          console.log('newestOffline', newestOffline);
-          return newestOffline ?? null;
+          return newestOffline ? { ...newestOffline, is_local: true } : null;
         }
 
         const sesh = await pb

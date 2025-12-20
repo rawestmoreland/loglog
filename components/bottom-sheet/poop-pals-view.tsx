@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { RoundButton } from '@/components/ui/round-button';
 import { SheetType } from '@/constants/sheet';
 import {
   useAcceptFollowRequest,
@@ -186,11 +187,8 @@ export function PoopPalsView({
     <YStack flex={1}>
       <XStack justify='space-between' items='center'>
         <Text fontWeight={'bold'}>Poop Pals</Text>
-        <Button
+        <RoundButton
           icon={X}
-          circular
-          theme='yellow'
-          size='$2'
           onPress={() => setSheetType?.(SheetType.USER_SETTINGS)}
         />
       </XStack>

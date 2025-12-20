@@ -16,6 +16,7 @@ export interface PooProfile {
 
 export interface PoopSesh {
   id?: string;
+  is_local?: boolean;
   bristol_score?: number;
   user?: string;
   poo_profile?: string;
