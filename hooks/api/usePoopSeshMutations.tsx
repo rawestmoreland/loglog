@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/context/authContext';
 import { useNetwork } from '@/context/networkContext';
-import { getCityFromCoords } from '@/lib/geo-helpers';
+import { getReverseGeoDataFromCoords } from '@/lib/geo-helpers';
 import { getOfflineSessions } from '@/lib/helpers';
 import { PoopSeshesResponse } from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
@@ -59,13 +59,14 @@ export function useStartPoopSesh() {
 
       // Skip geocoding for airplane sessions
       if (!poopSesh.is_airplane && poopSesh.location?.coordinates) {
-        const city = await getCityFromCoords({
+        const reverseGeoData = await getReverseGeoDataFromCoords({
           latitude: poopSesh.location.coordinates.lat,
           longitude: poopSesh.location.coordinates.lon,
         });
 
-        if (city && poopSesh.location) {
-          poopSesh.location.city = city;
+        if (reverseGeoData?.city && poopSesh.location) {
+          poopSesh.location.city = reverseGeoData.city;
+          poopSesh.location.timezone = reverseGeoData.timezone;
         }
       }
 
@@ -73,6 +74,7 @@ export function useStartPoopSesh() {
         ...poopSesh,
         user: user?.id,
         poo_profile: pooProfile?.id,
+        timezone: poopSesh.location?.timezone,
       });
 
       return {
