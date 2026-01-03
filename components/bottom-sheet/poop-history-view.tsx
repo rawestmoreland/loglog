@@ -1,8 +1,8 @@
 import { SheetContentProps, SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
 import { useMyPoopSeshHistory } from '@/hooks/api/usePoopSeshQueries';
-import { bristolScoreToImage } from '@/lib/helpers';
 import { formatFlightRoute } from '@/lib/flight-helpers';
+import { bristolScoreToImage } from '@/lib/helpers';
 import { FlashList } from '@shopify/flash-list';
 import { Globe, Lock, Plane, X } from '@tamagui/lucide-icons';
 import { differenceInMinutes, formatDistanceToNow } from 'date-fns';
@@ -10,18 +10,11 @@ import { useMemo } from 'react';
 import { Pressable, useColorScheme } from 'react-native';
 import { Card, Image, Separator, Text, XStack, YStack } from 'tamagui';
 
-const getBristolEmoji = (score?: number) => {
-  if (!score) return '💩';
-  const emojis = ['', '🥜', '🌭', '🍫', '🌊', '💧', '☕'];
-  return emojis[score] || '💩';
-};
-
 const getSessionDuration = (started: Date | string, ended?: Date) => {
   if (!ended) return null;
   const minutes = differenceInMinutes(new Date(ended), new Date(started));
   if (minutes < 1) return '< 1 min';
   if (minutes === 1) return '1 min';
-  return `${minutes} mins`;
 };
 
 export function PoopHistoryView({
@@ -50,6 +43,19 @@ export function PoopHistoryView({
 
     return { total, companyTime, avgBristol };
   }, [poopHistory]);
+
+  if (isLoading) {
+    return (
+      <YStack flex={1} justify='center' items='center' gap='$3' py='$8'>
+        <Text fontSize='$8' opacity={0.5}>
+          💩
+        </Text>
+        <Text fontSize='$5' fontWeight='600' color='$color11'>
+          Loading...
+        </Text>
+      </YStack>
+    );
+  }
 
   return (
     <YStack flex={1} gap='$4' mb='$4'>
@@ -225,7 +231,9 @@ export function PoopHistoryView({
                         <Text fontSize='$2' fontWeight='600'>
                           {item.is_airplane
                             ? `Flight ${item.flight_number || 'N/A'}`
-                            : `${item.is_public ? 'Public' : 'Private'} Session`}
+                            : `${
+                                item.is_public ? 'Public' : 'Private'
+                              } Session`}
                         </Text>
                       </XStack>
                       <Text fontSize='$2' fontWeight='600'>

@@ -74,10 +74,26 @@ export function useMyPoopSeshHistory(
 ) {
   const { pb } = usePocketBase();
   const { user, pooProfile } = useAuth();
+  const { isConnected, isNetworkInitialized } = useNetwork();
 
   return useQuery({
     queryKey: ['poop-sesh-history', { user: user?.id }],
     queryFn: async (): Promise<PoopSesh[]> => {
+      const hasNoConnection =
+        isConnected === false && isNetworkInitialized === true;
+
+      if (hasNoConnection) {
+        const offline = await getOfflineSessions();
+        return (
+          offline
+            .filter((s) => Boolean(s.started) && Boolean(s.ended))
+            .sort(
+              (a, b) =>
+                new Date(b.started).getTime() - new Date(a.started).getTime()
+            ) ?? []
+        );
+      }
+
       // Get public and user's private sesh
       const filter = `(user = '${user?.id}' || poo_profile = '${pooProfile?.id}') && started != null && ended != null`;
       const sort = `-started`;

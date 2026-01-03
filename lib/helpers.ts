@@ -4,7 +4,7 @@ import Client from 'pocketbase';
 // This is needed for the uuid library to work
 import 'react-native-get-random-values';
 import { v4 as uuid } from 'uuid';
-import { getCityFromCoords } from './geo-helpers';
+import { getReverseGeoDataFromCoords } from './geo-helpers';
 import { PoopSesh } from './types';
 
 export const bristolScoreToImage = (score: number) => {
@@ -96,11 +96,12 @@ export const syncOfflineSessions = async (
         sessionData.location?.coordinates?.lat &&
         sessionData.location?.coordinates?.lon
       ) {
-        city = await getCityFromCoords({
+        const reverseGeoData = await getReverseGeoDataFromCoords({
           latitude: sessionData.location?.coordinates?.lat ?? 0,
           longitude: sessionData.location?.coordinates?.lon ?? 0,
         });
-        if (city) {
+        if (reverseGeoData?.city) {
+          city = reverseGeoData.city;
           sessionData.location = {
             ...sessionData.location,
             city,
@@ -113,6 +114,7 @@ export const syncOfflineSessions = async (
           ...sessionData,
           user,
           poo_profile: pooProfile,
+          local_sync: true,
         })
         .then(async () => {
           if (id) {

@@ -9,6 +9,7 @@ import (
 
 	_ "loglog/migrations"
 	"loglog/notifications"
+	"loglog/achievements"
 
 	"github.com/joho/godotenv"
 	"github.com/pocketbase/dbx"
@@ -99,6 +100,22 @@ func main() {
 				Screen: "/(protected)/(screens)/chat/" + pooSesh.GetString("poo_profile") + "/" + activeSesh.GetString("poo_profile"),
 			}, nil)
 		}
+
+		return e.Next()
+	})
+
+	app.OnRecordAfterUpdateSuccess("poop_seshes").BindFunc(func(e *core.RecordEvent) error {
+		achievementService := achievements.NewAchievementService(app)
+		earnedAchievements, err := achievementService.AchievementScan(e.Record.GetString("poo_profile"))
+		if err != nil {
+			fmt.Println("Error scanning achievements", err)
+			return e.Next()
+		}
+
+		fmt.Println("Earned achievements", earnedAchievements)
+
+
+		// e.HttpContext.Set("earned_achievements", earnedAchievements)
 
 		return e.Next()
 	})
