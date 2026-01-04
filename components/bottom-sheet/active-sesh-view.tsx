@@ -564,7 +564,15 @@ const PlaceView = ({
         />
         <YStack gap='$2'>
           <XStack items='center' justify='space-between'>
-            <Label htmlFor='toilet-name'>Toilet Name</Label>
+            <YStack>
+              <Label htmlFor='toilet-name'>Toilet Name</Label>
+              {!Boolean(selectedPlace) && (
+                <Text color={Colors[scheme].textSecondary as any}>
+                  If you don&apos;t select a place, we&apos;ll use this name for
+                  your toilet
+                </Text>
+              )}
+            </YStack>
             {isKeyboardVisible && (
               <Button
                 size='$2'
@@ -606,7 +614,16 @@ const PlaceView = ({
                 )}
                 title={item.properties?.name}
                 subTitle={item.properties?.address}
-                onPress={() => setSelectedPlace(item)}
+                onPress={() => {
+                  if (
+                    selectedPlace?.properties?.mapbox_id ===
+                    item.properties?.mapbox_id
+                  ) {
+                    setSelectedPlace(null);
+                  } else {
+                    setSelectedPlace(item);
+                  }
+                }}
                 iconAfter={
                   item.properties?.mapbox_id ===
                   selectedPlace?.properties?.mapbox_id ? (
