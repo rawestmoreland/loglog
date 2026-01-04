@@ -29,7 +29,7 @@ export function useToiletRatingForPlace(placeId: string) {
       pb
         ?.collection('toilet_ratings')
         .getFirstListItem(
-          `user_id="${pooProfile?.id}" && place_id = "${placeId}"`
+          `poo_profile="${pooProfile?.id}" && place_id = "${placeId}"`
         ),
     enabled: !!pooProfile?.id && !!placeId,
   });
