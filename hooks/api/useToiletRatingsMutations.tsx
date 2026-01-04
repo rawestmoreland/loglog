@@ -16,19 +16,19 @@ export function useUpdatePlaceRating(placeId: string) {
       const ratingToUpdate = await pb
         ?.collection('toilet_ratings')
         .getFirstListItem(
-          `user_id = "${pooProfile?.id}" && place_id = "${placeId}"`
+          `poo_profile = "${pooProfile?.id}" && place_id = "${placeId}"`
         )
-        .catch(() => null);
-      console.log(ratingToUpdate);
+        .catch(console.error);
       if (ratingToUpdate) {
         return await pb
           ?.collection('toilet_ratings')
           .update(ratingToUpdate.id, {
             rating,
-          });
+          })
+          .catch(console.error);
       }
       return await pb?.collection('toilet_ratings').create({
-        user_id: pooProfile?.id,
+        poo_profile: pooProfile?.id,
         place_id: placeId,
         rating,
       });

@@ -58,8 +58,8 @@ export function useActivePoopSesh() {
           place: sesh?.expand?.place_id,
           custom_place_name: sesh?.custom_place_name,
         };
-      } catch (error) {
-        console.error(error);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
         return null;
       }
     },
