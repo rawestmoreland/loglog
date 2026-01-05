@@ -3,6 +3,7 @@ import { SheetType } from '@/constants/sheet';
 import { useAuth } from '@/context/authContext';
 import { useNetwork } from '@/context/networkContext';
 import { useSesh } from '@/context/seshContext';
+import { useToilet } from '@/context/toiletContext';
 import { syncOfflineSessions } from '@/lib/helpers';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { Stack, usePathname } from 'expo-router';
@@ -14,6 +15,7 @@ export default function ProtectedLayout() {
   const { isConnected, showOfflineUI } = useNetwork();
   const pathname = usePathname();
   const { activeSesh, selectedSesh } = useSesh();
+  const { selectedToilet } = useToilet();
   const [sheetType, setSheetType] = useState<SheetType>(SheetType.HOME);
   const [poopDetailsId, setPoopDetailsId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(true);
@@ -37,7 +39,10 @@ export default function ProtectedLayout() {
     if (!!selectedSesh) {
       setSheetType(SheetType.SELECTED_SESH);
     }
-  }, [activeSesh, selectedSesh]);
+    if (!!selectedToilet) {
+      setSheetType(SheetType.TOILET_DETAILS);
+    }
+  }, [activeSesh, selectedSesh, selectedToilet]);
 
   useEffect(() => {
     setSheetOpen(pathname !== '/bristol' && pathname !== '/settings');

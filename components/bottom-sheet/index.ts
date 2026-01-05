@@ -7,4 +7,5 @@ export * from './poop-details-view';
 export * from './poop-history-view';
 export * from './poop-pals-view';
 export * from './selected-sesh-view';
+export * from './toilet-details-view';
 export * from './user-settings-view';

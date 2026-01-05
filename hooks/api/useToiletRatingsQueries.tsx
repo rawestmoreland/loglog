@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/context/authContext';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
+import { RecordModel } from 'pocketbase';
 
 export function useToiletRatings() {
   const { pooProfile } = useAuth();
@@ -32,5 +33,32 @@ export function useToiletRatingForPlace(placeId: string) {
           `poo_profile="${pooProfile?.id}" && place_id = "${placeId}"`
         ),
     enabled: !!pooProfile?.id && !!placeId,
+  });
+}
+
+export function useAverageToiletRatings(params: { enabled?: boolean }) {
+  const { pb } = usePocketBase();
+
+  return useQuery({
+    queryKey: ['averageToiletRatings'],
+    queryFn: async (): Promise<RecordModel[]> => {
+      const ratings = await pb
+        ?.collection('average_ratings')
+        .getFullList({ expand: 'place_id' })
+        .catch((e) => {
+          console.error(e);
+          return [];
+        });
+
+      if (ratings && ratings.length > 0) {
+        return ratings.map((rating: RecordModel) => ({
+          ...rating,
+          type: 'toilet',
+        }));
+      }
+
+      return [];
+    },
+    enabled: !!pb && params.enabled,
   });
 }

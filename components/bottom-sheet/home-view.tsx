@@ -56,6 +56,7 @@ export function HomeView({
             { title: 'Friends', selected: poopsToView === 'friends' },
             { title: 'Yours', selected: poopsToView === 'yours' },
             { title: 'All', selected: poopsToView === 'all' },
+            { title: 'Toilets', selected: poopsToView === 'toilets' },
           ]}
           onPress={(e) => {
             setPalSelected(null);
@@ -64,6 +65,7 @@ export function HomeView({
                 | 'friends'
                 | 'yours'
                 | 'all'
+                | 'toilets'
             );
           }}
         >
@@ -72,6 +74,10 @@ export function HomeView({
               ? 'Friends'
               : poopsToView === 'yours'
               ? 'Yours'
+              : poopsToView === 'all'
+              ? 'All'
+              : poopsToView === 'toilets'
+              ? 'Toilets'
               : 'All'}
           </Button>
         </ContextMenu>
