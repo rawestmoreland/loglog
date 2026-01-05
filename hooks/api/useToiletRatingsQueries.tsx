@@ -36,7 +36,7 @@ export function useToiletRatingForPlace(placeId: string) {
   });
 }
 
-export function useAverageToiletRatings() {
+export function useAverageToiletRatings(params: { enabled?: boolean }) {
   const { pb } = usePocketBase();
 
   return useQuery({
@@ -59,6 +59,6 @@ export function useAverageToiletRatings() {
 
       return [];
     },
-    enabled: !!pb,
+    enabled: !!pb && params.enabled,
   });
 }

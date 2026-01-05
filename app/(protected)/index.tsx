@@ -53,7 +53,9 @@ export default function ProtectedIndexScreen() {
 
   const { data: publicHistory } = usePublicPoopSeshHistory();
 
-  const { data: averageToiletRatings } = useAverageToiletRatings();
+  const { data: averageToiletRatings } = useAverageToiletRatings({
+    enabled: poopsToView === 'toilets',
+  });
 
   const { data: palHistory } = usePalPoopSeshHistory();
 

@@ -12,8 +12,6 @@ export function ToiletDetailsView({ setSheetType }: SheetContentProps) {
   const scheme = useColorScheme() ?? 'light';
   const { selectedToilet, setSelectedToilet } = useToilet();
 
-  console.log(JSON.stringify(selectedToilet, null, 2));
-
   const toiletName = useMemo(() => {
     return selectedToilet?.expand?.place_id?.name;
   }, [selectedToilet]);
