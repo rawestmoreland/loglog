@@ -8,6 +8,7 @@ import {
   PoopHistoryView,
   PoopPalsView,
   SelectedSeshView,
+  ToiletDetailsView,
   UserSettingsView,
 } from '@/components/bottom-sheet';
 import { SheetContentComponent, SheetType } from '@/constants/sheet';
@@ -16,6 +17,7 @@ import { SheetContentComponent, SheetType } from '@/constants/sheet';
 export const SHEET_COMPONENTS: Record<SheetType, SheetContentComponent> = {
   [SheetType.HOME]: HomeView,
   [SheetType.ACTIVE_SESH]: ActiveSeshView,
+  [SheetType.TOILET_DETAILS]: ToiletDetailsView,
   [SheetType.SELECTED_SESH]: SelectedSeshView,
   [SheetType.NO_CONNECTION]: NoConnectionView,
   [SheetType.POOP_DETAILS]: PoopDetailsView,

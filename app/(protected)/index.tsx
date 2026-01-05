@@ -3,11 +3,13 @@ import { useLocation } from '@/context/locationContext';
 import { useMapViewContext } from '@/context/mapViewContext';
 import { useNetwork } from '@/context/networkContext';
 import { useSesh } from '@/context/seshContext';
+import { useToilet } from '@/context/toiletContext';
 import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
 import {
   usePalPoopSeshHistory,
   usePublicPoopSeshHistory,
 } from '@/hooks/api/usePoopSeshQueries';
+import { useAverageToiletRatings } from '@/hooks/api/useToiletRatingsQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import MapboxGL from '@rnmapbox/maps';
 import { MapPinOff, WifiOff } from '@tamagui/lucide-icons';
@@ -16,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 const POOP_MARKER = require('@/assets/images/poo-pile.png');
+const TOILET_MARKER = require('@/assets/images/toilet.png');
 
 export default function ProtectedIndexScreen() {
   const { isConnected, isNetworkInitialized } = useNetwork();
@@ -29,6 +32,7 @@ export default function ProtectedIndexScreen() {
   const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
   const { setSelectedSesh } = useSesh();
+  const { setSelectedToilet } = useToilet();
 
   const mapRef = useRef<MapboxGL.MapView>(null);
   const cameraRef = useRef<MapboxGL.Camera>(null);
@@ -48,6 +52,8 @@ export default function ProtectedIndexScreen() {
   const { userLocation, hasLocation } = useLocation();
 
   const { data: publicHistory } = usePublicPoopSeshHistory();
+
+  const { data: averageToiletRatings } = useAverageToiletRatings();
 
   const { data: palHistory } = usePalPoopSeshHistory();
 
@@ -108,7 +114,11 @@ export default function ProtectedIndexScreen() {
         });
       }
     } else {
-      setSelectedSesh(feature.properties);
+      if (poopsToView === 'toilets') {
+        setSelectedToilet(feature.properties);
+      } else {
+        setSelectedSesh(feature.properties);
+      }
     }
   };
 
@@ -166,6 +176,7 @@ export default function ProtectedIndexScreen() {
           <MapboxGL.Images
             images={{
               'poo-pile': POOP_MARKER,
+              toilet: TOILET_MARKER,
             }}
           />
           <MapboxGL.Camera
@@ -188,24 +199,38 @@ export default function ProtectedIndexScreen() {
             shape={{
               type: 'FeatureCollection',
               features:
-                historyToMap
-                  ?.filter(
-                    (poop) =>
-                      !isEmpty(poop.coords) &&
-                      poop.started &&
-                      poop.ended &&
-                      !poop.is_airplane
-                  )
-                  .map((poop) => ({
-                    type: 'Feature',
-                    geometry: {
-                      type: 'Point',
-                      coordinates: [poop.coords?.lon!, poop.coords?.lat!],
-                    },
-                    properties: {
-                      ...poop,
-                    },
-                  })) || [],
+                poopsToView === 'toilets'
+                  ? averageToiletRatings?.map((toilet) => ({
+                      type: 'Feature',
+                      geometry: {
+                        type: 'Point',
+                        coordinates: [
+                          toilet.expand?.place_id?.location?.lon!,
+                          toilet.expand?.place_id?.location?.lat!,
+                        ],
+                      },
+                      properties: {
+                        ...toilet,
+                      },
+                    })) || []
+                  : historyToMap
+                      ?.filter(
+                        (poop) =>
+                          !isEmpty(poop.coords) &&
+                          poop.started &&
+                          poop.ended &&
+                          !poop.is_airplane
+                      )
+                      .map((poop) => ({
+                        type: 'Feature',
+                        geometry: {
+                          type: 'Point',
+                          coordinates: [poop.coords?.lon!, poop.coords?.lat!],
+                        },
+                        properties: {
+                          ...poop,
+                        },
+                      })) || [],
             }}
           >
             {/* White circle background for clusters */}
@@ -225,8 +250,8 @@ export default function ProtectedIndexScreen() {
               id='clusteredPoints'
               filter={['has', 'point_count']}
               style={{
-                iconImage: 'poo-pile',
-                iconSize: 0.15,
+                iconImage: poopsToView === 'toilets' ? 'toilet' : 'poo-pile',
+                iconSize: poopsToView === 'toilets' ? 0.1 : 0.2,
                 iconAllowOverlap: true,
                 iconOffset: [0, -40], // Move the emoji up slightly
                 textField: ['get', 'point_count_abbreviated'],
@@ -239,7 +264,7 @@ export default function ProtectedIndexScreen() {
               id='singlePoint'
               filter={['!', ['has', 'point_count']]}
               style={{
-                iconImage: 'poo-pile',
+                iconImage: poopsToView === 'toilets' ? 'toilet' : 'poo-pile',
                 iconSize: 0.2,
               }}
             />

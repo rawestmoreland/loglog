@@ -7,8 +7,10 @@ import {
 } from 'react';
 
 const MapViewContext = createContext<{
-  poopsToView: 'friends' | 'yours' | 'all';
-  setPoopsToView: (poopsToView: 'friends' | 'yours' | 'all') => void;
+  poopsToView: 'friends' | 'yours' | 'all' | 'toilets';
+  setPoopsToView: (
+    poopsToView: 'friends' | 'yours' | 'all' | 'toilets'
+  ) => void;
   palSelected: string | null;
   setPalSelected: (palSelected: string | null) => void;
   recenterCamera: () => void;
@@ -28,13 +30,13 @@ export const MapViewContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [poopsToView, setPoopsToViewState] = useState<
-    'friends' | 'yours' | 'all'
+    'friends' | 'yours' | 'all' | 'toilets'
   >('yours');
   const [palSelected, setPalSelectedState] = useState<string | null>(null);
   const recenterCallbackRef = useRef<(() => void) | null>(null);
 
   const setPoopsToView = useCallback(
-    (newValue: 'friends' | 'yours' | 'all') => {
+    (newValue: 'friends' | 'yours' | 'all' | 'toilets') => {
       setPoopsToViewState(newValue);
     },
     []

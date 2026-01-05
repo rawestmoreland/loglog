@@ -15,6 +15,7 @@ import { MapViewContextProvider } from '@/context/mapViewContext';
 import { NetworkContextProvider } from '@/context/networkContext';
 import { NotificationProvider } from '@/context/notificationContext';
 import { SeshContextProvider } from '@/context/seshContext';
+import { ToiletContextProvider } from '@/context/toiletContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PocketBaseProvider } from '@/lib/pocketbaseConfig';
 import tamaguiConfig from '@/tamagui.config';
@@ -51,39 +52,45 @@ export default function RootLayout() {
                 <NotificationProvider>
                   <LocationContextProvider>
                     <SeshContextProvider>
-                    <MapViewContextProvider>
-                      <TamaguiProvider
-                        config={tamaguiConfig}
-                        defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
-                      >
-                        <ThemeProvider
-                          value={
-                            colorScheme === 'dark' ? DarkTheme : DefaultTheme
-                          }
-                        >
-                          <PortalProvider shouldAddRootHost>
-                            <ToastProvider>
-                              <Stack>
-                                <Stack.Screen
-                                  name='(auth)'
-                                  options={{ headerShown: false }}
-                                />
-                                <Stack.Screen
-                                  name='(protected)'
-                                  options={{ headerShown: false }}
-                                />
-                              </Stack>
-                              <StatusBar style='auto' />
-                              <ToastViewport />
-                            </ToastProvider>
-                          </PortalProvider>
-                        </ThemeProvider>
-                      </TamaguiProvider>
-                    </MapViewContextProvider>
-                  </SeshContextProvider>
-                </LocationContextProvider>
-              </NotificationProvider>
-            </ActionSheetProvider>
+                      <ToiletContextProvider>
+                        <MapViewContextProvider>
+                          <TamaguiProvider
+                            config={tamaguiConfig}
+                            defaultTheme={
+                              colorScheme === 'dark' ? 'dark' : 'light'
+                            }
+                          >
+                            <ThemeProvider
+                              value={
+                                colorScheme === 'dark'
+                                  ? DarkTheme
+                                  : DefaultTheme
+                              }
+                            >
+                              <PortalProvider shouldAddRootHost>
+                                <ToastProvider>
+                                  <Stack>
+                                    <Stack.Screen
+                                      name='(auth)'
+                                      options={{ headerShown: false }}
+                                    />
+                                    <Stack.Screen
+                                      name='(protected)'
+                                      options={{ headerShown: false }}
+                                    />
+                                  </Stack>
+                                  <StatusBar style='auto' />
+                                  <ToastViewport />
+                                </ToastProvider>
+                              </PortalProvider>
+                            </ThemeProvider>
+                          </TamaguiProvider>
+                        </MapViewContextProvider>
+                      </ToiletContextProvider>
+                    </SeshContextProvider>
+                  </LocationContextProvider>
+                </NotificationProvider>
+              </ActionSheetProvider>
             </NetworkContextProvider>
           </AuthContextProvider>
         </QueryClientProvider>
