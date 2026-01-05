@@ -235,6 +235,9 @@ export const SeshContextProvider = ({
           identifier: 'poop-sesh-started',
           sendAt,
           title: 'Are you ok?',
+          data: {
+            screen: 'poop-sesh-started',
+          },
           body: "You've been sitting there for a while. Are you ok?",
         });
         console.log(
