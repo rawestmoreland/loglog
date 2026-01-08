@@ -469,7 +469,7 @@ const PlaceView = ({
     }, 1000);
 
     return () => clearTimeout(debouncedSearch);
-  }, [toiletName]);
+  }, [toiletName, userLocation]);
 
   const screenWidth = Dimensions.get('window').width;
   // Account for container padding (approximately 32px total) and margins between items
@@ -563,8 +563,13 @@ const PlaceView = ({
           contentContainerStyle={{ paddingBottom: 16 }}
         />
         <YStack gap='$2'>
-          <XStack items='center' justify='space-between'>
-            <YStack>
+          <XStack
+            justify='space-between'
+            items='flex-start'
+            width='100%'
+            gap='$2'
+          >
+            <YStack flex={1} shrink={1} minW={0} pr='$2'>
               <Label htmlFor='toilet-name'>Toilet Name</Label>
               {!Boolean(selectedPlace) && (
                 <Text color={Colors[scheme].textSecondary as any}>
@@ -573,15 +578,17 @@ const PlaceView = ({
                 </Text>
               )}
             </YStack>
-            {isKeyboardVisible && (
-              <Button
-                size='$2'
-                bg={Colors[scheme].primary as any}
-                onPress={() => Keyboard.dismiss()}
-              >
-                <KeyboardOff size={18} pointerEvents='none' />
-              </Button>
-            )}
+            <YStack shrink={0}>
+              {isKeyboardVisible && (
+                <Button
+                  size='$2'
+                  bg={Colors[scheme].primary as any}
+                  onPress={() => Keyboard.dismiss()}
+                >
+                  <KeyboardOff size={18} pointerEvents='none' />
+                </Button>
+              )}
+            </YStack>
           </XStack>
           <Input
             id='toilet-name'
