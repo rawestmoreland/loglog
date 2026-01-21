@@ -1,32 +1,32 @@
-import { router } from 'expo-router';
-import * as React from 'react';
-import { Alert, Image, Platform, Text, View } from 'react-native';
+import { router } from "expo-router";
+import * as React from "react";
+import { Alert, Image, Platform, Text, View } from "react-native";
 import {
   KeyboardAwareScrollView,
   KeyboardController,
   KeyboardStickyView,
-} from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { TextInput } from '@/components/ui/text-input';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Button as TamaguiButton, YStack } from 'tamagui';
+import { TextInput } from "@/components/ui/text-input";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { Button as TamaguiButton, YStack } from "tamagui";
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require("@/assets/images/loggie.png");
 
 export default function InfoScreen() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const mutedForeground = useThemeColor({}, 'mutedForeground');
+  const backgroundColor = useThemeColor({}, "background");
+  const mutedForeground = useThemeColor({}, "mutedForeground");
 
   const insets = useSafeAreaInsets();
-  const [focusedTextField, _] = React.useState<'code-name' | null>(null);
+  const [focusedTextField, _] = React.useState<"code-name" | null>(null);
 
-  const [codeName, setCodeName] = React.useState('');
+  const [codeName, setCodeName] = React.useState("");
 
   return (
     <View
       style={{
-        display: 'flex',
+        display: "flex",
         flex: 1,
         paddingBottom: insets.bottom,
         backgroundColor,
@@ -34,11 +34,11 @@ export default function InfoScreen() {
     >
       <KeyboardAwareScrollView
         bottomOffset={Platform.select({ ios: 8 })}
-        bounces={false}
-        keyboardDismissMode='interactive'
-        keyboardShouldPersistTaps='handled'
+        bounces={true}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingTop: Platform.select({ ios: 48, default: 64 }),
+          paddingTop: Platform.select({ ios: 52, default: 64 }),
         }}
       >
         <View
@@ -47,7 +47,7 @@ export default function InfoScreen() {
             flex: 1,
           }}
         >
-          <View style={{ alignItems: 'center', paddingBottom: 4 }}>
+          <View style={{ alignItems: "center", paddingBottom: 4 }}>
             <Image
               source={LOGO_SOURCE}
               style={{
@@ -55,26 +55,26 @@ export default function InfoScreen() {
                 width: Platform.select({ ios: 48, default: 32 }),
                 borderRadius: 8,
               }}
-              resizeMode='contain'
+              resizeMode="contain"
             />
             <Text
               style={{
-                fontWeight: Platform.select({ ios: 'bold', default: 'normal' }),
+                fontWeight: Platform.select({ ios: "bold", default: "normal" }),
                 paddingBottom: 4,
                 paddingTop: 16,
-                textAlign: 'center',
+                textAlign: "center",
               }}
             >
               {Platform.select({
                 ios: "What's your code name?",
-                default: 'Create your account',
+                default: "Create your account",
               })}
             </Text>
-            {Platform.OS !== 'ios' && (
+            {Platform.OS !== "ios" && (
               <Text
                 style={{
                   fontSize: 12,
-                  textAlign: 'center',
+                  textAlign: "center",
                   color: mutedForeground,
                 }}
               >
@@ -91,12 +91,12 @@ export default function InfoScreen() {
                   value={codeName}
                   onChangeText={setCodeName}
                   placeholder={Platform.select({
-                    ios: 'Code Name',
-                    default: '',
+                    ios: "Code Name",
+                    default: "",
                   })}
                   onSubmitEditing={() => {
                     router.push({
-                      pathname: '/(auth)/(create-account)/credentials',
+                      pathname: "/(auth)/(create-account)/credentials",
                       params: { codeName },
                     });
                   }}
@@ -115,64 +115,66 @@ export default function InfoScreen() {
           }),
         }}
       >
-        {Platform.OS === 'ios' ? (
-          <View style={{ paddingHorizontal: 48, paddingVertical: 16 }}>
-            <YStack gap={8}>
+        {Platform.OS === "ios"
+          ? (
+            <View style={{ paddingHorizontal: 48, paddingVertical: 16 }}>
+              <YStack gap={8}>
+                <TamaguiButton
+                  onPress={() => {
+                    if (!codeName) {
+                      Alert.alert("Please enter a code name");
+                      return;
+                    }
+                    router.push({
+                      pathname: "/(auth)/(create-account)/credentials",
+                      params: { codeName },
+                    });
+                  }}
+                >
+                  Continue
+                </TamaguiButton>
+                <TamaguiButton
+                  style={{ paddingHorizontal: 8 }}
+                  onPress={() => {
+                    router.replace("/(auth)/(login)");
+                  }}
+                  themeInverse
+                >
+                  Already have an account?
+                </TamaguiButton>
+              </YStack>
+            </View>
+          )
+          : (
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                paddingVertical: 16,
+                paddingHorizontal: 24,
+              }}
+            >
               <TamaguiButton
                 onPress={() => {
-                  if (!codeName) {
-                    Alert.alert('Please enter a code name');
-                    return;
-                  }
-                  router.push({
-                    pathname: '/(auth)/(create-account)/credentials',
-                    params: { codeName },
-                  });
+                  router.replace("/(auth)/(login)");
                 }}
-              >
-                Continue
-              </TamaguiButton>
-              <TamaguiButton
-                style={{ paddingHorizontal: 8 }}
-                onPress={() => {
-                  router.replace('/(auth)/(login)');
-                }}
-                themeInverse
               >
                 Already have an account?
               </TamaguiButton>
-            </YStack>
-          </View>
-        ) : (
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              paddingVertical: 16,
-              paddingHorizontal: 24,
-            }}
-          >
-            <TamaguiButton
-              onPress={() => {
-                router.replace('/(auth)/(login)');
-              }}
-            >
-              Already have an account?
-            </TamaguiButton>
-            <TamaguiButton
-              onPress={() => {
-                if (focusedTextField === 'code-name') {
-                  KeyboardController.setFocusTo('next');
-                  return;
-                }
-                KeyboardController.dismiss();
-                router.push('/(auth)/(create-account)/credentials');
-              }}
-            >
-              Next
-            </TamaguiButton>
-          </View>
-        )}
+              <TamaguiButton
+                onPress={() => {
+                  if (focusedTextField === "code-name") {
+                    KeyboardController.setFocusTo("next");
+                    return;
+                  }
+                  KeyboardController.dismiss();
+                  router.push("/(auth)/(create-account)/credentials");
+                }}
+              >
+                Next
+              </TamaguiButton>
+            </View>
+          )}
       </KeyboardStickyView>
     </View>
   );
