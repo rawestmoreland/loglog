@@ -1,22 +1,14 @@
-import { Stack, useRouter } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
+import { HeaderBackButton } from '@/components/ui/header-back-button';
+import { Stack } from 'expo-router';
 
-import { Text } from 'tamagui';
-
-export default function ChatLayout() {
-  const router = useRouter();
-
+export default function BristolLayout() {
   return (
     <Stack>
       <Stack.Screen
         name='index'
         options={{
           title: 'Bristol Scale',
-          headerRight: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text>Done</Text>
-            </TouchableOpacity>
-          ),
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
     </Stack>
