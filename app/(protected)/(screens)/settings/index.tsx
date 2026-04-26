@@ -5,7 +5,7 @@ import { useNotification } from '@/context/notificationContext';
 import { useUpdatePooProfile } from '@/hooks/api/usePooProfileMutations';
 import { usePooProfile } from '@/hooks/api/usePooProfileQueries';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
-import { AlertTriangle, Bell, BellOff, Shield } from '@tamagui/lucide-icons';
+import { AlertTriangle, Bell, BellOff, Shield, User } from '@tamagui/lucide-icons';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import {
@@ -93,6 +93,36 @@ export default function SettingsPage() {
             Manage your preferences and account
           </Text>
         </YStack>
+
+        {/* Profile Section */}
+        <YStack gap='$3'>
+          <XStack items='center' gap='$2'>
+            <User size={20} color={Colors[scheme].primary as any} />
+            <Text fontSize='$6' fontWeight='700' color='$color'>
+              Profile
+            </Text>
+          </XStack>
+
+          <Card
+            backgroundColor={Colors[scheme].background as any}
+            padding='$4'
+            borderRadius='$4'
+            borderWidth={2}
+            borderColor={Colors[scheme].border as any}
+            elevate
+          >
+            <YStack gap='$1'>
+              <Text fontSize='$3' color='$color11' fontWeight='500'>
+                Username
+              </Text>
+              <Text fontSize='$4' fontWeight='600' color='$color'>
+                {pooProfile?.codeName ?? '—'}
+              </Text>
+            </YStack>
+          </Card>
+        </YStack>
+
+        <Separator borderColor={Colors[scheme].border as any} />
 
         {/* Notifications Section */}
         <YStack gap='$3'>
