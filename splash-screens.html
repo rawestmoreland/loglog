@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LogLog Splash Screens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #5a5a5a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 0 80px;
+      gap: 56px;
+      font-family: 'Nunito', system-ui, sans-serif;
+    }
+
+    .screen-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .screen-label {
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding-left: 2px;
+    }
+
+    .screen {
+      width: 390px;
+      height: 844px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ──────────────────────────────────────
+       SCREEN 1 — Yellow Bold
+       Logo blends into yellow bg via multiply
+    ────────────────────────────────────── */
+    .s1 {
+      background: #FFB800;
+    }
+
+    .s1 .logo {
+      width: 200px;
+      height: 200px;
+      mix-blend-mode: multiply;
+      margin-bottom: 28px;
+    }
+
+    .s1 .title {
+      font-size: 58px;
+      font-weight: 900;
+      color: #1C0E00;
+      letter-spacing: -2px;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+
+    .s1 .tagline {
+      font-size: 12px;
+      font-weight: 800;
+      color: #1C0E00;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    /* ──────────────────────────────────────
+       SCREEN 2 — Midnight Drama
+       Logo shown as glowing rounded tile
+    ────────────────────────────────────── */
+    .s2 {
+      background: #080808;
+    }
+
+    .s2 .logo-wrap {
+      border-radius: 32px;
+      overflow: hidden;
+      margin-bottom: 38px;
+      box-shadow:
+        0 0 18px rgba(255, 184, 0, 0.95),
+        0 0 50px rgba(255, 184, 0, 0.65),
+        0 0 100px rgba(255, 184, 0, 0.35);
+    }
+
+    .s2 .logo-wrap img {
+      display: block;
+      width: 160px;
+      height: 160px;
+    }
+
+    .s2 .title {
+      font-size: 58px;
+      font-weight: 900;
+      color: #FFB800;
+      letter-spacing: -2px;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+
+    .s2 .tagline {
+      font-size: 12px;
+      font-weight: 800;
+      color: #FFB800;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+    }
+
+    /* ──────────────────────────────────────
+       SCREEN 3 — White Minimal
+       Logo used as rounded app icon
+    ────────────────────────────────────── */
+    .s3 {
+      background: #FFFFFF;
+    }
+
+    .s3 .app-icon {
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      overflow: hidden;
+      margin-bottom: 32px;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.13);
+    }
+
+    .s3 .app-icon img {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .s3 .title {
+      font-size: 58px;
+      font-weight: 900;
+      color: #1C0E00;
+      letter-spacing: -2px;
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+
+    .s3 .divider {
+      width: 38px;
+      height: 3px;
+      background: #FFB800;
+      border-radius: 2px;
+      margin-bottom: 18px;
+    }
+
+    .s3 .tagline {
+      font-size: 11px;
+      font-weight: 600;
+      color: #9a9a9a;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    /* ──────────────────────────────────────
+       SCREEN 4 — Mascot Hero
+       Poop mascot emoji + logo mark
+    ────────────────────────────────────── */
+    .s4 {
+      background: #FFB800;
+    }
+
+    .s4 .mascot {
+      font-size: 128px;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+
+    .s4 .title {
+      font-size: 58px;
+      font-weight: 900;
+      color: #1C0E00;
+      letter-spacing: -2px;
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+
+    .s4 .tagline {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1C0E00;
+      text-align: center;
+      max-width: 230px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ───────────────────────────────────── -->
+  <!-- 01 — Yellow Bold                      -->
+  <!-- ───────────────────────────────────── -->
+  <div class="screen-wrapper">
+    <div class="screen-label">01 — Yellow Bold</div>
+    <div class="screen s1">
+      <img class="logo" src="assets/images/loggie_prod.png" alt="LogLog">
+      <div class="title">LogLog</div>
+      <div class="tagline">Drop a log. Own it.</div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <!-- 02 — Midnight Drama                   -->
+  <!-- ───────────────────────────────────── -->
+  <div class="screen-wrapper">
+    <div class="screen-label">02 — Midnight Drama</div>
+    <div class="screen s2">
+      <div class="logo-wrap">
+        <img src="assets/images/loggie_prod.png" alt="LogLog">
+      </div>
+      <div class="title">LogLog</div>
+      <div class="tagline">Your poop. Mapped.</div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <!-- 03 — White Minimal                    -->
+  <!-- ───────────────────────────────────── -->
+  <div class="screen-wrapper">
+    <div class="screen-label">03 — White Minimal</div>
+    <div class="screen s3">
+      <div class="app-icon">
+        <img src="assets/images/loggie_prod.png" alt="LogLog">
+      </div>
+      <div class="title">LogLog</div>
+      <div class="divider"></div>
+      <div class="tagline">Brace yourself for what's next</div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────── -->
+  <!-- 04 — Mascot Hero                      -->
+  <!-- ───────────────────────────────────── -->
+  <div class="screen-wrapper">
+    <div class="screen-label">04 — Mascot Hero</div>
+    <div class="screen s4">
+      <div class="mascot">💩</div>
+      <div class="title">LogLog</div>
+      <div class="tagline">The world's most important mapping app.</div>
+    </div>
+  </div>
+
+</body>
+</html>
