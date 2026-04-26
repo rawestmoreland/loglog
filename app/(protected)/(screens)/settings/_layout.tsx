@@ -1,18 +1,14 @@
-import { Stack, useRouter } from 'expo-router';
-import { Button } from 'react-native';
+import { HeaderBackButton } from '@/components/ui/header-back-button';
+import { Stack } from 'expo-router';
 
 export default function SettingsLayout() {
-  const router = useRouter();
-
   return (
     <Stack>
       <Stack.Screen
         name='index'
         options={{
           title: 'Settings',
-          headerRight: () => (
-            <Button onPress={() => router.back()} title='Back' />
-          ),
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
     </Stack>
