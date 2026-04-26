@@ -26,7 +26,10 @@
         {
           "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoid2VzdG1vcmVsYW5kY3JlYXRpdmUiLCJhIjoiY204YXByd3cyMTYycjJuczd2bm45ZWp2cCJ9.GSFFjqjMGoAMqxQxE_6aEw"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -40,7 +43,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFCC00"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.westmorelandcreative.dropspot",
