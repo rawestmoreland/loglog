@@ -88,6 +88,34 @@ export function useFollowing(
 }
 
 /**
+ * Get all follow requests the user has sent that are still pending
+ * @returns list of pending outgoing follow requests
+ */
+export function useMyPendingRequests(
+  params: { enabled?: boolean } = { enabled: true }
+) {
+  const { pb } = usePocketBase();
+
+  const { pooProfile } = useAuth();
+
+  return useQuery<FollowsWithExpand[]>({
+    queryKey: ['my-pending-requests'],
+    queryFn: async () => {
+      const requests = await pb
+        ?.collection('follows')
+        .getFullList({
+          filter: `(follower = '${pooProfile?.id}') && status = 'pending'`,
+          expand: `following,follower`,
+        })
+        .catch(() => []);
+
+      return (requests ?? []) as FollowsWithExpand[];
+    },
+    enabled: !!pooProfile?.id && params.enabled,
+  });
+}
+
+/**
  * Get all follow requests where the user is receiving a follow request
  * @returns list of follow requests
  */

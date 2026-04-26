@@ -24,6 +24,7 @@ export function useAddPal() {
         }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['follow-me-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-pending-requests'] });
       queryClient.invalidateQueries({ queryKey: ['my-followers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });
     },
@@ -41,6 +42,7 @@ export function useRemovePoopPal() {
       queryClient.invalidateQueries({ queryKey: ['my-followers'] });
       queryClient.invalidateQueries({ queryKey: ['following'] });
       queryClient.invalidateQueries({ queryKey: ['follow-me-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['my-pending-requests'] });
     },
     onError: (error) => {
       console.error(error);
