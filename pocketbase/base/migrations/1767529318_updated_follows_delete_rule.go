@@ -14,10 +14,12 @@ func init() {
 			return err
 		}
 
-		// fix delete rule: relation fields store the referenced record ID directly,
-		// so compare against follower/following without .id (join not supported in delete rules)
+		// follower/following are poo_profile IDs, not user auth IDs.
+		// Must traverse the relation via .user to compare against @request.auth.id.
 		if err := json.Unmarshal([]byte(`{
-			"deleteRule": "@request.auth.id != \"\" && (@request.auth.id = follower || @request.auth.id = following)"
+			"createRule": "@request.auth.id != \"\" && @request.auth.id = follower.user",
+			"deleteRule": "@request.auth.id != \"\" && (@request.auth.id = follower.user || @request.auth.id = following.user)",
+			"updateRule": "@request.auth.id != \"\" && @request.auth.id = following.user"
 		}`), &collection); err != nil {
 			return err
 		}
@@ -30,7 +32,9 @@ func init() {
 		}
 
 		if err := json.Unmarshal([]byte(`{
-			"deleteRule": "@request.auth.id != \"\" && (@request.auth.id = follower.id || @request.auth.id = following.id)"
+			"createRule": "@request.auth.id != \"\" && (@request.auth.id = follower || @request.auth.id = following)",
+			"deleteRule": "@request.auth.id != \"\" && (@request.auth.id = follower || @request.auth.id = following)",
+			"updateRule": "@request.auth.id != \"\" && (@request.auth.id = follower || @request.auth.id = following)"
 		}`), &collection); err != nil {
 			return err
 		}
