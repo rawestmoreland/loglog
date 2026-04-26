@@ -10,6 +10,7 @@ import {
   useFollowing,
   useFollowMeRequests,
   useMyFollowers,
+  useMyPendingRequests,
 } from '@/hooks/api/usePoopPalsQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useActionSheet } from '@expo/react-native-action-sheet';
@@ -55,6 +56,8 @@ export function PoopPalsView({
   const [removePalAlertDialogPalId, setRemovePalAlertDialogPalId] = useState<
     string | null
   >(null);
+  const [cancelRequestAlertDialogPalId, setCancelRequestAlertDialogPalId] =
+    useState<string | null>(null);
 
   const { showActionSheetWithOptions } = useActionSheet();
 
@@ -68,6 +71,10 @@ export function PoopPalsView({
   });
   const { data: followMeRequests, isLoading: isLoadingFollowMeRequests } =
     useFollowMeRequests({
+      enabled: sheetType === SheetType.POOP_PALS,
+    });
+  const { data: myPendingRequests, isLoading: isLoadingMyPendingRequests } =
+    useMyPendingRequests({
       enabled: sheetType === SheetType.POOP_PALS,
     });
   const { mutateAsync: removePoopPal } = useRemovePoopPal();
@@ -106,6 +113,14 @@ export function PoopPalsView({
     }
   };
 
+  const handleCancelFollowRequest = async (palId: string) => {
+    try {
+      await removePoopPal(palId);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to cancel follow request');
+    }
+  };
+
   const listData = useMemo(() => {
     const listData: (
       | string
@@ -115,12 +130,14 @@ export function PoopPalsView({
           followsYou: boolean;
           theirProfileId: string;
           followRequest?: boolean;
+          pendingRequest?: boolean;
         }
     )[] = [];
     if (
       isLoadingMyFollowers ||
       isLoadingFollowing ||
-      isLoadingFollowMeRequests
+      isLoadingFollowMeRequests ||
+      isLoadingMyPendingRequests
     ) {
       return listData;
     }
@@ -163,14 +180,30 @@ export function PoopPalsView({
         }))
       );
     }
+
+    if (myPendingRequests && myPendingRequests.length > 0) {
+      listData.push('Pending Requests');
+      listData.push(
+        ...(myPendingRequests ?? []).map((request) => ({
+          id: request.id,
+          title: request.expand?.following?.codeName,
+          theirProfileId: request.expand?.following?.id,
+          followsYou: false,
+          pendingRequest: true,
+        }))
+      );
+    }
+
     return listData;
   }, [
     isLoadingMyFollowers,
     isLoadingFollowing,
     isLoadingFollowMeRequests,
+    isLoadingMyPendingRequests,
     myFollowers,
     following,
     followMeRequests,
+    myPendingRequests,
   ]);
 
   const stickyHeaderIndices = listData
@@ -219,6 +252,7 @@ export function PoopPalsView({
                       isLoadingMyFollowers ||
                       isLoadingFollowing ||
                       isLoadingFollowMeRequests ||
+                      isLoadingMyPendingRequests ||
                       isDecliningFollowRequest ||
                       isAcceptingFollowRequest
                     ) {
@@ -227,6 +261,8 @@ export function PoopPalsView({
 
                     if (item.followRequest) {
                       setRequestAlertDialogPalId(item.id);
+                    } else if (item.pendingRequest) {
+                      setCancelRequestAlertDialogPalId(item.id);
                     } else {
                       setRemovePalAlertDialogPalId(item.id);
                     }
@@ -250,6 +286,13 @@ export function PoopPalsView({
           open={!!removePalAlertDialogPalId}
           onClose={() => setRemovePalAlertDialogPalId(null)}
           onAccept={() => handleRemovePoopPal(removePalAlertDialogPalId ?? '')}
+        />
+        <CancelRequestAlertDialog
+          open={!!cancelRequestAlertDialogPalId}
+          onClose={() => setCancelRequestAlertDialogPalId(null)}
+          onAccept={() =>
+            handleCancelFollowRequest(cancelRequestAlertDialogPalId ?? '')
+          }
         />
       </YStack>
     </YStack>
@@ -326,6 +369,74 @@ const RequestAlertDialog = ({
                   }}
                 >
                   Reject
+                </Button>
+              </AlertDialog.Action>
+            </XStack>
+          </YStack>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog>
+  );
+};
+
+const CancelRequestAlertDialog = ({
+  open,
+  onClose,
+  onAccept,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAccept: () => Promise<void>;
+}) => {
+  return (
+    <AlertDialog open={open} onOpenChange={onClose} modal>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay
+          key='overlay'
+          animation='quick'
+          opacity={0.5}
+          enterStyle={{ opacity: 0 }}
+          exitStyle={{ opacity: 0 }}
+          zIndex={150_000}
+        />
+        <AlertDialog.Content
+          bordered
+          elevate
+          key='content'
+          animation={[
+            'quick',
+            {
+              opacity: {
+                overshootClamping: true,
+              },
+            },
+          ]}
+          enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+          exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+          x={0}
+          scale={1}
+          opacity={1}
+          y={0}
+          z={200_000}
+        >
+          <YStack gap='$4'>
+            <AlertDialog.Title>Cancel Request</AlertDialog.Title>
+            <AlertDialog.Description>
+              Would you like to cancel this pending follow request?
+            </AlertDialog.Description>
+
+            <XStack gap='$3' justify='flex-end'>
+              <AlertDialog.Cancel asChild>
+                <Button onPress={onClose}>Keep</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button
+                  theme='accent'
+                  onPress={() => {
+                    onAccept().then(onClose);
+                  }}
+                >
+                  Cancel Request
                 </Button>
               </AlertDialog.Action>
             </XStack>
