@@ -255,7 +255,7 @@ export const SeshContextProvider = ({
         Alert.alert('We had trouble starting the poop sesh');
       }
     }
-  }, [startSeshMutation, userLocation, setUserLocation, scheduleNotification]);
+  }, [startSeshMutation, userLocation, setUserLocation, scheduleNotification, isConnected, isNetworkInitialized, refetchActiveSesh]);
 
   const updateActiveSesh = useCallback(
     async (payload: Partial<PoopSesh>) => {
@@ -278,7 +278,7 @@ export const SeshContextProvider = ({
         Alert.alert('We had trouble updating the poop sesh');
       }
     },
-    [activeSesh, updateSeshMutation]
+    [activeSesh, updateSeshMutation, isConnected]
   );
 
   const endSesh = useCallback(async () => {
@@ -308,7 +308,7 @@ export const SeshContextProvider = ({
       console.error(error);
       Alert.alert('We had trouble ending the poop sesh');
     }
-  }, [activeSesh, updateSeshMutation, cancelNotification, poopForm]);
+  }, [activeSesh, updateSeshMutation, cancelNotification, poopForm, isConnected]);
 
   const cancelActiveSesh = useCallback(async () => {
     if (!isNetworkInitialized || !activeSesh) return;
