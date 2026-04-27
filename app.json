@@ -2,7 +2,7 @@
   "expo": {
     "name": "LogLog",
     "slug": "jeremy-poop",
-    "version": "0.0.6",
+    "version": "1.0.0",
     "scheme": "loglog",
     "plugins": [
       "expo-router",
