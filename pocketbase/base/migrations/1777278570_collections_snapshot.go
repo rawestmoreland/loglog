@@ -407,7 +407,7 @@ func init() {
 			{
 				"authAlert": {
 					"emailTemplate": {
-						"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+						"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location:</p>\n<p><em>{ALERT_INFO}</em></p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>If this was you, you may disregard this email.</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
 						"subject": "Login from a new location"
 					},
 					"enabled": true
@@ -579,14 +579,14 @@ func init() {
 			{
 				"authAlert": {
 					"emailTemplate": {
-						"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+						"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location:</p>\n<p><em>{ALERT_INFO}</em></p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>If this was you, you may disregard this email.</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
 						"subject": "Login from a new location"
 					},
 					"enabled": true
 				},
 				"authRule": "",
 				"authToken": {
-					"duration": 604800
+					"duration": 94608000
 				},
 				"confirmEmailChangeTemplate": {
 					"body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
@@ -850,7 +850,7 @@ func init() {
 						"minSelect": 0,
 						"name": "poo_profile",
 						"presentable": false,
-						"required": false,
+						"required": true,
 						"system": false,
 						"type": "relation"
 					},
@@ -882,7 +882,7 @@ func init() {
 						"maxSize": 0,
 						"name": "location",
 						"presentable": false,
-						"required": true,
+						"required": false,
 						"system": false,
 						"type": "json"
 					},
@@ -903,6 +903,156 @@ func init() {
 						"required": false,
 						"system": false,
 						"type": "geoPoint"
+					},
+					{
+						"hidden": false,
+						"id": "bool754549419",
+						"name": "company_time",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
+					},
+					{
+						"hidden": false,
+						"id": "number3177734189",
+						"max": 7,
+						"min": 0,
+						"name": "bristol_score",
+						"onlyInt": true,
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "number"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text2875798080",
+						"max": 0,
+						"min": 0,
+						"name": "custom_place_name",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1181427653",
+						"max": 0,
+						"min": 0,
+						"name": "place_type",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"cascadeDelete": false,
+						"collectionId": "pbc_3384545563",
+						"hidden": false,
+						"id": "relation229024281",
+						"maxSelect": 1,
+						"minSelect": 0,
+						"name": "place_id",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "relation"
+					},
+					{
+						"hidden": false,
+						"id": "bool1734220001",
+						"name": "is_airplane",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1734220002",
+						"max": 0,
+						"min": 0,
+						"name": "flight_number",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1734220003",
+						"max": 0,
+						"min": 0,
+						"name": "airline",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1734220004",
+						"max": 0,
+						"min": 0,
+						"name": "departure_airport",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1734220005",
+						"max": 0,
+						"min": 0,
+						"name": "arrival_airport",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "bool271884201",
+						"name": "local_sync",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text922858135",
+						"max": 0,
+						"min": 0,
+						"name": "timezone",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
 					},
 					{
 						"hidden": false,
@@ -985,11 +1135,15 @@ func init() {
 						"id": "file1704208859",
 						"maxSelect": 1,
 						"maxSize": 0,
-						"mimeTypes": [],
+						"mimeTypes": [
+							"image/jpeg",
+							"image/png",
+							"image/webp"
+						],
 						"name": "icon",
 						"presentable": false,
-						"protected": false,
-						"required": true,
+						"protected": true,
+						"required": false,
 						"system": false,
 						"thumbs": [],
 						"type": "file"
@@ -1000,9 +1154,31 @@ func init() {
 						"maxSize": 0,
 						"name": "criteria",
 						"presentable": false,
-						"required": true,
+						"required": false,
 						"system": false,
 						"type": "json"
+					},
+					{
+						"cascadeDelete": false,
+						"collectionId": "pbc_2718025982",
+						"hidden": false,
+						"id": "relation105650625",
+						"maxSelect": 1,
+						"minSelect": 0,
+						"name": "category",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "relation"
+					},
+					{
+						"hidden": false,
+						"id": "bool1260321794",
+						"name": "active",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
 					},
 					{
 						"hidden": false,
@@ -1035,8 +1211,8 @@ func init() {
 				"viewRule": ""
 			},
 			{
-				"createRule": "",
-				"deleteRule": "",
+				"createRule": null,
+				"deleteRule": null,
 				"fields": [
 					{
 						"autogeneratePattern": "[a-z0-9]{15}",
@@ -1054,12 +1230,12 @@ func init() {
 					},
 					{
 						"cascadeDelete": true,
-						"collectionId": "_pb_users_auth_",
+						"collectionId": "pbc_2822695520",
 						"hidden": false,
-						"id": "relation2375276105",
+						"id": "relation2796447372",
 						"maxSelect": 1,
 						"minSelect": 0,
-						"name": "user",
+						"name": "poo_profile",
 						"presentable": false,
 						"required": true,
 						"system": false,
@@ -1116,12 +1292,12 @@ func init() {
 				"name": "user_achievement",
 				"system": false,
 				"type": "base",
-				"updateRule": "",
+				"updateRule": null,
 				"viewRule": ""
 			},
 			{
-				"createRule": null,
-				"deleteRule": null,
+				"createRule": "@request.auth.id != \"\" && user = @request.auth.id && (sesh.user = @request.auth.id || (@collection.follows.following ?= sesh.poo_profile && @collection.follows.follower.user ?= @request.auth.id && @collection.follows.status ?= \"approved\") || (@collection.follows.follower ?= sesh.poo_profile && @collection.follows.following.user ?= @request.auth.id && @collection.follows.status ?= \"approved\"))",
+				"deleteRule": "@request.auth.id != \"\" && (user = @request.auth.id || sesh.user = @request.auth.id)",
 				"fields": [
 					{
 						"autogeneratePattern": "[a-z0-9]{15}",
@@ -1179,6 +1355,34 @@ func init() {
 					},
 					{
 						"hidden": false,
+						"id": "select2063623452",
+						"maxSelect": 1,
+						"name": "status",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "select",
+						"values": [
+							"active",
+							"pending",
+							"flagged",
+							"removed"
+						]
+					},
+					{
+						"hidden": false,
+						"id": "number2428366133",
+						"max": 1,
+						"min": 0,
+						"name": "toxicity_score",
+						"onlyInt": false,
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "number"
+					},
+					{
+						"hidden": false,
 						"id": "autodate2990389176",
 						"name": "created",
 						"onCreate": true,
@@ -1190,16 +1394,16 @@ func init() {
 				],
 				"id": "pbc_2755712140",
 				"indexes": [],
-				"listRule": null,
+				"listRule": "@request.auth.id != \"\" && (sesh.user = @request.auth.id || (@collection.follows.following ?= sesh.poo_profile && @collection.follows.follower.user ?= @request.auth.id && @collection.follows.status ?= \"approved\") || (@collection.follows.follower ?= sesh.poo_profile && @collection.follows.following.user ?= @request.auth.id && @collection.follows.status ?= \"approved\"))",
 				"name": "poop_comments",
 				"system": false,
 				"type": "base",
-				"updateRule": null,
-				"viewRule": null
+				"updateRule": "@request.auth.id != \"\" && (user = @request.auth.id || sesh.user = @request.auth.id)",
+				"viewRule": "@request.auth.id != \"\" && (sesh.user = @request.auth.id || (@collection.follows.following ?= sesh.poo_profile && @collection.follows.follower.user ?= @request.auth.id && @collection.follows.status ?= \"approved\") || (@collection.follows.follower ?= sesh.poo_profile && @collection.follows.following.user ?= @request.auth.id && @collection.follows.status ?= \"approved\"))"
 			},
 			{
-				"createRule": "@request.auth.id != \"\"",
-				"deleteRule": "@request.auth.id != \"\"",
+				"createRule": "@request.auth.id != \"\" && @request.auth.id = follower.user",
+				"deleteRule": "@request.auth.id != \"\" && (@request.auth.id = following.user)",
 				"fields": [
 					{
 						"autogeneratePattern": "[a-z0-9]{15}",
@@ -1275,8 +1479,8 @@ func init() {
 				"name": "follows",
 				"system": false,
 				"type": "base",
-				"updateRule": "@request.auth.id != \"\"",
-				"viewRule": "@request.auth.id != \"\"  && (@request.auth.id = follower.id || @request.auth.id = following.id)"
+				"updateRule": "@request.auth.id != \"\" && (@request.auth.id = follower.user || @request.auth.id = following.user)",
+				"viewRule": "@request.auth.id != \"\"  && (@request.auth.id = follower || @request.auth.id = following)"
 			},
 			{
 				"createRule": "",
@@ -1336,6 +1540,15 @@ func init() {
 						"required": false,
 						"system": false,
 						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "bool3317086611",
+						"name": "shift_logs",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "bool"
 					},
 					{
 						"hidden": false,
@@ -1530,6 +1743,363 @@ func init() {
 				"type": "base",
 				"updateRule": "@request.auth.id != \"\" && @request.auth.id = sender.user.id",
 				"viewRule": "@request.auth.id != \"\" && (@request.auth.id = chat.participant1.user.id || @request.auth.id = chat.participant2.user.id)"
+			},
+			{
+				"createRule": "@request.auth.id != \"\"",
+				"deleteRule": null,
+				"fields": [
+					{
+						"autogeneratePattern": "[a-z0-9]{15}",
+						"hidden": false,
+						"id": "text3208210256",
+						"max": 15,
+						"min": 15,
+						"name": "id",
+						"pattern": "^[a-z0-9]+$",
+						"presentable": false,
+						"primaryKey": true,
+						"required": true,
+						"system": true,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text3849420801",
+						"max": 0,
+						"min": 0,
+						"name": "mapbox_place_id",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": true,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1579384326",
+						"max": 0,
+						"min": 0,
+						"name": "name",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": true,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "geoPoint1587448267",
+						"name": "location",
+						"presentable": false,
+						"required": true,
+						"system": false,
+						"type": "geoPoint"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text223244161",
+						"max": 0,
+						"min": 0,
+						"name": "address",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text975149429",
+						"max": 0,
+						"min": 0,
+						"name": "place_formatted",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1181427653",
+						"max": 0,
+						"min": 0,
+						"name": "place_type",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "autodate2990389176",
+						"name": "created",
+						"onCreate": true,
+						"onUpdate": false,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					},
+					{
+						"hidden": false,
+						"id": "autodate3332085495",
+						"name": "updated",
+						"onCreate": true,
+						"onUpdate": true,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					}
+				],
+				"id": "pbc_3384545563",
+				"indexes": [
+					"CREATE UNIQUE INDEX ` + "`" + `idx_5YQkholM0j` + "`" + ` ON ` + "`" + `places` + "`" + ` (` + "`" + `mapbox_place_id` + "`" + `)"
+				],
+				"listRule": "@request.auth.id != \"\"",
+				"name": "places",
+				"system": false,
+				"type": "base",
+				"updateRule": null,
+				"viewRule": "@request.auth.id != \"\""
+			},
+			{
+				"createRule": "@request.auth.id != \"\" && @request.auth.id = poo_profile.user.id",
+				"deleteRule": "@request.auth.id != \"\" && @request.auth.id = poo_profile.user.id",
+				"fields": [
+					{
+						"autogeneratePattern": "[a-z0-9]{15}",
+						"hidden": false,
+						"id": "text3208210256",
+						"max": 15,
+						"min": 15,
+						"name": "id",
+						"pattern": "^[a-z0-9]+$",
+						"presentable": false,
+						"primaryKey": true,
+						"required": true,
+						"system": true,
+						"type": "text"
+					},
+					{
+						"cascadeDelete": false,
+						"collectionId": "pbc_3384545563",
+						"hidden": false,
+						"id": "relation229024281",
+						"maxSelect": 1,
+						"minSelect": 0,
+						"name": "place_id",
+						"presentable": false,
+						"required": true,
+						"system": false,
+						"type": "relation"
+					},
+					{
+						"cascadeDelete": false,
+						"collectionId": "pbc_2822695520",
+						"hidden": false,
+						"id": "relation2809058197",
+						"maxSelect": 1,
+						"minSelect": 0,
+						"name": "poo_profile",
+						"presentable": false,
+						"required": true,
+						"system": false,
+						"type": "relation"
+					},
+					{
+						"hidden": false,
+						"id": "number3632866850",
+						"max": 5,
+						"min": 1,
+						"name": "rating",
+						"onlyInt": false,
+						"presentable": false,
+						"required": true,
+						"system": false,
+						"type": "number"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text3644844767",
+						"max": 160,
+						"min": 0,
+						"name": "review_text",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "autodate2990389176",
+						"name": "created",
+						"onCreate": true,
+						"onUpdate": false,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					},
+					{
+						"hidden": false,
+						"id": "autodate3332085495",
+						"name": "updated",
+						"onCreate": true,
+						"onUpdate": true,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					}
+				],
+				"id": "pbc_2256013619",
+				"indexes": [
+					"CREATE UNIQUE INDEX ` + "`" + `idx_1tmb0CtZrn` + "`" + ` ON ` + "`" + `toilet_ratings` + "`" + ` (\n  ` + "`" + `place_id` + "`" + `,\n  ` + "`" + `poo_profile` + "`" + `\n)"
+				],
+				"listRule": "@request.auth.id != \"\"",
+				"name": "toilet_ratings",
+				"system": false,
+				"type": "base",
+				"updateRule": "@request.auth.id != \"\" && @request.auth.id = poo_profile.user.id",
+				"viewRule": "@request.auth.id != \"\""
+			},
+			{
+				"createRule": null,
+				"deleteRule": null,
+				"fields": [
+					{
+						"autogeneratePattern": "[a-z0-9]{15}",
+						"hidden": false,
+						"id": "text3208210256",
+						"max": 15,
+						"min": 15,
+						"name": "id",
+						"pattern": "^[a-z0-9]+$",
+						"presentable": false,
+						"primaryKey": true,
+						"required": true,
+						"system": true,
+						"type": "text"
+					},
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text1579384326",
+						"max": 0,
+						"min": 0,
+						"name": "name",
+						"pattern": "",
+						"presentable": false,
+						"primaryKey": false,
+						"required": false,
+						"system": false,
+						"type": "text"
+					},
+					{
+						"hidden": false,
+						"id": "autodate2990389176",
+						"name": "created",
+						"onCreate": true,
+						"onUpdate": false,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					},
+					{
+						"hidden": false,
+						"id": "autodate3332085495",
+						"name": "updated",
+						"onCreate": true,
+						"onUpdate": true,
+						"presentable": false,
+						"system": false,
+						"type": "autodate"
+					}
+				],
+				"id": "pbc_2718025982",
+				"indexes": [],
+				"listRule": "",
+				"name": "achievement_categories",
+				"system": false,
+				"type": "base",
+				"updateRule": null,
+				"viewRule": ""
+			},
+			{
+				"createRule": null,
+				"deleteRule": null,
+				"fields": [
+					{
+						"autogeneratePattern": "",
+						"hidden": false,
+						"id": "text3208210256",
+						"max": 0,
+						"min": 0,
+						"name": "id",
+						"pattern": "^[a-z0-9]+$",
+						"presentable": false,
+						"primaryKey": true,
+						"required": true,
+						"system": true,
+						"type": "text"
+					},
+					{
+						"cascadeDelete": false,
+						"collectionId": "pbc_3384545563",
+						"hidden": false,
+						"id": "_clone_cMNn",
+						"maxSelect": 1,
+						"minSelect": 0,
+						"name": "place_id",
+						"presentable": false,
+						"required": true,
+						"system": false,
+						"type": "relation"
+					},
+					{
+						"hidden": false,
+						"id": "json3632866850",
+						"maxSize": 1,
+						"name": "rating",
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "json"
+					},
+					{
+						"hidden": false,
+						"id": "number984262331",
+						"max": null,
+						"min": null,
+						"name": "total_ratings",
+						"onlyInt": false,
+						"presentable": false,
+						"required": false,
+						"system": false,
+						"type": "number"
+					}
+				],
+				"id": "pbc_3700094976",
+				"indexes": [],
+				"listRule": "",
+				"name": "average_ratings",
+				"system": false,
+				"type": "view",
+				"updateRule": null,
+				"viewQuery": "SELECT (ROW_NUMBER() OVER()) as id, place_id, ROUND(AVG(rating), 1) as rating, COUNT(*) as total_ratings FROM toilet_ratings GROUP BY place_id;",
+				"viewRule": ""
 			}
 		]`
 

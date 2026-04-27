@@ -57,10 +57,47 @@ func main() {
 		return e.Next()
 	})
 
+	// scanAndNotifyAchievements runs an achievement scan and sends a push
+	// notification for each newly earned achievement.
+	scanAndNotifyAchievements := func(poopProfileId string) {
+		achievementService := achievements.NewAchievementService(app)
+		earned, err := achievementService.AchievementScan(poopProfileId)
+		if err != nil {
+			fmt.Println("Error scanning achievements:", err)
+			return
+		}
+		if len(earned) == 0 {
+			return
+		}
+		fmt.Printf("Profile %s earned %d achievement(s): %v\n", poopProfileId, len(earned), earned)
+
+		notificationService := notifications.NewNotificationService(app)
+		for _, achievementId := range earned {
+			achievement, err := app.FindRecordById("achievements", achievementId)
+			if err != nil {
+				fmt.Println("Error fetching achievement for notification:", err)
+				continue
+			}
+			notificationService.SendPushNotification(
+				poopProfileId,
+				notifications.Achievement,
+				notifications.NotificationData{
+					Title:  "Achievement Unlocked!",
+					Body:   "You earned: " + achievement.GetString("name"),
+					Screen: "/(protected)/(tabs)/achievements",
+				},
+				nil,
+			)
+		}
+	}
+
 	app.OnRecordAfterCreateSuccess("poop_seshes").BindFunc(func(e *core.RecordEvent) error {
 		notificationService := notifications.NewNotificationService(app)
 		fmt.Println("Poop sesh created")
 		activeSesh := e.Record
+
+		// Scan for count/streak/time-of-day achievements on new sesh creation.
+		go scanAndNotifyAchievements(activeSesh.GetString("poo_profile"))
 
 		// Get poo pals that follow you
 		followers, err := app.FindAllRecords("follows", dbx.NewExp("following = {:following}", dbx.Params{"following": activeSesh.GetString("poo_profile")}))
@@ -105,18 +142,8 @@ func main() {
 	})
 
 	app.OnRecordAfterUpdateSuccess("poop_seshes").BindFunc(func(e *core.RecordEvent) error {
-		achievementService := achievements.NewAchievementService(app)
-		earnedAchievements, err := achievementService.AchievementScan(e.Record.GetString("poo_profile"))
-		if err != nil {
-			fmt.Println("Error scanning achievements", err)
-			return e.Next()
-		}
-
-		fmt.Println("Earned achievements", earnedAchievements)
-
-
-		// e.HttpContext.Set("earned_achievements", earnedAchievements)
-
+		// Scan for duration/calculated achievements when a sesh is updated (ended).
+		go scanAndNotifyAchievements(e.Record.GetString("poo_profile"))
 		return e.Next()
 	})
 
