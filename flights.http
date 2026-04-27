@@ -5,3 +5,6 @@ GET https://api.aviationstack.com/v1/flights?access_key=a4662dfc17c3fbd18292a0a0
 
 ###
 GET https://api.aviationstack.com/v1/airlines?access_key=a4662dfc17c3fbd18292a0a0ee18539c
+
+###
+GET https://loglog-pocketbase-backend.fly.dev/api/collections/achievements/records?fields=name,description
