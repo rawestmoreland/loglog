@@ -17,7 +17,8 @@ func (nt NotificationType) String() string {
 }
 
 const (
-	PoopSesh NotificationType = "poop_sesh"
+	PoopSesh    NotificationType = "poop_sesh"
+	Achievement NotificationType = "achievement"
 )
 
 type NotificationService struct {
