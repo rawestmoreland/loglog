@@ -4,12 +4,46 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
 )
 
-// criteriaByName maps normalized achievement names to their criteria JSON and
-// marks them active. Only applied when the achievement's criteria field is empty.
+// seedCategories defines the achievement categories to create if absent.
+var seedCategories = []string{
+	"Consistency",
+	"Explorer",
+	"Timing",
+	"Performance",
+}
+
+// achievementCategory maps normalized achievement names to their category.
+var achievementCategory = map[string]string{
+	"century_club":         "Consistency",
+	"streak_master":        "Consistency",
+	"creature_of_habit":    "Consistency",
+	"home_court_advantage": "Consistency",
+
+	"globe_trotter":   "Explorer",
+	"world_tour":      "Explorer",
+	"cross_country":   "Explorer",
+	"adventurer":      "Explorer",
+	"never_same_twice": "Explorer",
+	"road_warrior":    "Explorer",
+	"off_the_grid":    "Explorer",
+	"beach_bum":       "Explorer",
+	"tourist_trap":    "Explorer",
+
+	"early_bird":     "Timing",
+	"night_owl":      "Timing",
+	"perfect_timing": "Timing",
+
+	"marathon":    "Performance",
+	"speed_demon": "Performance",
+	"perfection":  "Performance",
+}
+
+// achievementCriteria maps normalized achievement names to their criteria JSON.
 //
 // Condition type reference:
 //
@@ -21,7 +55,7 @@ import (
 //	               profileField: relation field name (default "poo_profile")
 //	streak       – longest consecutive daily/weekly/monthly streak
 //	time_of_day  – seshes started inside [startHour, endHour) window
-var criteriaByName = map[string]string{
+var achievementCriteria = map[string]string{
 	"century_club": `{
 		"type": "aggregate",
 		"conditions": [{
@@ -46,27 +80,28 @@ var criteriaByName = map[string]string{
 		}]
 	}`,
 
-	"early_bird": `{
-		"type": "time_of_day",
+	"creature_of_habit": `{
+		"type": "aggregate",
 		"conditions": [{
-			"conditionType": "time_of_day",
+			"conditionType": "aggregate",
 			"table": "poop_seshes",
-			"field": "started",
-			"startHour": 5,
-			"endHour": 8,
-			"minCount": 1
+			"aggregation": "max_group_count",
+			"field": "place_id",
+			"operator": "greater_than_or_equal",
+			"value": 20
 		}]
 	}`,
 
-	"night_owl": `{
-		"type": "time_of_day",
+	"home_court_advantage": `{
+		"type": "aggregate",
 		"conditions": [{
-			"conditionType": "time_of_day",
+			"conditionType": "aggregate",
 			"table": "poop_seshes",
-			"field": "started",
-			"startHour": 22,
-			"endHour": 4,
-			"minCount": 1
+			"aggregation": "count",
+			"field": "id",
+			"filter": "is_local = true",
+			"operator": "greater_than_or_equal",
+			"value": 50
 		}]
 	}`,
 
@@ -106,32 +141,6 @@ var criteriaByName = map[string]string{
 		}]
 	}`,
 
-	"home_court_advantage": `{
-		"type": "aggregate",
-		"conditions": [{
-			"conditionType": "aggregate",
-			"table": "poop_seshes",
-			"aggregation": "count",
-			"field": "id",
-			"filter": "is_local = true",
-			"operator": "greater_than_or_equal",
-			"value": 50
-		}]
-	}`,
-
-	"road_warrior": `{
-		"type": "aggregate",
-		"conditions": [{
-			"conditionType": "aggregate",
-			"table": "poop_seshes",
-			"aggregation": "count",
-			"field": "id",
-			"filter": "is_local = false && is_airplane = false",
-			"operator": "greater_than_or_equal",
-			"value": 25
-		}]
-	}`,
-
 	"adventurer": `{
 		"type": "aggregate",
 		"conditions": [{
@@ -156,15 +165,16 @@ var criteriaByName = map[string]string{
 		}]
 	}`,
 
-	"creature_of_habit": `{
+	"road_warrior": `{
 		"type": "aggregate",
 		"conditions": [{
 			"conditionType": "aggregate",
 			"table": "poop_seshes",
-			"aggregation": "max_group_count",
-			"field": "place_id",
+			"aggregation": "count",
+			"field": "id",
+			"filter": "is_local = false && is_airplane = false",
 			"operator": "greater_than_or_equal",
-			"value": 20
+			"value": 25
 		}]
 	}`,
 
@@ -178,6 +188,56 @@ var criteriaByName = map[string]string{
 		}]
 	}`,
 
+	"beach_bum": `{
+		"type": "aggregate",
+		"conditions": [{
+			"conditionType": "aggregate",
+			"table": "poop_seshes",
+			"aggregation": "count",
+			"field": "id",
+			"filter": "is_local = false && is_airplane = false",
+			"operator": "greater_than_or_equal",
+			"value": 10
+		}]
+	}`,
+
+	"tourist_trap": `{
+		"type": "aggregate",
+		"conditions": [{
+			"conditionType": "aggregate",
+			"table": "toilet_ratings",
+			"aggregation": "count",
+			"field": "id",
+			"profileField": "user_id",
+			"operator": "greater_than_or_equal",
+			"value": 3
+		}]
+	}`,
+
+	"early_bird": `{
+		"type": "time_of_day",
+		"conditions": [{
+			"conditionType": "time_of_day",
+			"table": "poop_seshes",
+			"field": "started",
+			"startHour": 5,
+			"endHour": 8,
+			"minCount": 1
+		}]
+	}`,
+
+	"night_owl": `{
+		"type": "time_of_day",
+		"conditions": [{
+			"conditionType": "time_of_day",
+			"table": "poop_seshes",
+			"field": "started",
+			"startHour": 22,
+			"endHour": 4,
+			"minCount": 1
+		}]
+	}`,
+
 	"perfect_timing": `{
 		"type": "simple",
 		"conditions": [{
@@ -185,16 +245,6 @@ var criteriaByName = map[string]string{
 			"field": "company_time",
 			"operator": "equals",
 			"value": true
-		}]
-	}`,
-
-	"perfection": `{
-		"type": "simple",
-		"conditions": [{
-			"table": "poop_seshes",
-			"field": "bristol_score",
-			"operator": "equals",
-			"value": 4
 		}]
 	}`,
 
@@ -226,81 +276,110 @@ var criteriaByName = map[string]string{
 		}]
 	}`,
 
-	"tourist_trap": `{
-		"type": "aggregate",
+	"perfection": `{
+		"type": "simple",
 		"conditions": [{
-			"conditionType": "aggregate",
-			"table": "toilet_ratings",
-			"aggregation": "count",
-			"field": "id",
-			"profileField": "user_id",
-			"operator": "greater_than_or_equal",
-			"value": 3
-		}]
-	}`,
-
-	"beach_bum": `{
-		"type": "aggregate",
-		"conditions": [{
-			"conditionType": "aggregate",
 			"table": "poop_seshes",
-			"aggregation": "count",
-			"field": "id",
-			"filter": "is_local = false && is_airplane = false",
-			"operator": "greater_than_or_equal",
-			"value": 10
+			"field": "bristol_score",
+			"operator": "equals",
+			"value": 4
 		}]
 	}`,
 }
 
-func seedNormalizeName(name string) string {
-	return strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(name, " ", "_"), "-", "_"))
+func normalizeName(s string) string {
+	return strings.ToLower(strings.ReplaceAll(strings.ReplaceAll(s, " ", "_"), "-", "_"))
 }
 
 func init() {
 	m.Register(func(app core.App) error {
-		achievements, err := app.FindAllRecords("achievements")
+		// 1. Ensure all categories exist and collect their IDs.
+		categoryIds := make(map[string]string, len(seedCategories))
+		catCollection, err := app.FindCollectionByNameOrId("achievement_categories")
 		if err != nil {
-			return nil
+			return err
+		}
+		for _, name := range seedCategories {
+			existing, err := app.FindFirstRecordByFilter(
+				"achievement_categories",
+				"name = {:name}",
+				dbx.Params{"name": name},
+			)
+			if err != nil {
+				// Not found — create it.
+				rec := core.NewRecord(catCollection)
+				rec.Set("name", name)
+				if err := app.Save(rec); err != nil {
+					return err
+				}
+				categoryIds[name] = rec.Id
+			} else {
+				categoryIds[name] = existing.Id
+			}
 		}
 
+		// 2. Update every achievement with its criteria and category.
+		//    This migration is the source of truth — always overwrite.
+		achievements, err := app.FindAllRecords("achievements")
+		if err != nil {
+			return err
+		}
 		for _, achievement := range achievements {
-			if existing := achievement.GetString("criteria"); existing != "" && existing != "null" {
-				continue
+			key := normalizeName(achievement.GetString("name"))
+			changed := false
+
+			if criteria, ok := achievementCriteria[key]; ok {
+				var check any
+				if err := json.Unmarshal([]byte(criteria), &check); err == nil {
+					achievement.Set("criteria", json.RawMessage(criteria))
+					achievement.Set("active", true)
+					changed = true
+				}
 			}
 
-			key := seedNormalizeName(achievement.GetString("name"))
-			criteriaJSON, ok := criteriaByName[key]
-			if !ok {
-				continue
+			if catName, ok := achievementCategory[key]; ok {
+				if catId, ok := categoryIds[catName]; ok {
+					achievement.Set("category", catId)
+					changed = true
+				}
 			}
 
-			var check any
-			if err := json.Unmarshal([]byte(criteriaJSON), &check); err != nil {
-				continue
-			}
-
-			achievement.Set("criteria", json.RawMessage(criteriaJSON))
-			achievement.Set("active", true)
-			if err := app.Save(achievement); err != nil {
-				return err
+			if changed {
+				if err := app.Save(achievement); err != nil {
+					return err
+				}
 			}
 		}
 
 		return nil
 	}, func(app core.App) error {
+		// Clear criteria, category, and active flag on all seeded achievements.
 		achievements, err := app.FindAllRecords("achievements")
 		if err != nil {
 			return nil
 		}
 		for _, achievement := range achievements {
-			key := seedNormalizeName(achievement.GetString("name"))
-			if _, ok := criteriaByName[key]; ok {
+			key := normalizeName(achievement.GetString("name"))
+			if _, ok := achievementCriteria[key]; ok {
 				achievement.Set("criteria", nil)
+				achievement.Set("category", nil)
 				achievement.Set("active", false)
 				_ = app.Save(achievement)
 			}
 		}
+
+		// Remove categories created by this migration.
+		for _, name := range seedCategories {
+			rec, err := app.FindFirstRecordByFilter(
+				"achievement_categories",
+				"name = {:name}",
+				dbx.Params{"name": name},
+			)
+			if err == nil {
+				_ = app.Delete(rec)
+			}
+		}
+
 		return nil
 	})
 }
