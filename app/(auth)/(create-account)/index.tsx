@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import * as React from 'react';
-import { Alert, Image, Platform, Text, View } from 'react-native';
+import { Image, Platform, Text, View } from 'react-native';
 import {
   KeyboardAwareScrollView,
   KeyboardController,
@@ -14,14 +14,47 @@ import { Button as TamaguiButton, YStack } from 'tamagui';
 
 const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
+const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
+
+function validateUsername(value: string): string | null {
+  if (!value) return 'Please enter a username';
+  if (value.length < 3) return 'Username must be at least 3 characters';
+  if (value.length > 20) return 'Username must be at most 20 characters';
+  if (!USERNAME_REGEX.test(value))
+    return 'Start with a letter. Letters, numbers, and underscores only.';
+  return null;
+}
+
 export default function InfoScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const mutedForeground = useThemeColor({}, 'mutedForeground');
+  const textColor = useThemeColor({}, 'foreground');
+  const borderColor = useThemeColor({}, 'border');
+  const destructive = useThemeColor({}, 'destructive');
 
   const insets = useSafeAreaInsets();
-  const [focusedTextField, _] = React.useState<'code-name' | null>(null);
 
   const [codeName, setCodeName] = React.useState('');
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleChangeText = (value: string) => {
+    // Strip a leading @ if the user types one
+    const stripped = value.startsWith('@') ? value.slice(1) : value;
+    setCodeName(stripped);
+    if (error) setError(null);
+  };
+
+  const handleContinue = () => {
+    const validationError = validateUsername(codeName.trim());
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    router.push({
+      pathname: '/(auth)/(create-account)/credentials',
+      params: { codeName: codeName.trim() },
+    });
+  };
 
   return (
     <View
@@ -66,7 +99,7 @@ export default function InfoScreen() {
               }}
             >
               {Platform.select({
-                ios: "What's your code name?",
+                ios: "What's your username?",
                 default: 'Create your account',
               })}
             </Text>
@@ -85,23 +118,46 @@ export default function InfoScreen() {
           <View
             style={{ paddingTop: Platform.select({ ios: 16, default: 24 }) }}
           >
-            <View style={{ gap: 8 }}>
-              <View style={{ backgroundColor }}>
+            <View style={{ gap: 6 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: error ? destructive : borderColor,
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: Platform.select({ ios: 12, default: 4 }),
+                  backgroundColor,
+                }}
+              >
+                <Text style={{ color: mutedForeground, fontSize: 16 }}>@</Text>
                 <TextInput
                   value={codeName}
-                  onChangeText={setCodeName}
+                  onChangeText={handleChangeText}
                   placeholder={Platform.select({
-                    ios: 'Code Name',
+                    ios: 'username',
                     default: '',
                   })}
-                  onSubmitEditing={() => {
-                    router.push({
-                      pathname: '/(auth)/(create-account)/credentials',
-                      params: { codeName },
-                    });
+                  autoCapitalize='none'
+                  autoCorrect={false}
+                  style={{
+                    flex: 1,
+                    borderWidth: 0,
+                    paddingHorizontal: 4,
+                    paddingVertical: 0,
+                    color: textColor,
                   }}
+                  onSubmitEditing={handleContinue}
                 />
               </View>
+              {error ? (
+                <Text style={{ color: destructive, fontSize: 12 }}>{error}</Text>
+              ) : (
+                <Text style={{ color: mutedForeground, fontSize: 12 }}>
+                  3–20 characters. Letters, numbers, and underscores only.
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -118,20 +174,7 @@ export default function InfoScreen() {
         {Platform.OS === 'ios' ? (
           <View style={{ paddingHorizontal: 48, paddingVertical: 16 }}>
             <YStack gap={8}>
-              <TamaguiButton
-                onPress={() => {
-                  if (!codeName) {
-                    Alert.alert('Please enter a code name');
-                    return;
-                  }
-                  router.push({
-                    pathname: '/(auth)/(create-account)/credentials',
-                    params: { codeName },
-                  });
-                }}
-              >
-                Continue
-              </TamaguiButton>
+              <TamaguiButton onPress={handleContinue}>Continue</TamaguiButton>
               <TamaguiButton
                 style={{ paddingHorizontal: 8 }}
                 onPress={() => {
@@ -161,12 +204,8 @@ export default function InfoScreen() {
             </TamaguiButton>
             <TamaguiButton
               onPress={() => {
-                if (focusedTextField === 'code-name') {
-                  KeyboardController.setFocusTo('next');
-                  return;
-                }
                 KeyboardController.dismiss();
-                router.push('/(auth)/(create-account)/credentials');
+                handleContinue();
               }}
             >
               Next

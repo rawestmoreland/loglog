@@ -45,6 +45,16 @@ export default function useSignUp() {
 
   async function signUp(form: ISignUp) {
     if (!pb) throw new Error('Pocketbase not initialized');
+
+    const existing = await pb
+      .collection('poo_profiles')
+      .getList(1, 1, { filter: `codeName = "${form.codeName}"` })
+      .catch(() => ({ totalItems: 0 }));
+
+    if (existing.totalItems > 0) {
+      throw new Error('USERNAME_TAKEN');
+    }
+
     try {
       const data = {
         password: form.password,
@@ -81,7 +91,12 @@ export default function useSignUp() {
 
       router.push('/(protected)');
     } catch (err: any) {
-      console.error(JSON.stringify(err.originalError, null, 2));
+      // Check if PocketBase returned a unique constraint violation for codeName
+      const pbData = err?.data?.data;
+      if (pbData?.codeName?.code === 'validation_not_unique') {
+        throw new Error('USERNAME_TAKEN');
+      }
+      throw err;
     }
   }
 
