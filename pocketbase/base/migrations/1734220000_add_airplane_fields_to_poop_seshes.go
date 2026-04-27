@@ -9,7 +9,9 @@ func init() {
 	m.Register(func(app core.App) error {
 		collection, err := app.FindCollectionByNameOrId("pbc_2365814001")
 		if err != nil {
-			return err
+			// Collection doesn't exist yet on a fresh database — the collections
+			// snapshot (1747259544) will create it with these fields already present.
+			return nil
 		}
 
 		// add is_airplane field
