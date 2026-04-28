@@ -1,54 +1,72 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="bg" cx="38%" cy="30%" r="65%">
-      <stop offset="0%" stop-color="#F0A855"/>
-      <stop offset="65%" stop-color="#BF6F2E"/>
-      <stop offset="100%" stop-color="#7A3510"/>
+    <radialGradient id="bgG_never_same_twice" cx="36%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#F5B060"/>
+      <stop offset="35%" stop-color="#D07828"/>
+      <stop offset="70%" stop-color="#8F4210"/>
+      <stop offset="100%" stop-color="#4A1A04"/>
     </radialGradient>
-    <filter id="sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#00000070"/></filter>
-    <clipPath id="cc"><circle cx="100" cy="100" r="82"/></clipPath>
+    <radialGradient id="sheenG_never_same_twice" cx="32%" cy="22%" r="62%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <linearGradient id="goldG_never_same_twice" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE87A"/>
+      <stop offset="45%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#A07808"/>
+    </linearGradient>
+    <filter id="shF_never_same_twice" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+    <filter id="innerGlow_never_same_twice">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <clipPath id="ccG_never_same_twice"><circle cx="200" cy="200" r="165"/></clipPath>
   </defs>
-  <circle cx="100" cy="103" r="93" fill="#170800" filter="url(#sh)"/>
-  <circle cx="100" cy="100" r="93" fill="#170800"/>
-  <circle cx="100" cy="100" r="90" fill="none" stroke="#FFD700" stroke-width="2.5"/>
-  <circle cx="100.0" cy="9.5" r="2.2" fill="#FFD700"/>
-  <circle cx="128.0" cy="13.9" r="2.2" fill="#FFD700"/>
-  <circle cx="153.2" cy="26.8" r="2.2" fill="#FFD700"/>
-  <circle cx="173.2" cy="46.8" r="2.2" fill="#FFD700"/>
-  <circle cx="186.1" cy="72.0" r="2.2" fill="#FFD700"/>
-  <circle cx="190.5" cy="100.0" r="2.2" fill="#FFD700"/>
-  <circle cx="186.1" cy="128.0" r="2.2" fill="#FFD700"/>
-  <circle cx="173.2" cy="153.2" r="2.2" fill="#FFD700"/>
-  <circle cx="153.2" cy="173.2" r="2.2" fill="#FFD700"/>
-  <circle cx="128.0" cy="186.1" r="2.2" fill="#FFD700"/>
-  <circle cx="100.0" cy="190.5" r="2.2" fill="#FFD700"/>
-  <circle cx="72.0" cy="186.1" r="2.2" fill="#FFD700"/>
-  <circle cx="46.8" cy="173.2" r="2.2" fill="#FFD700"/>
-  <circle cx="26.8" cy="153.2" r="2.2" fill="#FFD700"/>
-  <circle cx="13.9" cy="128.0" r="2.2" fill="#FFD700"/>
-  <circle cx="9.5" cy="100.0" r="2.2" fill="#FFD700"/>
-  <circle cx="13.9" cy="72.0" r="2.2" fill="#FFD700"/>
-  <circle cx="26.8" cy="46.8" r="2.2" fill="#FFD700"/>
-  <circle cx="46.8" cy="26.8" r="2.2" fill="#FFD700"/>
-  <circle cx="72.0" cy="13.9" r="2.2" fill="#FFD700"/>
-  <circle cx="100" cy="100" r="83.5" fill="none" stroke="#FFD700" stroke-width="1.5"/>
-  <circle cx="100" cy="100" r="82" fill="url(#bg)"/>
-  <ellipse cx="86" cy="72" rx="32" ry="20" fill="rgba(255,255,255,0.13)" clip-path="url(#cc)"/>
-  <g stroke-linecap="round" stroke-linejoin="round">
 
-    <circle cx="71" cy="76" r="9" fill="white"/>
-    <path d="M 62 76 Q 71 90 80 76" fill="white" stroke="none"/>
-    <line x1="71" y1="76" x2="71" y2="109" stroke="white" stroke-width="4.5"/>
-    <circle cx="100" cy="90" r="9" fill="white"/>
-    <path d="M 91 90 Q 100 104 109 90" fill="white" stroke="none"/>
-    <line x1="100" y1="90" x2="100" y2="123" stroke="white" stroke-width="4.5"/>
-    <circle cx="129" cy="73" r="9" fill="white"/>
-    <path d="M 120 73 Q 129 87 138 73" fill="white" stroke="none"/>
-    <line x1="129" y1="73" x2="129" y2="106" stroke="white" stroke-width="4.5"/>
+  <!-- Shadow -->
+  <circle cx="200" cy="212" r="190" fill="#050200" filter="url(#shF_never_same_twice)"/>
+  <!-- Outermost dark ring -->
+  <circle cx="200" cy="200" r="196" fill="#0A0300"/>
+  <circle cx="200" cy="200" r="190" fill="#140600"/>
+  <!-- Gold outer ring -->
+  <circle cx="200" cy="200" r="182" fill="none" stroke="url(#goldG_never_same_twice)" stroke-width="5.5"/>
+  <!-- Dots -->
+  <circle cx="200.0" cy="20.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="246.6" cy="26.1" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="290.0" cy="44.1" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="327.3" cy="72.7" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="355.9" cy="110.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="373.9" cy="153.4" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="380.0" cy="200.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="373.9" cy="246.6" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="355.9" cy="290.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="327.3" cy="327.3" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="290.0" cy="355.9" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="246.6" cy="373.9" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="200.0" cy="380.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="153.4" cy="373.9" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="110.0" cy="355.9" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="72.7" cy="327.3" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="44.1" cy="290.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="26.1" cy="246.6" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="20.0" cy="200.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="26.1" cy="153.4" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="44.1" cy="110.0" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="72.7" cy="72.7" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="110.0" cy="44.1" r="4.5" fill="url(#goldGnever_same_twice)"/><circle cx="153.4" cy="26.1" r="4.5" fill="url(#goldGnever_same_twice)"/>
+  <!-- Inner gold ring -->
+  <circle cx="200" cy="200" r="169" fill="none" stroke="url(#goldG_never_same_twice)" stroke-width="2.5"/>
+  <!-- Main badge fill -->
+  <circle cx="200" cy="200" r="166" fill="url(#bgG_never_same_twice)"/>
+  <!-- Sheen overlay -->
+  <circle cx="200" cy="200" r="166" fill="url(#sheenG_never_same_twice)" clip-path="url(#ccG_never_same_twice)"/>
+
+  <!-- ── ICON ── -->
+  
+  <g stroke="white" stroke-linecap="round" fill="none">
+    <line x1="200" y1="126" x2="200" y2="250" stroke-width="5.5"/>
+    <line x1="148" y1="157" x2="252" y2="219" stroke-width="5.5"/>
+    <line x1="252" y1="157" x2="148" y2="219" stroke-width="5.5"/>
+    <line x1="200" y1="150" x2="184" y2="140" stroke-width="3.5"/>
+    <line x1="200" y1="150" x2="216" y2="140" stroke-width="3.5"/>
+    <line x1="200" y1="226" x2="184" y2="236" stroke-width="3.5"/>
+    <line x1="200" y1="226" x2="216" y2="236" stroke-width="3.5"/>
+    <line x1="240" y1="162" x2="247" y2="148" stroke-width="3.5"/>
+    <line x1="240" y1="162" x2="254" y2="169" stroke-width="3.5"/>
+    <line x1="160" y1="214" x2="153" y2="228" stroke-width="3.5"/>
+    <line x1="160" y1="214" x2="146" y2="207" stroke-width="3.5"/>
+    <line x1="240" y1="214" x2="254" y2="207" stroke-width="3.5"/>
+    <line x1="240" y1="214" x2="247" y2="228" stroke-width="3.5"/>
+    <line x1="160" y1="162" x2="146" y2="169" stroke-width="3.5"/>
+    <line x1="160" y1="162" x2="153" y2="148" stroke-width="3.5"/>
+    <circle cx="200" cy="188" r="11" stroke-width="4.5" fill="rgba(255,255,255,0.22)"/>
   </g>
-  <path d="M 22 150 A 81 81 0 0 0 178 150 L 181 173 A 85 85 0 0 1 19 173 Z" fill="#170800"/>
-  <line x1="22" y1="150" x2="178" y2="150" stroke="#FFD700" stroke-width="1.5"/>
-  <path d="M 19 173 Q 100 181 181 173" fill="none" stroke="#FFD700" stroke-width="1.5"/>
-  <text x="100" y="154" text-anchor="middle" fill="#FFD700" font-family="Arial Black,Impact,sans-serif" font-size="9" font-weight="900" letter-spacing="0.5">NEVER THE</text>
-  <text x="100" y="168" text-anchor="middle" fill="#FFD700" font-family="Arial Black,Impact,sans-serif" font-size="9" font-weight="900" letter-spacing="0.5">SAME TWICE</text>
+
+  <!-- Banner -->
+  <path d="M 65 306 A 164 164 0 0 0 335 306 L 341 352 A 172 172 0 0 1 59 352 Z" fill="#100400"/>
+  <line x1="65" y1="306" x2="335" y2="306" stroke="url(#goldG_never_same_twice)" stroke-width="3.5"/>
+  <path d="M 59 352 Q 200 366 341 352" fill="none" stroke="url(#goldG_never_same_twice)" stroke-width="3.5"/>
+  <text x="200" y="334" text-anchor="middle" fill="url(#goldG_never_same_twice)"
+        font-family="Arial Black,Impact,sans-serif"
+        font-size="17" font-weight="900" letter-spacing="2">NEVER SAME TWICE</text>
 </svg>

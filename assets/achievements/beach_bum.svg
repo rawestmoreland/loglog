@@ -1,57 +1,72 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="bg" cx="38%" cy="30%" r="65%">
-      <stop offset="0%" stop-color="#F0A855"/>
-      <stop offset="65%" stop-color="#BF6F2E"/>
-      <stop offset="100%" stop-color="#7A3510"/>
+    <radialGradient id="bgG_beach_bum" cx="36%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#F5B060"/>
+      <stop offset="35%" stop-color="#D07828"/>
+      <stop offset="70%" stop-color="#8F4210"/>
+      <stop offset="100%" stop-color="#4A1A04"/>
     </radialGradient>
-    <filter id="sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#00000070"/></filter>
-    <clipPath id="cc"><circle cx="100" cy="100" r="82"/></clipPath>
+    <radialGradient id="sheenG_beach_bum" cx="32%" cy="22%" r="62%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <linearGradient id="goldG_beach_bum" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE87A"/>
+      <stop offset="45%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#A07808"/>
+    </linearGradient>
+    <filter id="shF_beach_bum" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+    <filter id="innerGlow_beach_bum">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <clipPath id="ccG_beach_bum"><circle cx="200" cy="200" r="165"/></clipPath>
   </defs>
-  <circle cx="100" cy="103" r="93" fill="#170800" filter="url(#sh)"/>
-  <circle cx="100" cy="100" r="93" fill="#170800"/>
-  <circle cx="100" cy="100" r="90" fill="none" stroke="#FFD700" stroke-width="2.5"/>
-  <circle cx="100.0" cy="9.5" r="2.2" fill="#FFD700"/>
-  <circle cx="128.0" cy="13.9" r="2.2" fill="#FFD700"/>
-  <circle cx="153.2" cy="26.8" r="2.2" fill="#FFD700"/>
-  <circle cx="173.2" cy="46.8" r="2.2" fill="#FFD700"/>
-  <circle cx="186.1" cy="72.0" r="2.2" fill="#FFD700"/>
-  <circle cx="190.5" cy="100.0" r="2.2" fill="#FFD700"/>
-  <circle cx="186.1" cy="128.0" r="2.2" fill="#FFD700"/>
-  <circle cx="173.2" cy="153.2" r="2.2" fill="#FFD700"/>
-  <circle cx="153.2" cy="173.2" r="2.2" fill="#FFD700"/>
-  <circle cx="128.0" cy="186.1" r="2.2" fill="#FFD700"/>
-  <circle cx="100.0" cy="190.5" r="2.2" fill="#FFD700"/>
-  <circle cx="72.0" cy="186.1" r="2.2" fill="#FFD700"/>
-  <circle cx="46.8" cy="173.2" r="2.2" fill="#FFD700"/>
-  <circle cx="26.8" cy="153.2" r="2.2" fill="#FFD700"/>
-  <circle cx="13.9" cy="128.0" r="2.2" fill="#FFD700"/>
-  <circle cx="9.5" cy="100.0" r="2.2" fill="#FFD700"/>
-  <circle cx="13.9" cy="72.0" r="2.2" fill="#FFD700"/>
-  <circle cx="26.8" cy="46.8" r="2.2" fill="#FFD700"/>
-  <circle cx="46.8" cy="26.8" r="2.2" fill="#FFD700"/>
-  <circle cx="72.0" cy="13.9" r="2.2" fill="#FFD700"/>
-  <circle cx="100" cy="100" r="83.5" fill="none" stroke="#FFD700" stroke-width="1.5"/>
-  <circle cx="100" cy="100" r="82" fill="url(#bg)"/>
-  <ellipse cx="86" cy="72" rx="32" ry="20" fill="rgba(255,255,255,0.13)" clip-path="url(#cc)"/>
-  <g stroke-linecap="round" stroke-linejoin="round">
 
-    <circle cx="122" cy="68" r="13" fill="white"/>
-    <line x1="122" y1="49" x2="122" y2="43" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
-    <line x1="136" y1="54" x2="141" y2="49" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
-    <line x1="141" y1="68" x2="147" y2="68" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
-    <line x1="136" y1="82" x2="141" y2="87" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
-    <line x1="108" y1="82" x2="103" y2="87" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M 80 132 Q 82 104 91 85" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
-    <path d="M 91 85 Q 73 72 62 79" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M 91 85 Q 80 70 87 61" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M 91 85 Q 101 68 111 75" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M 91 85 Q 106 78 110 87" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M 55 118 Q 66 111 77 118 Q 88 125 99 118 Q 110 111 121 118 Q 132 125 141 118" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/>
-    <path d="M 58 130 Q 69 123 80 130 Q 91 137 102 130 Q 113 123 122 130" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Shadow -->
+  <circle cx="200" cy="212" r="190" fill="#050200" filter="url(#shF_beach_bum)"/>
+  <!-- Outermost dark ring -->
+  <circle cx="200" cy="200" r="196" fill="#0A0300"/>
+  <circle cx="200" cy="200" r="190" fill="#140600"/>
+  <!-- Gold outer ring -->
+  <circle cx="200" cy="200" r="182" fill="none" stroke="url(#goldG_beach_bum)" stroke-width="5.5"/>
+  <!-- Dots -->
+  <circle cx="200.0" cy="20.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="246.6" cy="26.1" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="290.0" cy="44.1" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="327.3" cy="72.7" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="355.9" cy="110.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="373.9" cy="153.4" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="380.0" cy="200.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="373.9" cy="246.6" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="355.9" cy="290.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="327.3" cy="327.3" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="290.0" cy="355.9" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="246.6" cy="373.9" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="200.0" cy="380.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="153.4" cy="373.9" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="110.0" cy="355.9" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="72.7" cy="327.3" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="44.1" cy="290.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="26.1" cy="246.6" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="20.0" cy="200.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="26.1" cy="153.4" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="44.1" cy="110.0" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="72.7" cy="72.7" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="110.0" cy="44.1" r="4.5" fill="url(#goldGbeach_bum)"/><circle cx="153.4" cy="26.1" r="4.5" fill="url(#goldGbeach_bum)"/>
+  <!-- Inner gold ring -->
+  <circle cx="200" cy="200" r="169" fill="none" stroke="url(#goldG_beach_bum)" stroke-width="2.5"/>
+  <!-- Main badge fill -->
+  <circle cx="200" cy="200" r="166" fill="url(#bgG_beach_bum)"/>
+  <!-- Sheen overlay -->
+  <circle cx="200" cy="200" r="166" fill="url(#sheenG_beach_bum)" clip-path="url(#ccG_beach_bum)"/>
+
+  <!-- ── ICON ── -->
+  
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="252" cy="162" r="26" fill="rgba(255,255,255,0.88)"/>
+    <line x1="252" y1="128" x2="252" y2="140" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="252" y1="184" x2="252" y2="196" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="218" y1="162" x2="230" y2="162" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="274" y1="162" x2="286" y2="162" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+    <line x1="226" y1="138" x2="235" y2="147" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="269" y1="177" x2="278" y2="186" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="226" y1="186" x2="235" y2="177" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <line x1="269" y1="147" x2="278" y2="138" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 178 288 Q 180 254 187 228 Q 196 196 212 166" stroke="white" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M 212 166 Q 234 144 258 150" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M 212 166 Q 216 140 207 120" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M 212 166 Q 190 146 172 153" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M 212 166 Q 196 152 184 138" stroke="white" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+    <path d="M 128 265 Q 150 255 174 265 Q 196 275 220 265 Q 242 255 264 265" stroke="white" stroke-width="4.5" fill="none"/>
+    <path d="M 134 280 Q 158 268 183 280 Q 208 292 232 280 Q 256 268 276 280" stroke="white" stroke-width="4" fill="none"/>
   </g>
-  <path d="M 22 150 A 81 81 0 0 0 178 150 L 181 173 A 85 85 0 0 1 19 173 Z" fill="#170800"/>
-  <line x1="22" y1="150" x2="178" y2="150" stroke="#FFD700" stroke-width="1.5"/>
-  <path d="M 19 173 Q 100 181 181 173" fill="none" stroke="#FFD700" stroke-width="1.5"/>
-  <text x="100" y="163" text-anchor="middle" fill="#FFD700" font-family="Arial Black,Impact,sans-serif" font-size="11" font-weight="900" letter-spacing="0.8">BEACH BUM</text>
+
+  <!-- Banner -->
+  <path d="M 65 306 A 164 164 0 0 0 335 306 L 341 352 A 172 172 0 0 1 59 352 Z" fill="#100400"/>
+  <line x1="65" y1="306" x2="335" y2="306" stroke="url(#goldG_beach_bum)" stroke-width="3.5"/>
+  <path d="M 59 352 Q 200 366 341 352" fill="none" stroke="url(#goldG_beach_bum)" stroke-width="3.5"/>
+  <text x="200" y="334" text-anchor="middle" fill="url(#goldG_beach_bum)"
+        font-family="Arial Black,Impact,sans-serif"
+        font-size="22" font-weight="900" letter-spacing="2">BEACH BUM</text>
 </svg>
