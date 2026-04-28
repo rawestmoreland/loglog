@@ -48,8 +48,14 @@ export default function useSignUp() {
 
     const existing = await pb
       .collection('poo_profiles')
-      .getList(1, 1, { filter: `codeName = "${form.codeName}"` })
-      .catch(() => ({ totalItems: 0 }));
+      .getList(1, 1, { filter: `codeName="${form.codeName}"` })
+      .catch((e) => {
+        console.error(
+          'Error checking existing codeName:',
+          JSON.stringify(e, null, 2),
+        );
+        return { totalItems: 0 };
+      });
 
     if (existing.totalItems > 0) {
       throw new Error('USERNAME_TAKEN');

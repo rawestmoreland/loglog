@@ -7,4 +7,4 @@ GET https://api.aviationstack.com/v1/flights?access_key=a4662dfc17c3fbd18292a0a0
 GET https://api.aviationstack.com/v1/airlines?access_key=a4662dfc17c3fbd18292a0a0ee18539c
 
 ###
-GET https://loglog-pocketbase-backend.fly.dev/api/collections/achievements/records?fields=name,description
+GET http://localhost:8080/api/collections/poo_profiles/records?filter=codeName="Big_Country"

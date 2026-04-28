@@ -35,7 +35,7 @@ const signUpSchema = z
       .max(20, 'Username must be at most 20 characters')
       .regex(
         USERNAME_REGEX,
-        'Start with a letter. Letters, numbers, and underscores only.'
+        'Start with a letter. Letters, numbers, and underscores only.',
       ),
   })
   .superRefine((data, ctx) => {
@@ -97,14 +97,16 @@ export default function CredentialsScreen() {
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'USERNAME_TAKEN') {
+        console.warn('Username already taken:', data.codeName);
         Alert.alert(
           'Username taken',
-          'That username is already in use. Please go back and choose a different one.'
+          'That username is already in use. Please go back and choose a different one.',
         );
       } else {
+        console.warn('Error during sign up:', error);
         Alert.alert(
           'Something went wrong',
-          'There was an issue creating your account. Please try again.'
+          'There was an issue creating your account. Please try again.',
         );
       }
     } finally {
