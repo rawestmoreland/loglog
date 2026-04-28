@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,6 +20,8 @@ import useSignUp from './hook/useSignUp';
 
 const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
+const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
+
 const signUpSchema = z
   .object({
     email: z.email('A valid email is required'),
@@ -27,7 +29,14 @@ const signUpSchema = z
     passwordConfirm: z
       .string()
       .min(8, 'Password must be at least 8 characters long'),
-    codeName: z.string().min(1, 'Code name is required'),
+    codeName: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(20, 'Username must be at most 20 characters')
+      .regex(
+        USERNAME_REGEX,
+        'Start with a letter. Letters, numbers, and underscores only.',
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.passwordConfirm) {
@@ -87,13 +96,16 @@ export default function CredentialsScreen() {
         codeName: data.codeName,
       });
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof Error && error.message === 'USERNAME_TAKEN') {
         Alert.alert(
-          'There was an issue while creating your account. Please try again.'
+          'Username taken',
+          'That username is already in use. Please choose a different one.',
+          [{ text: 'Change username', onPress: () => router.back() }],
         );
       } else {
         Alert.alert(
-          'There was an issue while creating your account. Please try again.'
+          'Something went wrong',
+          'There was an issue creating your account. Please try again.',
         );
       }
     } finally {
