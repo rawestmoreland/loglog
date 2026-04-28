@@ -65,6 +65,20 @@ export const SHEET_SNAP_POINTS_MODE: Record<
   [SheetType.LOADING]: 'fit',
 };
 
+export const SHEET_DISABLE_DRAG: Record<SheetType, boolean> = {
+  [SheetType.HOME]: false,
+  [SheetType.ACTIVE_SESH]: false,
+  [SheetType.SELECTED_SESH]: false,
+  [SheetType.TOILET_DETAILS]: false,
+  [SheetType.NO_CONNECTION]: false,
+  [SheetType.POOP_DETAILS]: true,
+  [SheetType.POOP_COMMENT]: false,
+  [SheetType.USER_SETTINGS]: false,
+  [SheetType.POOP_PALS]: false,
+  [SheetType.POOP_HISTORY]: false,
+  [SheetType.LOADING]: false,
+};
+
 export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {
   [SheetType.HOME]: false,
   [SheetType.ACTIVE_SESH]: false,
