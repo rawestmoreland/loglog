@@ -17,7 +17,11 @@ export function useAchievements() {
     queryKey: ['achievements', pooProfile?.id],
     queryFn: async (): Promise<AchievementWithStatus[]> => {
       const [allAchievements, userAchievements] = await Promise.all([
-        pb?.collection('achievements').getFullList<AchievementsRecord & { id: string }>() ?? [],
+        pb
+          ?.collection('achievements')
+          .getFullList<
+            AchievementsRecord & { id: string }
+          >({ filter: `active = true` }) ?? [],
         pb
           ?.collection('user_achievement')
           .getFullList({
@@ -28,7 +32,10 @@ export function useAchievements() {
       ]);
 
       const earnedMap = new Map(
-        userAchievements.map((ua) => [ua.achievement as string, ua.unlocked_at as string])
+        userAchievements.map((ua) => [
+          ua.achievement as string,
+          ua.unlocked_at as string,
+        ]),
       );
 
       return allAchievements.map((achievement) => ({
