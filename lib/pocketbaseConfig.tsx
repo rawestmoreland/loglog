@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PocketBase, { AsyncAuthStore } from 'pocketbase';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import eventsource from 'react-native-sse';
 
 // @ts-ignore
@@ -18,7 +18,11 @@ const PocketBaseContext = createContext<{
 
 export const usePocketBase = () => useContext(PocketBaseContext);
 
-export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) => {
+export const PocketBaseProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [pb, setPb] = useState<PocketBase | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,13 +34,14 @@ export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) 
         console.log('Initializing PocketBase...');
         // This is where our auth session will be stored. It's PocketBase magic.
         const store = new AsyncAuthStore({
-          save: async (serialized) => AsyncStorage.setItem('pb_auth', serialized),
+          save: async (serialized) =>
+            AsyncStorage.setItem('pb_auth', serialized),
           initial: (await AsyncStorage.getItem('pb_auth')) ?? undefined,
           clear: async () => AsyncStorage.removeItem('pb_auth'),
         });
 
         const baseUrl =
-          process.env.EXPO_PUBLIC_POCKETBASE_URL || 'https://loglog-pocketbase-backend.fly.dev';
+          process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://localhost:8080'; // Default to local PocketBase for development
 
         console.log('Connecting to PocketBase at:', baseUrl);
         const pbInstance = new PocketBase(baseUrl, store);
@@ -51,12 +56,19 @@ export const PocketBaseProvider = ({ children }: { children: React.ReactNode }) 
           console.log('PocketBase connection successful');
           setError(null);
         } catch (healthErr) {
-          console.warn('PocketBase health check failed (offline mode):', healthErr);
+          console.warn(
+            'PocketBase health check failed (offline mode):',
+            healthErr,
+          );
           setError('Offline mode - some features may be limited');
         }
       } catch (err) {
         console.error('Failed to initialize PocketBase:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize PocketBase');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to initialize PocketBase',
+        );
       } finally {
         setIsLoading(false);
       }

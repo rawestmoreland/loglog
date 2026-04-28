@@ -53,21 +53,35 @@ export default function useSignUp() {
         codeName: form.codeName,
       };
 
-      const user = await pb.collection('users').create(data);
+      const user = await pb
+        .collection('users')
+        .create(data)
+        .catch((e) =>
+          console.error('Error creating user:', JSON.stringify(e, null, 2)),
+        );
       const formData = {
         email: form.email,
         password: form.password,
       };
+      console.log('User created successfully:', JSON.stringify(user, null, 2));
       await signIn(formData);
 
-      await pb.collection('poo_profiles').create({
-        user,
-        codeName: form.codeName,
-      });
+      await pb
+        .collection('poo_profiles')
+        .create({
+          user,
+          codeName: form.codeName,
+        })
+        .catch((e) =>
+          console.error(
+            'Error creating poo profile:',
+            JSON.stringify(e, null, 2),
+          ),
+        );
 
       router.push('/(protected)');
     } catch (err: any) {
-      console.error(err.originalError);
+      console.error(JSON.stringify(err.originalError, null, 2));
     }
   }
 

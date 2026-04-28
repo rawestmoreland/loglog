@@ -27,9 +27,17 @@ func main() {
 
 	// loosely check if it was executed using "go run"
 	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())
+	isDev := isGoRun || os.Getenv("APP_ENV") == "development"
+
+	fmt.Printf("Starting app in %s mode\n", func() string {
+		if isDev {
+			return "development"
+		}
+		return "production"
+	}())
 
 	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
-		Automigrate: isGoRun,
+		Automigrate: isDev,
 	})
 
 	app.OnRecordAfterCreateSuccess("users").BindFunc(func(e *core.RecordEvent) error {
