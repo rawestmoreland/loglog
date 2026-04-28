@@ -34,6 +34,9 @@ export interface PoopSesh {
     timezone?: string;
   };
   timezone?: string;
+  city?: string | null;
+  country?: string | null;
+  region?: string | null;
   company_time: boolean;
   revelations?: string;
   started: Date | string;
