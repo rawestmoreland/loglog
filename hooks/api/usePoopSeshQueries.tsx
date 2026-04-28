@@ -163,7 +163,7 @@ export function usePoopSesh(
     queryKey: ['poop-sesh', { poopId }],
     queryFn: async (): Promise<PoopSesh | null> => {
       if (!poopId) return null;
-      const expand = `user`;
+      const expand = `user,place_id`;
       try {
         const sesh = await pb?.collection('poop_seshes').getOne(poopId, {
           expand,
@@ -184,6 +184,15 @@ export function usePoopSesh(
           user: sesh?.user,
           is_public: sesh?.is_public ?? false,
           company_time: sesh?.company_time ?? false,
+          place_id: sesh?.place_id,
+          place: sesh?.expand?.place_id,
+          custom_place_name: sesh?.custom_place_name,
+          place_type: sesh?.place_type,
+          is_airplane: sesh?.is_airplane,
+          flight_number: sesh?.flight_number,
+          airline: sesh?.airline,
+          departure_airport: sesh?.departure_airport,
+          arrival_airport: sesh?.arrival_airport,
         } as PoopSesh;
       } catch (error) {
         console.error(error);

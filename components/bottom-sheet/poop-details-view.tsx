@@ -2,29 +2,33 @@ import { LogSwitch } from '@/components/ui/log-switch';
 import { RoundButton } from '@/components/ui/round-button';
 import { BRISTOL_SCORE_OPTIONS } from '@/constants';
 import { SheetContentProps, SheetType } from '@/constants/sheet';
+import { Colors } from '@/constants/theme';
 import {
   useDeletePoop,
   useUpdatePoopSesh,
 } from '@/hooks/api/usePoopSeshMutations';
 import { usePoopSesh } from '@/hooks/api/usePoopSeshQueries';
+import { useToiletRatingForPlace } from '@/hooks/api/useToiletRatingsQueries';
 import {
   validateAirportCode,
   validateFlightNumber,
 } from '@/lib/flight-helpers';
 import { PoopSesh } from '@/lib/types';
-import { CircleHelp, Plane, X } from '@tamagui/lucide-icons';
+import { CircleHelp, MapPin, Plane, X } from '@tamagui/lucide-icons';
 import { toast } from 'burnt';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, TouchableOpacity } from 'react-native';
+import { Alert, TouchableOpacity, useColorScheme } from 'react-native';
 import DatePicker from 'react-native-date-picker';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   AlertDialog,
   Button,
   Image,
   Input,
   Label,
+  Separator,
   Spinner,
   Text,
   TextArea,
@@ -43,6 +47,7 @@ export function PoopDetailsView({
   setSheetType,
 }: SheetContentProps) {
   const router = useRouter();
+  const scheme = useColorScheme() ?? 'light';
 
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
@@ -56,6 +61,10 @@ export function PoopDetailsView({
   const { data: poopDetails, isLoading } = usePoopSesh(poopDetailsId ?? null, {
     enabled: !!poopDetailsId,
   });
+
+  const { data: toiletRating } = useToiletRatingForPlace(
+    poopDetails?.place_id ?? ''
+  );
 
   const updateSeshMutation = useUpdatePoopSesh();
   const deleteSeshMutation = useDeletePoop();
@@ -207,6 +216,55 @@ export function PoopDetailsView({
             onCancel={() => setStartDatePickerOpen(false)}
           />
         </YStack>
+        {(poopDetails?.place || poopDetails?.custom_place_name) && (
+          <YStack
+            gap='$3'
+            p='$3'
+            borderWidth={1}
+            style={{ borderRadius: 16 }}
+            borderColor='$borderColor'
+          >
+            <XStack items='center' gap='$2'>
+              <MapPin size={16} />
+              <Text fontWeight='bold'>Bathroom</Text>
+            </XStack>
+            <Text fontSize='$4'>
+              {poopDetails.place?.name || poopDetails.custom_place_name}
+            </Text>
+            <Separator />
+            <YStack gap='$1'>
+              <Text fontSize='$3' color={Colors[scheme].textSecondary as any}>
+                Your rating
+              </Text>
+              {toiletRating?.rating ? (
+                <XStack items='center' gap='$2'>
+                  <XStack gap='$1'>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Icon
+                        key={index}
+                        name='star'
+                        size={16}
+                        color={
+                          index < Math.round(toiletRating.rating)
+                            ? (Colors[scheme].primary as string)
+                            : (Colors[scheme].border as string)
+                        }
+                      />
+                    ))}
+                  </XStack>
+                  <Text fontSize='$3'>{toiletRating.rating.toFixed(1)}</Text>
+                </XStack>
+              ) : (
+                <Text
+                  fontSize='$3'
+                  color={Colors[scheme].textSecondary as any}
+                >
+                  Not rated yet
+                </Text>
+              )}
+            </YStack>
+          </YStack>
+        )}
         <YStack>
           <Label htmlFor='revelations-textarea'>Revelations</Label>
           <TextArea
