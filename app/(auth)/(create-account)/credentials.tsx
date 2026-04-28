@@ -16,7 +16,7 @@ import { TextInput } from '@/components/ui/text-input';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Button as TamaguiButton } from 'tamagui';
 
-import useSignUp from './hook/useSignUp';
+import useSignUp, { SignUpValidationError } from './hook/useSignUp';
 
 const LOGO_SOURCE = require('@/assets/images/loggie.png');
 
@@ -54,6 +54,7 @@ export default function CredentialsScreen() {
   const cardBackground = useThemeColor({}, 'card');
   const textColor = useThemeColor({}, 'foreground');
   const mutedForeground = useThemeColor({}, 'mutedForeground');
+  const destructive = useThemeColor({}, 'destructive');
 
   const { codeName } = useLocalSearchParams();
 
@@ -96,7 +97,13 @@ export default function CredentialsScreen() {
         codeName: data.codeName,
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'USERNAME_TAKEN') {
+      if (error instanceof SignUpValidationError) {
+        Object.entries(error.fields).forEach(([field, message]) => {
+          form.setError(field as 'email' | 'password' | 'passwordConfirm', {
+            message,
+          });
+        });
+      } else if (error instanceof Error && error.message === 'USERNAME_TAKEN') {
         Alert.alert(
           'Username taken',
           'That username is already in use. Please choose a different one.',
@@ -202,6 +209,11 @@ export default function CredentialsScreen() {
                   )}
                 />
               </View>
+              {form.formState.errors.email && (
+                <Text style={[styles.fieldError, { color: destructive }]}>
+                  {form.formState.errors.email.message}
+                </Text>
+              )}
             </View>
             <View style={styles.inputGroup}>
               {Platform.OS !== 'ios' && (
@@ -244,6 +256,11 @@ export default function CredentialsScreen() {
                   )}
                 />
               </View>
+              {form.formState.errors.password && (
+                <Text style={[styles.fieldError, { color: destructive }]}>
+                  {form.formState.errors.password.message}
+                </Text>
+              )}
             </View>
             <View style={styles.inputGroup}>
               {Platform.OS !== 'ios' && (
@@ -284,6 +301,11 @@ export default function CredentialsScreen() {
                   )}
                 />
               </View>
+              {form.formState.errors.passwordConfirm && (
+                <Text style={[styles.fieldError, { color: destructive }]}>
+                  {form.formState.errors.passwordConfirm.message}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -369,6 +391,10 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     marginBottom: 8,
+  },
+  fieldError: {
+    fontSize: 12,
+    marginTop: 4,
   },
   label: {
     fontSize: 12,
