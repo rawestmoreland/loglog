@@ -1,4 +1,5 @@
 import {
+  AchievementsView,
   ActiveSeshView,
   HomeView,
   LoadingView,
@@ -26,4 +27,5 @@ export const SHEET_COMPONENTS: Record<SheetType, SheetContentComponent> = {
   [SheetType.POOP_PALS]: PoopPalsView,
   [SheetType.POOP_HISTORY]: PoopHistoryView,
   [SheetType.LOADING]: LoadingView,
+  [SheetType.ACHIEVEMENTS]: AchievementsView,
 };
