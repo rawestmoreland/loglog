@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -97,13 +97,12 @@ export default function CredentialsScreen() {
       });
     } catch (error) {
       if (error instanceof Error && error.message === 'USERNAME_TAKEN') {
-        console.warn('Username already taken:', data.codeName);
         Alert.alert(
           'Username taken',
-          'That username is already in use. Please go back and choose a different one.',
+          'That username is already in use. Please choose a different one.',
+          [{ text: 'Change username', onPress: () => router.back() }],
         );
       } else {
-        console.warn('Error during sign up:', error);
         Alert.alert(
           'Something went wrong',
           'There was an issue creating your account. Please try again.',
