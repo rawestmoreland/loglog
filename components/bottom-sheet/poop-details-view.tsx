@@ -19,7 +19,7 @@ import { toast } from 'burnt';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, TouchableOpacity, useColorScheme } from 'react-native';
+import { Alert, ScrollView, TouchableOpacity, useColorScheme } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
@@ -143,7 +143,7 @@ export function PoopDetailsView({
   if (isLoading) return <Spinner size='large' />;
 
   return (
-    <YStack flex={1} gap='$4' mb='$4'>
+    <YStack flex={1} gap='$4'>
       <XStack justify='space-between' items='center'>
         <Text fontWeight={'bold'}>Poop Details</Text>
         <RoundButton
@@ -151,7 +151,8 @@ export function PoopDetailsView({
           onPress={() => setSheetType?.(SheetType.POOP_HISTORY)}
         />
       </XStack>
-      <YStack flex={1}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+      <YStack gap='$4'>
         <YStack>
           <Label htmlFor='poop-start-button'>Poop Start</Label>
           <Button
@@ -420,6 +421,7 @@ export function PoopDetailsView({
           <ConfirmDeleteAlert handleDelete={handleDelete} />
         </YStack>
       </YStack>
+      </ScrollView>
     </YStack>
   );
 }
