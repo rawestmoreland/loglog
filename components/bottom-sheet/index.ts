@@ -1,3 +1,4 @@
+export * from './achievements-view';
 export * from './active-sesh-view';
 export * from './home-view';
 export * from './loading-view';

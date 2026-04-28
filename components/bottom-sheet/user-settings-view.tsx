@@ -2,7 +2,7 @@ import { SheetContentProps, SheetType } from '@/constants/sheet';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/authContext';
 import { useTimeOnToilet } from '@/hooks/api/usePoopStats';
-import { Cog, Users, X } from '@tamagui/lucide-icons';
+import { Cog, Trophy, Users, X } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, useColorScheme } from 'react-native';
 import { Button, Card, Separator, Text, XStack, YStack } from 'tamagui';
@@ -69,6 +69,18 @@ export function UserSettingsView({
           onPress={() => setSheetType?.(SheetType.POOP_PALS)}
         >
           <Text fontWeight='600'>Poo pals</Text>
+        </Button>
+        <Button
+          flex={1}
+          icon={Trophy}
+          size='$4'
+          borderWidth={2}
+          borderColor={Colors[scheme].border as any}
+          bg={Colors[scheme].background as any}
+          pressStyle={{ opacity: 0.8, scale: 0.98 }}
+          onPress={() => setSheetType?.(SheetType.ACHIEVEMENTS)}
+        >
+          <Text fontWeight='600'>Badges</Text>
         </Button>
         <Button
           flex={1}

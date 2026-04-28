@@ -13,6 +13,7 @@ export enum SheetType {
   POOP_HISTORY = 'poop-history',
   POOP_COMMENT = 'poop-comment',
   LOADING = 'loading',
+  ACHIEVEMENTS = 'achievements',
 }
 
 export type SheetContentProps = {
@@ -46,6 +47,7 @@ export const SHEET_SNAP_POINTS: Record<
   [SheetType.POOP_PALS]: [90],
   [SheetType.POOP_HISTORY]: [90],
   [SheetType.LOADING]: [0],
+  [SheetType.ACHIEVEMENTS]: [90],
 };
 
 export const SHEET_SNAP_POINTS_MODE: Record<
@@ -63,6 +65,7 @@ export const SHEET_SNAP_POINTS_MODE: Record<
   [SheetType.POOP_PALS]: 'percent',
   [SheetType.POOP_HISTORY]: 'percent',
   [SheetType.LOADING]: 'fit',
+  [SheetType.ACHIEVEMENTS]: 'percent',
 };
 
 export const SHEET_DISABLE_DRAG: Record<SheetType, boolean> = {
@@ -77,6 +80,7 @@ export const SHEET_DISABLE_DRAG: Record<SheetType, boolean> = {
   [SheetType.POOP_PALS]: true,
   [SheetType.POOP_HISTORY]: true,
   [SheetType.LOADING]: false,
+  [SheetType.ACHIEVEMENTS]: true,
 };
 
 export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {
@@ -91,4 +95,5 @@ export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {
   [SheetType.POOP_PALS]: false,
   [SheetType.POOP_HISTORY]: true,
   [SheetType.LOADING]: false,
+  [SheetType.ACHIEVEMENTS]: false,
 };
