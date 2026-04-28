@@ -4,7 +4,7 @@ import {
   AchievementWithStatus,
   useAchievements,
 } from '@/hooks/api/useAchievementsQueries';
-import { getAchievementAsset } from '@/lib/achievementAssets';
+import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { FlashList } from '@shopify/flash-list';
 import { Lock, X } from '@tamagui/lucide-icons';
 import { Image } from 'expo-image';
@@ -22,7 +22,11 @@ function BadgeDetailDialog({
   onClose: () => void;
 }) {
   const scheme = useColorScheme() ?? 'light';
-  const asset = achievement ? getAchievementAsset(achievement.name) : null;
+  const { pb } = usePocketBase();
+  const iconUri =
+    achievement?.icon && pb
+      ? `${pb.baseURL}/api/files/achievements/${achievement.id}/${achievement.icon}`
+      : null;
 
   return (
     <Dialog modal open={open} onOpenChange={(o) => !o && onClose()}>
@@ -39,10 +43,7 @@ function BadgeDetailDialog({
           bordered
           elevate
           key='content'
-          animation={[
-            'quick',
-            { opacity: { overshootClamping: true } },
-          ]}
+          animation={['quick', { opacity: { overshootClamping: true } }]}
           enterStyle={{ y: -10, opacity: 0, scale: 0.95 }}
           exitStyle={{ y: 10, opacity: 0, scale: 0.95 }}
           style={{ marginHorizontal: 24 }}
@@ -79,7 +80,7 @@ function BadgeDetailDialog({
               {/* Badge image */}
               <YStack position='relative' items='center'>
                 <Image
-                  source={asset}
+                  source={{ uri: iconUri ?? undefined }}
                   style={{
                     width: 150,
                     height: 150,
@@ -137,7 +138,10 @@ function BadgeDetailDialog({
                   py='$2'
                   borderRadius='$4'
                 >
-                  <Lock size={12} color={Colors[scheme].mutedForeground as any} />
+                  <Lock
+                    size={12}
+                    color={Colors[scheme].mutedForeground as any}
+                  />
                   <Text
                     fontSize='$2'
                     color={Colors[scheme].mutedForeground as any}
@@ -157,13 +161,14 @@ function BadgeDetailDialog({
 
 function AchievementBadge({
   achievement,
+  iconUri,
   onPress,
 }: {
   achievement: AchievementWithStatus;
+  iconUri: string | null;
   onPress: (achievement: AchievementWithStatus) => void;
 }) {
   const scheme = useColorScheme() ?? 'light';
-  const asset = getAchievementAsset(achievement.name);
 
   return (
     <Pressable
@@ -173,7 +178,7 @@ function AchievementBadge({
       <YStack items='center' gap='$1' px='$1' py='$2' flex={1}>
         <YStack position='relative'>
           <Image
-            source={asset}
+            source={{ uri: iconUri ?? undefined }}
             style={{
               width: 90,
               height: 90,
@@ -219,12 +224,18 @@ export function AchievementsView({
   setSheetType,
 }: SheetContentProps) {
   const scheme = useColorScheme() ?? 'light';
+  const { pb } = usePocketBase();
   const { data: achievements, isLoading } = useAchievements();
   const [selectedAchievement, setSelectedAchievement] =
     useState<AchievementWithStatus | null>(null);
 
   const earnedCount = achievements?.filter((a) => a.earned).length ?? 0;
   const total = achievements?.length ?? 0;
+
+  const getIconUri = (achievement: AchievementWithStatus) =>
+    achievement.icon && pb
+      ? `${pb.baseURL}/api/files/achievements/${achievement.id}/${achievement.icon}`
+      : null;
 
   return (
     <YStack flex={1} gap='$3'>
@@ -278,6 +289,7 @@ export function AchievementsView({
           renderItem={({ item }) => (
             <AchievementBadge
               achievement={item}
+              iconUri={getIconUri(item)}
               onPress={setSelectedAchievement}
             />
           )}
