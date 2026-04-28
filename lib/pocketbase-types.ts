@@ -182,6 +182,7 @@ export type PoopSeshesRecord<Tlocation = unknown> = {
 	bristol_score?: number
 	company_time?: boolean
 	coords?: GeoPoint
+	country?: string | null
 	created: IsoAutoDateString
 	custom_place_name?: string
 	ended?: IsoDateString
@@ -191,6 +192,7 @@ export type PoopSeshesRecord<Tlocation = unknown> = {
 	place_id?: RecordIdString
 	place_type?: string
 	poo_profile: RecordIdString
+	region?: string | null
 	revelations?: string
 	started: IsoDateString
 	updated: IsoAutoDateString

@@ -58,8 +58,9 @@ export function useStartPoopSesh() {
       }
 
       // Skip geocoding for airplane sessions
+      let reverseGeoData = null;
       if (!poopSesh.is_airplane && poopSesh.location?.coordinates) {
-        const reverseGeoData = await getReverseGeoDataFromCoords({
+        reverseGeoData = await getReverseGeoDataFromCoords({
           latitude: poopSesh.location.coordinates.lat,
           longitude: poopSesh.location.coordinates.lon,
         });
@@ -75,6 +76,8 @@ export function useStartPoopSesh() {
         user: user?.id,
         poo_profile: pooProfile?.id,
         timezone: poopSesh.location?.timezone,
+        country: reverseGeoData?.country ?? null,
+        region: reverseGeoData?.region ?? null,
       });
 
       return {

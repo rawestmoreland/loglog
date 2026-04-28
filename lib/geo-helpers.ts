@@ -6,7 +6,7 @@ export async function getReverseGeoDataFromCoords({
 }: {
   latitude: number;
   longitude: number;
-}): Promise<{ city: string; country: string; timezone: string } | null> {
+}): Promise<{ city: string; country: string; region: string | null; timezone: string } | null> {
   try {
     // Ensure we're using https
     const url = `${process.env.EXPO_PUBLIC_MAPBOX_API_URL}/reverse?longitude=${longitude}&latitude=${latitude}&types=place&access_token=${process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN}`;
@@ -24,10 +24,11 @@ export async function getReverseGeoDataFromCoords({
       );
     }
 
-    const city = response.data.features?.[0]?.properties?.name ?? 'Unknown';
-    const country =
-      response.data.features?.[0]?.properties?.country ?? 'Unknown';
-    return { city, country, timezone: zoneName };
+    const props = response.data.features?.[0]?.properties;
+    const city = props?.name ?? 'Unknown';
+    const country = props?.context?.country?.name ?? props?.country ?? 'Unknown';
+    const region = props?.context?.region?.name ?? null;
+    return { city, country, region, timezone: zoneName };
   } catch (error) {
     // More detailed error logging
     console.error('Failed to fetch city from coords:', error);
