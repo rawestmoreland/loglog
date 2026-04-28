@@ -4,18 +4,23 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-export function TextInput({ ...props }: TextInputProps) {
+export function TextInput({ style, ...props }: TextInputProps) {
   const borderColor = useThemeColor({}, 'border');
+  const textColor = useThemeColor({}, 'foreground');
 
   return (
     <NativeTextInput
-      style={{
-        borderWidth: 1,
-        borderColor,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 8,
-      }}
+      style={[
+        {
+          borderWidth: 1,
+          borderColor,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderRadius: 8,
+          color: textColor,
+        },
+        style,
+      ]}
       {...props}
     />
   );
