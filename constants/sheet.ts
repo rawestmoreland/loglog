@@ -40,11 +40,11 @@ export const SHEET_SNAP_POINTS: Record<
   [SheetType.SELECTED_SESH]: undefined,
   [SheetType.TOILET_DETAILS]: undefined,
   [SheetType.NO_CONNECTION]: undefined,
-  [SheetType.POOP_DETAILS]: [80],
+  [SheetType.POOP_DETAILS]: [90],
   [SheetType.POOP_COMMENT]: [90],
   [SheetType.USER_SETTINGS]: undefined,
-  [SheetType.POOP_PALS]: [75],
-  [SheetType.POOP_HISTORY]: [75],
+  [SheetType.POOP_PALS]: [90],
+  [SheetType.POOP_HISTORY]: [90],
   [SheetType.LOADING]: [0],
 };
 
@@ -74,8 +74,8 @@ export const SHEET_DISABLE_DRAG: Record<SheetType, boolean> = {
   [SheetType.POOP_DETAILS]: true,
   [SheetType.POOP_COMMENT]: false,
   [SheetType.USER_SETTINGS]: false,
-  [SheetType.POOP_PALS]: false,
-  [SheetType.POOP_HISTORY]: false,
+  [SheetType.POOP_PALS]: true,
+  [SheetType.POOP_HISTORY]: true,
   [SheetType.LOADING]: false,
 };
 
