@@ -46,64 +46,24 @@ export default function useSignUp() {
   async function signUp(form: ISignUp) {
     if (!pb) throw new Error('Pocketbase not initialized');
 
-    const existing = await pb
-      .collection('poo_profiles')
-      .getList(1, 1, { filter: `codeName="${form.codeName}"` })
-      .catch((e) => {
-        console.error(
-          'Error checking existing codeName:',
-          JSON.stringify(e, null, 2),
-        );
-        return { totalItems: 0 };
-      });
-
-    if (existing.totalItems > 0) {
-      throw new Error('USERNAME_TAKEN');
-    }
-
     try {
-      const data = {
+      await pb.collection('users').create({
         password: form.password,
         email: form.email,
         passwordConfirm: form.password,
         codeName: form.codeName,
-      };
-
-      const user = await pb
-        .collection('users')
-        .create(data)
-        .catch((e) =>
-          console.error('Error creating user:', JSON.stringify(e, null, 2)),
-        );
-      const formData = {
-        email: form.email,
-        password: form.password,
-      };
-      console.log('User created successfully:', JSON.stringify(user, null, 2));
-      await signIn(formData);
-
-      await pb
-        .collection('poo_profiles')
-        .create({
-          user,
-          codeName: form.codeName,
-        })
-        .catch((e) =>
-          console.error(
-            'Error creating poo profile:',
-            JSON.stringify(e, null, 2),
-          ),
-        );
-
-      router.push('/(protected)');
+      });
     } catch (err: any) {
-      // Check if PocketBase returned a unique constraint violation for codeName
       const pbData = err?.data?.data;
       if (pbData?.codeName?.code === 'validation_not_unique') {
         throw new Error('USERNAME_TAKEN');
       }
       throw err;
     }
+
+    await signIn({ email: form.email, password: form.password });
+    // poo_profile is created by the server-side OnRecordAfterCreateSuccess hook
+    router.push('/(protected)');
   }
 
   return {
