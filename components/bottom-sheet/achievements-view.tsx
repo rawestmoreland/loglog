@@ -22,13 +22,10 @@ function BadgeDetailDialog({
   onClose: () => void;
 }) {
   const scheme = useColorScheme() ?? 'light';
-
-  if (!achievement) return null;
-
-  const asset = getAchievementAsset(achievement.name);
+  const asset = achievement ? getAchievementAsset(achievement.name) : null;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog modal open={open} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay
           key='overlay'
@@ -36,6 +33,7 @@ function BadgeDetailDialog({
           opacity={0.6}
           enterStyle={{ opacity: 0 }}
           exitStyle={{ opacity: 0 }}
+          z={150_000}
         />
         <Dialog.Content
           bordered
@@ -51,99 +49,106 @@ function BadgeDetailDialog({
           bg={Colors[scheme].background as any}
           borderColor={Colors[scheme].border as any}
           borderWidth={1}
+          z={200_000}
         >
-          <YStack gap='$4' items='center' px='$2' py='$2'>
-            {/* Close button */}
-            <XStack width='100%' justify='flex-end'>
-              <Dialog.Close asChild>
-                <Pressable
-                  aria-label='Close'
-                  style={({ pressed }) => ({
-                    opacity: pressed ? 0.8 : 1,
-                    backgroundColor: Colors[scheme].primary as any,
-                    padding: 8,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 999,
-                  })}
-                >
-                  <X
-                    size={14}
-                    pointerEvents='none'
-                    color={Colors[scheme].primaryForeground as any}
-                  />
-                </Pressable>
-              </Dialog.Close>
-            </XStack>
+          {achievement && (
+            <YStack gap='$4' items='center' px='$2' py='$2'>
+              {/* Close button */}
+              <XStack width='100%' justify='flex-end'>
+                <Dialog.Close asChild>
+                  <Pressable
+                    aria-label='Close'
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.8 : 1,
+                      backgroundColor: Colors[scheme].primary as any,
+                      padding: 8,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 999,
+                    })}
+                  >
+                    <X
+                      size={14}
+                      pointerEvents='none'
+                      color={Colors[scheme].primaryForeground as any}
+                    />
+                  </Pressable>
+                </Dialog.Close>
+              </XStack>
 
-            {/* Badge image */}
-            <YStack position='relative' items='center'>
-              <Image
-                source={asset}
-                style={{
-                  width: 150,
-                  height: 150,
-                  opacity: achievement.earned ? 1 : 0.2,
-                }}
-                contentFit='contain'
-              />
-              {!achievement.earned && (
-                <YStack
-                  position='absolute'
-                  bottom={4}
-                  right={4}
-                  bg={Colors[scheme].background as any}
-                  borderRadius={999}
-                  padding={6}
-                  borderWidth={1}
-                  borderColor={Colors[scheme].border as any}
+              {/* Badge image */}
+              <YStack position='relative' items='center'>
+                <Image
+                  source={asset}
+                  style={{
+                    width: 150,
+                    height: 150,
+                    opacity: achievement.earned ? 1 : 0.2,
+                  }}
+                  contentFit='contain'
+                />
+                {!achievement.earned && (
+                  <YStack
+                    position='absolute'
+                    bottom={4}
+                    right={4}
+                    bg={Colors[scheme].background as any}
+                    borderRadius={999}
+                    padding={6}
+                    borderWidth={1}
+                    borderColor={Colors[scheme].border as any}
+                  >
+                    <Lock size={18} color={Colors[scheme].foreground as any} />
+                  </YStack>
+                )}
+              </YStack>
+
+              {/* Name */}
+              <Dialog.Title asChild>
+                <Text
+                  fontSize='$6'
+                  fontWeight='800'
+                  color={achievement.earned ? '$color' : '$color10'}
+                  textAlign='center'
                 >
-                  <Lock size={18} color={Colors[scheme].foreground as any} />
-                </YStack>
+                  {achievement.name}
+                </Text>
+              </Dialog.Title>
+
+              {/* Description */}
+              <Dialog.Description asChild>
+                <Text
+                  fontSize='$3'
+                  color={achievement.earned ? '$color11' : '$color9'}
+                  textAlign='center'
+                  lineHeight='$4'
+                >
+                  {achievement.description}
+                </Text>
+              </Dialog.Description>
+
+              {/* Locked label */}
+              {!achievement.earned && (
+                <XStack
+                  gap='$1'
+                  items='center'
+                  bg={Colors[scheme].muted as any}
+                  px='$3'
+                  py='$2'
+                  borderRadius='$4'
+                >
+                  <Lock size={12} color={Colors[scheme].mutedForeground as any} />
+                  <Text
+                    fontSize='$2'
+                    color={Colors[scheme].mutedForeground as any}
+                    fontWeight='600'
+                  >
+                    Not yet unlocked
+                  </Text>
+                </XStack>
               )}
             </YStack>
-
-            {/* Name */}
-            <Dialog.Title asChild>
-              <Text
-                fontSize='$6'
-                fontWeight='800'
-                color={achievement.earned ? '$color' : '$color10'}
-                textAlign='center'
-              >
-                {achievement.name}
-              </Text>
-            </Dialog.Title>
-
-            {/* Description */}
-            <Dialog.Description asChild>
-              <Text
-                fontSize='$3'
-                color={achievement.earned ? '$color11' : '$color9'}
-                textAlign='center'
-                lineHeight='$4'
-              >
-                {achievement.description}
-              </Text>
-            </Dialog.Description>
-
-            {/* Locked label */}
-            {!achievement.earned && (
-              <XStack
-                gap='$1'
-                items='center'
-                bg={Colors[scheme].muted as any}
-                px='$3'
-                py='$2'
-                borderRadius='$4'
-              >
-                <Lock size={12} color={Colors[scheme].mutedForeground as any} />
-                <Text fontSize='$2' color={Colors[scheme].mutedForeground as any} fontWeight='600'>
-                  Not yet unlocked
-                </Text>
-              </XStack>
-            )}
-          </YStack>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog>
