@@ -63,7 +63,7 @@ export function PoopDetailsView({
   });
 
   const { data: toiletRating } = useToiletRatingForPlace(
-    poopDetails?.place_id ?? ''
+    poopDetails?.place_id ?? '',
   );
 
   const updateSeshMutation = useUpdatePoopSesh();
@@ -80,7 +80,7 @@ export function PoopDetailsView({
         },
       });
     },
-    [poopDetails, updateSeshMutation]
+    [poopDetails, updateSeshMutation],
   );
 
   useEffect(() => {
@@ -160,7 +160,7 @@ export function PoopDetailsView({
           >
             {format(
               new Date(poopDetails?.started ?? new Date()),
-              'dd/MM/yyyy h:mm a'
+              'dd/MM/yyyy h:mm a',
             )}
           </Button>
           <DatePicker
@@ -173,7 +173,7 @@ export function PoopDetailsView({
                 new Date(poopDetails?.ended ?? new Date()).getTime()
               ) {
                 Alert.alert(
-                  'You cannot set the start date to a time after the end date'
+                  'You cannot set the start date to a time after the end date',
                 );
                 setStartDatePickerOpen(false);
               } else {
@@ -184,7 +184,7 @@ export function PoopDetailsView({
             onCancel={() => setStartDatePickerOpen(false)}
           />
         </YStack>
-        <YStack>
+        <YStack mb='$3'>
           <Label htmlFor='poop-end-button'>Poop End</Label>
           <Button
             id='poop-end-button'
@@ -192,7 +192,7 @@ export function PoopDetailsView({
           >
             {format(
               new Date(poopDetails?.ended ?? new Date()),
-              'dd/MM/yyyy h:mm a'
+              'dd/MM/yyyy h:mm a',
             )}
           </Button>
           <DatePicker
@@ -205,7 +205,7 @@ export function PoopDetailsView({
                 new Date(poopDetails?.started ?? new Date()).getTime()
               ) {
                 Alert.alert(
-                  'You cannot set the end date to a time before the start date'
+                  'You cannot set the end date to a time before the start date',
                 );
                 setEndDatePickerOpen(false);
               } else {
@@ -255,10 +255,7 @@ export function PoopDetailsView({
                   <Text fontSize='$3'>{toiletRating.rating.toFixed(1)}</Text>
                 </XStack>
               ) : (
-                <Text
-                  fontSize='$3'
-                  color={Colors[scheme].textSecondary as any}
-                >
+                <Text fontSize='$3' color={Colors[scheme].textSecondary as any}>
                   Not rated yet
                 </Text>
               )}
