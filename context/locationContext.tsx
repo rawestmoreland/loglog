@@ -43,17 +43,28 @@ export function LocationContextProvider({
         );
         return;
       }
-      const location = await Location.getCurrentPositionAsync();
 
-      if (location.coords.latitude && location.coords.longitude) {
-        setHasLocation(true);
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        setHasLocation(false);
+        setIsLoadingLocation(false);
+        return;
       }
 
-      setUserLocation({
-        lat: location.coords.latitude,
-        lon: location.coords.longitude,
-      });
-      setIsLoadingLocation(false);
+      try {
+        const location = await Location.getCurrentPositionAsync();
+        if (location.coords.latitude && location.coords.longitude) {
+          setHasLocation(true);
+        }
+        setUserLocation({
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
+        });
+      } catch {
+        setHasLocation(false);
+      } finally {
+        setIsLoadingLocation(false);
+      }
     };
 
     getCurrentLocation();

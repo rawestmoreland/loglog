@@ -83,6 +83,7 @@ export default function CredentialsScreen() {
   }, [codeName, form]);
 
   const handleCreateAccount = async (data: z.infer<typeof signUpSchema>) => {
+    console.log(data);
     if (!form.formState.isValid) {
       return;
     }

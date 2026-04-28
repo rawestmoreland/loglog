@@ -49,10 +49,6 @@ export default function LoginScreen() {
   const { signIn } = useContext(AuthContext);
 
   const handleLogin = async (data: z.infer<typeof signInSchema>) => {
-    if (!form.formState.isValid) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
