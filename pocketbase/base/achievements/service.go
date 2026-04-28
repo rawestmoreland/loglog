@@ -3,7 +3,10 @@ package achievements
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"os"
 	"sort"
 	"time"
 
@@ -53,6 +56,16 @@ type StreakCondition struct {
 	DateField          string `json:"dateField"`
 	ConsecutiveCount   int    `json:"consecutiveCount"`
 	MinEventsPerPeriod int    `json:"minEventsPerPeriod"`
+}
+
+// GeoProximityCondition checks whether seshes occurred near a geographical
+// feature (e.g. ocean) by querying an external tile API per sesh location.
+// The Mapbox access token must be in the MAPBOX_ACCESS_TOKEN env var.
+type GeoProximityCondition struct {
+	ConditionType string `json:"conditionType"` // "ocean_proximity"
+	Table         string `json:"table"`
+	LocationField string `json:"locationField"` // geoPoint field, default "location"
+	MinCount      int    `json:"minCount"`       // minimum matching seshes (default 1)
 }
 
 // TimeOfDayCondition checks how many seshes started in a given hour range.
@@ -190,6 +203,13 @@ func (s *AchievementService) evaluateCriteria(criteria Criteria, poopProfileId s
 				return false, fmt.Errorf("parsing time_of_day condition: %w", err)
 			}
 			matched, err = checkTimeOfDayCondition(s.app, cond, poopProfileId)
+
+		case "geo_proximity":
+			var cond GeoProximityCondition
+			if err = json.Unmarshal(rawCond, &cond); err != nil {
+				return false, fmt.Errorf("parsing geo_proximity condition: %w", err)
+			}
+			matched, err = checkGeoProximityCondition(s.app, cond, poopProfileId)
 
 		default:
 			return false, fmt.Errorf("unknown criteria type: %s", criteria.Type)
@@ -633,6 +653,116 @@ func parsePeriod(periodStr string, streakType string) time.Time {
 		t, _ := time.Parse("2006-01-02", periodStr)
 		return t
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Geo proximity condition
+// ---------------------------------------------------------------------------
+
+func checkGeoProximityCondition(app *pocketbase.PocketBase, cond GeoProximityCondition, pooProfileId string) (bool, error) {
+	table := cond.Table
+	if table == "" {
+		table = "poop_seshes"
+	}
+	locationField := cond.LocationField
+	if locationField == "" {
+		locationField = "location"
+	}
+	minCount := cond.MinCount
+	if minCount == 0 {
+		minCount = 1
+	}
+
+	mapboxToken := os.Getenv("MAPBOX_ACCESS_TOKEN")
+	if mapboxToken == "" {
+		return false, fmt.Errorf("MAPBOX_ACCESS_TOKEN environment variable not set")
+	}
+
+	records, err := app.FindRecordsByFilter(
+		table,
+		fmt.Sprintf("poo_profile = '%s'", pooProfileId),
+		"",
+		10000,
+		0,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	httpClient := &http.Client{Timeout: 10 * time.Second}
+	count := 0
+	for _, record := range records {
+		ll, ok := extractLatLon(record, locationField)
+		if !ok {
+			continue
+		}
+		near, err := isNearOcean(httpClient, ll.Lon, ll.Lat, mapboxToken)
+		if err != nil {
+			log.Printf("ocean proximity check failed for sesh %s: %v", record.Id, err)
+			continue
+		}
+		if near {
+			count++
+			if count >= minCount {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+type latLon struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+func extractLatLon(record *core.Record, field string) (latLon, bool) {
+	raw := record.Get(field)
+	if raw == nil {
+		return latLon{}, false
+	}
+	b, err := json.Marshal(raw)
+	if err != nil {
+		return latLon{}, false
+	}
+	var ll latLon
+	if err := json.Unmarshal(b, &ll); err != nil {
+		return latLon{}, false
+	}
+	if ll.Lat == 0 && ll.Lon == 0 {
+		return latLon{}, false
+	}
+	return ll, true
+}
+
+// isNearOcean calls the Mapbox bathymetry tile query API and returns true when
+// at least one depth feature is found within the query radius (~1 mile).
+// lon is longitude and must come before lat in the Mapbox URL.
+func isNearOcean(client *http.Client, lon, lat float64, token string) (bool, error) {
+	url := fmt.Sprintf(
+		"https://api.mapbox.com/v4/mapbox.mapbox-bathymetry-v2/tilequery/%f,%f.json?radius=1609&limit=1&dedupe&layers=depth&access_token=%s",
+		lon, lat, token,
+	)
+	resp, err := client.Get(url)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return false, fmt.Errorf("mapbox API status %d: %s", resp.StatusCode, body)
+	}
+
+	var result struct {
+		Features []json.RawMessage `json:"features"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, err
+	}
+
+	return len(result.Features) > 0, nil
 }
 
 func isConsecutivePeriod(prev, current time.Time, streakType string) bool {
