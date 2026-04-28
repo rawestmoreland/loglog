@@ -40,11 +40,11 @@ export const SHEET_SNAP_POINTS: Record<
   [SheetType.SELECTED_SESH]: undefined,
   [SheetType.TOILET_DETAILS]: undefined,
   [SheetType.NO_CONNECTION]: undefined,
-  [SheetType.POOP_DETAILS]: undefined,
+  [SheetType.POOP_DETAILS]: [90],
   [SheetType.POOP_COMMENT]: [90],
   [SheetType.USER_SETTINGS]: undefined,
-  [SheetType.POOP_PALS]: [75],
-  [SheetType.POOP_HISTORY]: [75],
+  [SheetType.POOP_PALS]: [90],
+  [SheetType.POOP_HISTORY]: [90],
   [SheetType.LOADING]: [0],
 };
 
@@ -57,12 +57,26 @@ export const SHEET_SNAP_POINTS_MODE: Record<
   [SheetType.SELECTED_SESH]: 'fit',
   [SheetType.TOILET_DETAILS]: 'fit',
   [SheetType.NO_CONNECTION]: 'fit',
-  [SheetType.POOP_DETAILS]: 'fit',
+  [SheetType.POOP_DETAILS]: 'percent',
   [SheetType.POOP_COMMENT]: 'percent',
   [SheetType.USER_SETTINGS]: 'fit',
   [SheetType.POOP_PALS]: 'percent',
   [SheetType.POOP_HISTORY]: 'percent',
   [SheetType.LOADING]: 'fit',
+};
+
+export const SHEET_DISABLE_DRAG: Record<SheetType, boolean> = {
+  [SheetType.HOME]: false,
+  [SheetType.ACTIVE_SESH]: false,
+  [SheetType.SELECTED_SESH]: false,
+  [SheetType.TOILET_DETAILS]: false,
+  [SheetType.NO_CONNECTION]: false,
+  [SheetType.POOP_DETAILS]: true,
+  [SheetType.POOP_COMMENT]: false,
+  [SheetType.USER_SETTINGS]: false,
+  [SheetType.POOP_PALS]: true,
+  [SheetType.POOP_HISTORY]: true,
+  [SheetType.LOADING]: false,
 };
 
 export const SHEET_SHOW_HANDLE: Record<SheetType, boolean> = {

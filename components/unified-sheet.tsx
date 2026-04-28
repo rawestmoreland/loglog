@@ -1,4 +1,5 @@
 import {
+  SHEET_DISABLE_DRAG,
   SHEET_SHOW_HANDLE,
   SHEET_SNAP_POINTS,
   SHEET_SNAP_POINTS_MODE,
@@ -36,6 +37,7 @@ export function UnifiedSheet({
   const showHandle = SHEET_SHOW_HANDLE[sheetType] || false;
   const snapPoints = SHEET_SNAP_POINTS[sheetType];
   const snapPointsMode = SHEET_SNAP_POINTS_MODE[sheetType] || 'fit';
+  const disableDrag = SHEET_DISABLE_DRAG[sheetType] || false;
 
   return (
     <Sheet
@@ -47,6 +49,7 @@ export function UnifiedSheet({
       snapPointsMode={snapPointsMode}
       zIndex={100_000}
       animation='medium'
+      disableDrag={disableDrag}
     >
       {showHandle && <Sheet.Handle />}
       <Sheet.Frame p='$4' gap='$6'>
