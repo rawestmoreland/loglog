@@ -32,10 +32,11 @@ export interface PoopSesh {
     };
     city?: string;
     timezone?: string;
-    country?: string | null;
-    region?: string | null;
   };
   timezone?: string;
+  city?: string | null;
+  country?: string | null;
+  region?: string | null;
   company_time: boolean;
   revelations?: string;
   started: Date | string;

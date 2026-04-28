@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -357,7 +356,7 @@ func checkAggregateCondition(app *pocketbase.PocketBase, cond AggregateCondition
 	case "count_distinct":
 		unique := make(map[string]struct{})
 		for _, r := range records {
-			if val := getFieldValue(r, cond.Field); val != "" {
+			if val := r.GetString(cond.Field); val != "" {
 				unique[val] = struct{}{}
 			}
 		}
@@ -385,7 +384,7 @@ func checkAggregateCondition(app *pocketbase.PocketBase, cond AggregateCondition
 	case "max_group_count":
 		groups := make(map[string]int)
 		for _, r := range records {
-			if val := getFieldValue(r, cond.Field); val != "" {
+			if val := r.GetString(cond.Field); val != "" {
 				groups[val]++
 			}
 		}
@@ -481,28 +480,6 @@ func checkStreakCondition(app *pocketbase.PocketBase, cond StreakCondition, pooP
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-// getFieldValue reads a field from a record, supporting dot notation for JSON
-// fields (e.g. "location.country" reads the "country" key from the "location"
-// JSON field).
-func getFieldValue(record *core.Record, field string) string {
-	parts := strings.SplitN(field, ".", 2)
-	if len(parts) == 1 {
-		return record.GetString(field)
-	}
-	raw := record.GetString(parts[0])
-	if raw == "" {
-		return ""
-	}
-	var obj map[string]any
-	if err := json.Unmarshal([]byte(raw), &obj); err != nil {
-		return ""
-	}
-	if val, ok := obj[parts[1]]; ok && val != nil {
-		return fmt.Sprintf("%v", val)
-	}
-	return ""
-}
 
 func operatorToSQL(op string) (string, error) {
 	switch op {

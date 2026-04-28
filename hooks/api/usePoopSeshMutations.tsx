@@ -68,8 +68,6 @@ export function useStartPoopSesh() {
         if (reverseGeoData && poopSesh.location) {
           poopSesh.location.city = reverseGeoData.city;
           poopSesh.location.timezone = reverseGeoData.timezone;
-          poopSesh.location.country = reverseGeoData.country;
-          poopSesh.location.region = reverseGeoData.region;
         }
       }
 
@@ -78,6 +76,9 @@ export function useStartPoopSesh() {
         user: user?.id,
         poo_profile: pooProfile?.id,
         timezone: poopSesh.location?.timezone,
+        city: reverseGeoData?.city ?? null,
+        country: reverseGeoData?.country ?? null,
+        region: reverseGeoData?.region ?? null,
       });
 
       return {
