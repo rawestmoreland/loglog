@@ -1,6 +1,5 @@
 import * as Location from 'expo-location';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 
 export const LocationContext = createContext<{
   userLocation: { lat: number; lon: number };
@@ -36,11 +35,8 @@ export function LocationContextProvider({
       setIsLoadingLocation(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
+        setHasLocation(false);
         setIsLoadingLocation(false);
-        Alert.alert(
-          'Permission not granted',
-          'Please grant permission to access your location'
-        );
         return;
       }
 
