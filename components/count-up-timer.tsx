@@ -8,16 +8,15 @@ const CountUpTimer = ({ startTime }: { startTime: string }) => {
   const scheme = useColorScheme() ?? 'light';
 
   useEffect(() => {
-    // Convert startTime to a Date object if it's a timestamp string or number
     const actualStartTime = new Date(startTime).getTime();
+    if (isNaN(actualStartTime)) return;
 
     const interval = setInterval(() => {
-      const currentTime = Date.now();
-      setElapsedTime(currentTime - actualStartTime);
-    }, 1000); // Update every second
+      setElapsedTime(Date.now() - actualStartTime);
+    }, 1000);
 
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [startTime]); // Re-run effect if startTime changes
+    return () => clearInterval(interval);
+  }, [startTime]);
 
   const formattedTimeObject = (millis: number) => {
     const totalSeconds = Math.floor(millis / 1000);

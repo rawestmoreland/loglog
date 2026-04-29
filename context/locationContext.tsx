@@ -1,17 +1,18 @@
 import * as Location from 'expo-location';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 
 export const LocationContext = createContext<{
   userLocation: { lat: number; lon: number };
   setUserLocation: (location: { lat: number; lon: number }) => void;
   isLoadingLocation: boolean;
   hasLocation: boolean | undefined;
+  isPermissionDenied: boolean;
 }>({
   userLocation: { lat: 0, lon: 0 },
   setUserLocation: () => {},
   isLoadingLocation: false,
   hasLocation: undefined,
+  isPermissionDenied: false,
 });
 
 export function LocationContextProvider({
@@ -30,17 +31,16 @@ export function LocationContextProvider({
   const [hasLocation, setHasLocation] = useState<boolean | undefined>(
     undefined
   );
+  const [isPermissionDenied, setIsPermissionDenied] = useState(false);
 
   useEffect(() => {
     const getCurrentLocation = async () => {
       setIsLoadingLocation(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
+        setIsPermissionDenied(status === 'denied');
+        setHasLocation(false);
         setIsLoadingLocation(false);
-        Alert.alert(
-          'Permission not granted',
-          'Please grant permission to access your location'
-        );
         return;
       }
 
@@ -72,7 +72,7 @@ export function LocationContextProvider({
 
   return (
     <LocationContext.Provider
-      value={{ userLocation, setUserLocation, isLoadingLocation, hasLocation }}
+      value={{ userLocation, setUserLocation, isLoadingLocation, hasLocation, isPermissionDenied }}
     >
       {children}
     </LocationContext.Provider>

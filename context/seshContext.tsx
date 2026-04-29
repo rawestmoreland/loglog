@@ -36,7 +36,7 @@ export const SeshContext = createContext<{
   selectedSesh: PoopSesh | null | undefined;
   setSelectedSesh: (sesh: PoopSesh | null) => void;
   isLoadingActiveSesh: boolean;
-  startSesh: () => Promise<void>;
+  startSesh: () => Promise<boolean>;
   endSesh: () => Promise<void>;
   cancelActiveSesh: () => Promise<void>;
   poopForm: any;
@@ -47,7 +47,7 @@ export const SeshContext = createContext<{
   selectedSesh: null,
   setSelectedSesh: () => {},
   isLoadingActiveSesh: false,
-  startSesh: () => Promise.resolve(),
+  startSesh: () => Promise.resolve(false),
   endSesh: () => Promise.resolve(),
   cancelActiveSesh: () => Promise.resolve(),
   poopForm: {},
@@ -86,104 +86,157 @@ export const SeshContextProvider = ({
     },
   });
 
-  const { userLocation, setUserLocation } = useLocation();
+  const { userLocation, setUserLocation, isLoadingLocation } = useLocation();
   const { isConnected, isNetworkInitialized } = useNetwork();
 
-  const startSesh = useCallback(async () => {
+  const startSesh = useCallback(async (): Promise<boolean> => {
+    if (isLoadingLocation) {
+      return false;
+    }
+
     // Check if location is valid
     if (!isValidLocation(userLocation)) {
-      Alert.alert(
-        'Location Unavailable',
-        "We couldn't get your location. Are you on an airplane?",
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Try Again',
-            onPress: async () => {
-              try {
-                const { status } =
-                  await Location.requestForegroundPermissionsAsync();
-                if (status === 'granted') {
-                  const location = await Location.getCurrentPositionAsync();
-                  setUserLocation({
-                    lat: location.coords.latitude,
-                    lon: location.coords.longitude,
-                  });
-                  // Retry starting session after getting location
-                  startSesh();
-                } else {
-                  Alert.alert(
-                    'Permission Denied',
-                    'Location permission is required to track your poop session'
-                  );
-                }
-              } catch (error) {
-                console.error('Failed to get location:', error);
-                Alert.alert('Failed to get location');
-              }
+      return new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Location Unavailable',
+          "We couldn't get your location. Are you on an airplane?",
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => resolve(false),
             },
-          },
-          {
-            text: "I'm on an Airplane",
-            onPress: async () => {
-              const session: PoopSesh = {
-                id: uuid(),
-                is_public: true,
-                is_airplane: true,
-                bristol_score: 0,
-                started: new Date(),
-                company_time: false,
-              };
-              try {
-                if (!isConnected) {
-                  // Store session in async storage
-                  await startOfflineSession(session);
-                  await refetchActiveSesh();
-                } else {
-                  // Create airplane session without location
-                  await startSeshMutation.mutateAsync(session);
-                }
-
-                const sendAt = new Date(Date.now() + 1000 * 60 * 10);
-                console.log('About to schedule notification for:', sendAt);
-
-                if (isConnected) {
-                  try {
-                    const notificationId = await scheduleNotification({
-                      identifier: 'poop-sesh-started',
-                      sendAt,
-                      title: 'Are you ok?',
-                      body: "You've been sitting there for a while. Are you ok?",
-                    });
-                    console.log(
-                      'Notification scheduled successfully with ID:',
-                      notificationId
+            {
+              text: 'Try Again',
+              onPress: async () => {
+                try {
+                  const { status } =
+                    await Location.requestForegroundPermissionsAsync();
+                  if (status === 'granted') {
+                    const location = await Location.getCurrentPositionAsync();
+                    const freshCoords = {
+                      lat: location.coords.latitude,
+                      lon: location.coords.longitude,
+                    };
+                    setUserLocation(freshCoords);
+                    try {
+                      if (!isConnected) {
+                        await startOfflineSession({
+                          is_public: true,
+                          location: { coordinates: freshCoords },
+                          coords: freshCoords,
+                          bristol_score: 0,
+                          started: new Date(),
+                          company_time: false,
+                        });
+                        await refetchActiveSesh();
+                      } else {
+                        await startSeshMutation.mutateAsync({
+                          is_public: true,
+                          location: { coordinates: freshCoords },
+                          coords: freshCoords,
+                          bristol_score: 0,
+                          started: new Date(),
+                          company_time: false,
+                        });
+                        const sendAt = new Date(Date.now() + 1000 * 60 * 10);
+                        try {
+                          await scheduleNotification({
+                            identifier: 'poop-sesh-started',
+                            sendAt,
+                            title: 'Are you ok?',
+                            data: { screen: 'poop-sesh-started' },
+                            body: "You've been sitting there for a while. Are you ok?",
+                          });
+                        } catch (notificationError) {
+                          console.error(
+                            'Failed to schedule notification:',
+                            notificationError
+                          );
+                        }
+                      }
+                      resolve(true);
+                    } catch (error) {
+                      if (
+                        error instanceof Error &&
+                        error.message === 'rate-limit'
+                      ) {
+                        Alert.alert(
+                          'You can only make one poop sesh every 5 minutes'
+                        );
+                      } else {
+                        console.error(error);
+                        Alert.alert('We had trouble starting the poop sesh');
+                      }
+                      resolve(false);
+                    }
+                  } else {
+                    Alert.alert(
+                      'Permission Denied',
+                      'Location permission is required to track your poop session'
                     );
-                  } catch (notificationError) {
-                    console.error(
-                      'Failed to schedule notification:',
-                      notificationError
-                    );
+                    resolve(false);
                   }
+                } catch (error) {
+                  console.error('Failed to get location:', error);
+                  Alert.alert('Failed to get location');
+                  resolve(false);
                 }
-              } catch (error) {
-                if (error instanceof Error && error.message === 'rate-limit') {
-                  Alert.alert(
-                    'You can only make one poop sesh every 5 minutes'
-                  );
-                } else {
-                  console.error(error);
-                  Alert.alert('We had trouble starting the poop sesh');
-                }
-              }
+              },
             },
-          },
-        ]
-      );
-      return;
+            {
+              text: "I'm on an Airplane",
+              onPress: async () => {
+                const session: PoopSesh = {
+                  id: uuid(),
+                  is_public: true,
+                  is_airplane: true,
+                  bristol_score: 0,
+                  started: new Date(),
+                  company_time: false,
+                };
+                try {
+                  if (!isConnected) {
+                    await startOfflineSession(session);
+                    await refetchActiveSesh();
+                  } else {
+                    await startSeshMutation.mutateAsync(session);
+                  }
+
+                  const sendAt = new Date(Date.now() + 1000 * 60 * 10);
+
+                  if (isConnected) {
+                    try {
+                      await scheduleNotification({
+                        identifier: 'poop-sesh-started',
+                        sendAt,
+                        title: 'Are you ok?',
+                        body: "You've been sitting there for a while. Are you ok?",
+                      });
+                    } catch (notificationError) {
+                      console.error(
+                        'Failed to schedule notification:',
+                        notificationError
+                      );
+                    }
+                  }
+                  resolve(true);
+                } catch (error) {
+                  if (error instanceof Error && error.message === 'rate-limit') {
+                    Alert.alert(
+                      'You can only make one poop sesh every 5 minutes'
+                    );
+                  } else {
+                    console.error(error);
+                    Alert.alert('We had trouble starting the poop sesh');
+                  }
+                  resolve(false);
+                }
+              },
+            },
+          ]
+        );
+      });
     }
 
     // Normal session with valid location
@@ -206,7 +259,7 @@ export const SeshContextProvider = ({
           company_time: false,
         });
         await refetchActiveSesh();
-        return;
+        return true;
       }
       await startSeshMutation.mutateAsync({
         is_public: true,
@@ -247,6 +300,7 @@ export const SeshContextProvider = ({
       } catch (notificationError) {
         console.error('Failed to schedule notification:', notificationError);
       }
+      return true;
     } catch (error) {
       if (error instanceof Error && error.message === 'rate-limit') {
         Alert.alert('You can only make one poop sesh every 5 minutes');
@@ -254,8 +308,9 @@ export const SeshContextProvider = ({
         console.error(error);
         Alert.alert('We had trouble starting the poop sesh');
       }
+      return false;
     }
-  }, [startSeshMutation, userLocation, setUserLocation, scheduleNotification, isConnected, isNetworkInitialized, refetchActiveSesh]);
+  }, [startSeshMutation, userLocation, setUserLocation, scheduleNotification, isConnected, isNetworkInitialized, refetchActiveSesh, isLoadingLocation]);
 
   const updateActiveSesh = useCallback(
     async (payload: Partial<PoopSesh>) => {

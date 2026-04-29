@@ -43,8 +43,8 @@ export function HomeView({
 
   const handleStartSesh = async () => {
     if (!!activeSesh) return;
-    await startSesh();
-    setSheetType?.(SheetType.ACTIVE_SESH);
+    const started = await startSesh();
+    if (started) setSheetType?.(SheetType.ACTIVE_SESH);
   };
 
   return (
