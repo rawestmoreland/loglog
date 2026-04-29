@@ -57,9 +57,7 @@ export default function LoginScreen() {
         if (error.message === 'Failed to authenticate.') {
           Alert.alert('Incorrect username or password.');
         } else {
-          Alert.alert(
-            'There was an issue while signing in. Pleaase try again.',
-          );
+          Alert.alert('There was an issue while signing in. Please try again.');
         }
       }
     } finally {
