@@ -4,6 +4,7 @@ import { useAuth } from '@/context/authContext';
 import { useNetwork } from '@/context/networkContext';
 import { getReverseGeoDataFromCoords } from '@/lib/geo-helpers';
 import { getOfflineSessions } from '@/lib/helpers';
+import { isValidLocation } from '@/lib/location-helpers';
 import { PoopSeshesResponse } from '@/lib/pocketbase-types';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
@@ -16,6 +17,7 @@ export function useStartPoopSesh() {
 
   return useMutation({
     mutationFn: async (poopSesh: PoopSesh): Promise<PoopSesh> => {
+      console.log('starting sesh with data', poopSesh);
       // Check for a sesh made within the last 5 minutes for rate limiting
       let shouldLimit = false;
       if (isConnected === false && isNetworkInitialized) {
@@ -24,7 +26,7 @@ export function useStartPoopSesh() {
           .filter((s) => s.poo_profile === pooProfile?.id)
           .sort(
             (a, b) =>
-              new Date(b.started).getTime() - new Date(a.started).getTime()
+              new Date(b.started).getTime() - new Date(a.started).getTime(),
           )[0];
         if (
           lastOfflineSesh &&
@@ -34,14 +36,15 @@ export function useStartPoopSesh() {
           shouldLimit = true;
         }
       } else {
+        console.log('checking for recent sesh for user', pooProfile?.id);
         const lastSesh = await pb
           ?.collection('poop_seshes')
           .getFirstListItem<PoopSeshesResponse>(
             `poo_profile = "${pooProfile?.id}" && started >= "${new Date(
-              Date.now() - 5 * 60 * 1000
+              Date.now() - 5 * 60 * 1000,
             )
               .toISOString()
-              .replace('T', ' ')}"`
+              .replace('T', ' ')}"`,
           )
           .catch((e) => {
             console.log('sesherror', e);
@@ -59,7 +62,11 @@ export function useStartPoopSesh() {
 
       // Skip geocoding for airplane sessions
       let reverseGeoData = null;
-      if (!poopSesh.is_airplane && poopSesh.location?.coordinates) {
+      if (
+        !poopSesh.is_airplane &&
+        poopSesh.location?.coordinates &&
+        isValidLocation(poopSesh.location.coordinates)
+      ) {
         reverseGeoData = await getReverseGeoDataFromCoords({
           latitude: poopSesh.location.coordinates.lat,
           longitude: poopSesh.location.coordinates.lon,
@@ -71,15 +78,24 @@ export function useStartPoopSesh() {
         }
       }
 
-      const sesh = await pb?.collection('poop_seshes').create({
-        ...poopSesh,
-        user: user?.id,
-        poo_profile: pooProfile?.id,
-        timezone: poopSesh.location?.timezone,
-        city: reverseGeoData?.city ?? null,
-        country: reverseGeoData?.country ?? null,
-        region: reverseGeoData?.region ?? null,
-      });
+      const { id: _localId, ...poopSeshData } = poopSesh;
+      const sesh = await pb
+        ?.collection('poop_seshes')
+        .create({
+          ...poopSeshData,
+          user: user?.id,
+          poo_profile: pooProfile?.id,
+          timezone: poopSesh.location?.timezone,
+          city: reverseGeoData?.city ?? null,
+          country: reverseGeoData?.country ?? null,
+          region: reverseGeoData?.region ?? null,
+        })
+        .catch(async (e) => {
+          console.error('error creating poop sesh', e);
+          const response = await e.response.data;
+          console.log('RESPONNSE', response);
+          throw e;
+        });
 
       return {
         id: sesh?.id!,

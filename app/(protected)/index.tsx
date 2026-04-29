@@ -15,7 +15,7 @@ import MapboxGL from '@rnmapbox/maps';
 import { MapPinOff, WifiOff } from '@tamagui/lucide-icons';
 import { isEmpty } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 const POOP_MARKER = require('@/assets/images/poo-pile.png');
 const TOILET_MARKER = require('@/assets/images/toilet.png');
@@ -49,7 +49,7 @@ export default function ProtectedIndexScreen() {
     maxLat: number;
   } | null>(null);
 
-  const { userLocation, hasLocation } = useLocation();
+  const { userLocation, hasLocation, isPermissionDenied } = useLocation();
 
   const { data: publicHistory } = usePublicPoopSeshHistory();
 
@@ -275,6 +275,13 @@ export default function ProtectedIndexScreen() {
       ) : hasLocation === false ? (
         <View style={styles.container}>
           <MapPinOff size={40} />
+          {isPermissionDenied && (
+            <Pressable onPress={() => Linking.openSettings()}>
+              <Text style={styles.permissionText}>
+                Location access is off.{'\n'}Tap here to open Settings.
+              </Text>
+            </Pressable>
+          )}
         </View>
       ) : isConnected === false ? (
         <View style={styles.container}>
@@ -296,5 +303,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     width: '100%',
+  },
+  permissionText: {
+    marginTop: 12,
+    fontSize: 13,
+    textAlign: 'center',
+    opacity: 0.6,
+    paddingHorizontal: 32,
   },
 });
