@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button as TamaguiButton } from 'tamagui';
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie_prod.png');
 
 const GOOGLE_SOURCE = {
   uri: 'https://www.pngall.com/wp-content/uploads/13/Google-Logo.png',

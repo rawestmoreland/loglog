@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie_prod.png');
 
 export default function ForgotPasswordScreen() {
   const { pb } = usePocketBase();
@@ -56,13 +56,13 @@ export default function ForgotPasswordScreen() {
               router.replace('/');
             },
           },
-        ]
+        ],
       );
     } catch (e) {
       Alert.alert(
         'Error',
         e instanceof Error ? e.message : 'An unknown error occurred',
-        [{ text: 'OK' }]
+        [{ text: 'OK' }],
       );
     }
   };

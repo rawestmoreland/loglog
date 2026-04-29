@@ -18,7 +18,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "The app needs access to your location to drop a log."
+          "locationWhenInUsePermission": "LogLog uses your location to tag where each bathroom session occurred and to find nearby restrooms to rate.",
+          "locationAlwaysAndWhenInUsePermission": "LogLog uses your location to tag where each bathroom session occurred and to find nearby restrooms to rate."
         }
       ],
       [

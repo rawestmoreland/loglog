@@ -12,7 +12,7 @@ import { TextInput } from '@/components/ui/text-input';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Button as TamaguiButton, YStack } from 'tamagui';
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie_prod.png');
 
 const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
 
@@ -152,7 +152,9 @@ export default function InfoScreen() {
                 />
               </View>
               {error ? (
-                <Text style={{ color: destructive, fontSize: 12 }}>{error}</Text>
+                <Text style={{ color: destructive, fontSize: 12 }}>
+                  {error}
+                </Text>
               ) : (
                 <Text style={{ color: mutedForeground, fontSize: 12 }}>
                   3–20 characters. Letters, numbers, and underscores only.

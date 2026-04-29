@@ -17,7 +17,7 @@ import { AuthContext } from '@/context/authContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Button as TamaguiButton } from 'tamagui';
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie_prod.png');
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -25,7 +25,6 @@ export default function LoginScreen() {
   const cardBackground = useThemeColor({}, 'card');
   const textColor = useThemeColor({}, 'foreground');
   const mutedForeground = useThemeColor({}, 'mutedForeground');
-  const primaryColor = useThemeColor({}, 'primary');
 
   const signInSchema = z.object({
     email: z.string().email(),
@@ -59,7 +58,7 @@ export default function LoginScreen() {
           Alert.alert('Incorrect username or password.');
         } else {
           Alert.alert(
-            'There was an issue while signing in. Pleaase try again.'
+            'There was an issue while signing in. Pleaase try again.',
           );
         }
       }

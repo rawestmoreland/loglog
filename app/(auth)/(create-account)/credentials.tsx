@@ -18,7 +18,7 @@ import { Button as TamaguiButton } from 'tamagui';
 
 import useSignUp, { SignUpValidationError } from './hook/useSignUp';
 
-const LOGO_SOURCE = require('@/assets/images/loggie.png');
+const LOGO_SOURCE = require('@/assets/images/loggie_prod.png');
 
 const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
 
