@@ -37,7 +37,7 @@ export const SHEET_SNAP_POINTS: Record<
   (number | 'fit')[] | undefined
 > = {
   [SheetType.HOME]: undefined,
-  [SheetType.ACTIVE_SESH]: undefined,
+  [SheetType.ACTIVE_SESH]: [90],
   [SheetType.SELECTED_SESH]: undefined,
   [SheetType.TOILET_DETAILS]: undefined,
   [SheetType.NO_CONNECTION]: undefined,
@@ -55,7 +55,7 @@ export const SHEET_SNAP_POINTS_MODE: Record<
   'percent' | 'fit' | 'mixed'
 > = {
   [SheetType.HOME]: 'fit',
-  [SheetType.ACTIVE_SESH]: 'fit',
+  [SheetType.ACTIVE_SESH]: 'percent',
   [SheetType.SELECTED_SESH]: 'fit',
   [SheetType.TOILET_DETAILS]: 'fit',
   [SheetType.NO_CONNECTION]: 'fit',
