@@ -4,6 +4,7 @@ import { useSesh } from '@/context/seshContext';
 import { toast } from 'burnt';
 import { memo, useEffect, useState } from 'react';
 import {
+  Dimensions,
   FlatList,
   Keyboard,
   Platform,
