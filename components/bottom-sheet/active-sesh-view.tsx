@@ -4,11 +4,11 @@ import { useSesh } from '@/context/seshContext';
 import { toast } from 'burnt';
 import { memo, useEffect, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   Keyboard,
   Platform,
   Pressable,
+  ScrollView,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -170,182 +170,191 @@ function ActiveSeshViewComponent({
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <YStack gap='$2' mb='$4'>
-        <XStack justify='space-between'>
-          <Text fontWeight={'bold'}>Log Details</Text>
-          {activeSesh?.is_local && <Text theme='red'>Local log</Text>}
-          <XStack items='center' gap='$2'>
-            <Label size='$2' htmlFor='public-log'>
-              Public log?
-            </Label>
-            <Separator minH={20} vertical />
-            <LogSwitch
-              id='public-log'
-              key='public-log'
-              size='$2'
-              checked={activeSesh?.is_public}
-              defaultChecked={activeSesh?.is_public}
-              onCheckedChange={(value) =>
-                updateActiveSesh({ is_public: value })
-              }
-            />
-          </XStack>
-        </XStack>
-        <CountUpTimer startTime={(activeSesh?.started as string) ?? ''} />
-        <YStack>
-          <XStack justify='space-between' items='center'>
-            <Label>Revelations</Label>
-            {isKeyboardVisible && (
-              <Button
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 8 }}
+        keyboardShouldPersistTaps='handled'
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack gap='$2'>
+          <XStack justify='space-between'>
+            <Text fontWeight={'bold'}>Log Details</Text>
+            {activeSesh?.is_local && <Text theme='red'>Local log</Text>}
+            <XStack items='center' gap='$2'>
+              <Label size='$2' htmlFor='public-log'>
+                Public log?
+              </Label>
+              <Separator minH={20} vertical />
+              <LogSwitch
+                id='public-log'
+                key='public-log'
                 size='$2'
-                bg={Colors[scheme].primary as any}
-                onPress={() => Keyboard.dismiss()}
-              >
-                <KeyboardOff size={18} pointerEvents='none' />
-              </Button>
-            )}
-          </XStack>
-          <TextArea
-            value={revelations}
-            onChangeText={setRevelations}
-            placeholder='How will we change the world?'
-            size='$4'
-          />
-        </YStack>
-        <YStack gap='$2'>
-          {activeSesh?.is_airplane ? (
-            <ListItem
-              title={
-                activeSesh?.flight_number
-                  ? `Flight ${activeSesh.flight_number}`
-                  : 'Add flight details'
-              }
-              subTitle={
-                activeSesh?.airline
-                  ? `${activeSesh.airline} • ${formatFlightRoute(
-                      activeSesh.departure_airport,
-                      activeSesh.arrival_airport
-                    )}`
-                  : undefined
-              }
-              icon={Plane}
-              iconAfter={ChevronRight}
-              onPress={() => setFlightInfoOpen(true)}
-            />
-          ) : (
-            <>
-              {isConnected === true && (
-                <ListItem
-                  title={
-                    activeSesh?.place?.name ||
-                    activeSesh?.custom_place_name ||
-                    'Name your toilet'
-                  }
-                  icon={Toilet}
-                  iconAfter={ChevronRight}
-                  onPress={() => setPlaceViewOpen(true)}
-                />
-              )}
-              {activeSesh?.place && (
-                <XStack items='center' justify='space-between'>
-                  <Label htmlFor='rate-your-toilet'>Rate your toilet</Label>
-                  <XStack id='rate-your-toilet' gap='$2'>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Pressable
-                        key={index}
-                        onPress={() => {
-                          handleRating(index + 1);
-                        }}
-                      >
-                        <Icon
-                          name='star'
-                          size={18}
-                          color={
-                            index < (toiletRating?.rating || 0)
-                              ? (Colors[scheme].primary as string)
-                              : (Colors[scheme].border as string)
-                          }
-                        />
-                      </Pressable>
-                    ))}
-                  </XStack>
-                </XStack>
-              )}
-            </>
-          )}
-        </YStack>
-        <XStack items='center' justify='space-between'>
-          <Label htmlFor='is-airplane'>Airplane?</Label>
-          <LogSwitch
-            id='is-airplane'
-            key='is-airplane'
-            size='$3'
-            checked={activeSesh?.is_airplane}
-            defaultChecked={activeSesh?.is_airplane}
-            onCheckedChange={(value) =>
-              updateActiveSesh({ is_airplane: value })
-            }
-          />
-        </XStack>
-        <XStack items='center' justify='space-between'>
-          <Label htmlFor='company-time'>On company time?</Label>
-          <LogSwitch
-            id='company-time'
-            key='company-time'
-            size='$3'
-            checked={activeSesh?.company_time}
-            defaultChecked={activeSesh?.company_time}
-            onCheckedChange={(value) =>
-              updateActiveSesh({ company_time: value })
-            }
-          />
-        </XStack>
-        <YStack gap='$2'>
-          <XStack items='center' gap='$2'>
-            <Text>Bristol Score:</Text>
-            <Button
-              chromeless
-              size='$3'
-              icon={CircleHelp}
-              onPress={() => router.push('/bristol')}
-            />
-          </XStack>
-          <XStack gap='$2' flexWrap='wrap'>
-            {BRISTOL_SCORE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.value}
-                onPress={() =>
-                  setBristolScore({
-                    value: option.value,
-                    label: option.label,
-                    image: option.image,
-                  })
+                checked={activeSesh?.is_public}
+                defaultChecked={activeSesh?.is_public}
+                onCheckedChange={(value) =>
+                  updateActiveSesh({ is_public: value })
                 }
-                style={{
-                  borderWidth: 1,
-                  padding: 5,
-                  borderRadius: 10,
-                  backgroundColor:
-                    bristolScore.value === option.value
-                      ? (Colors[scheme].primary as string)
-                      : 'transparent',
-                }}
-              >
-                <Image
-                  source={option.image}
-                  style={{
-                    width: 50,
-                    height: 35,
-                  }}
-                />
-              </TouchableOpacity>
-            ))}
+              />
+            </XStack>
           </XStack>
+          <CountUpTimer startTime={(activeSesh?.started as string) ?? ''} />
+          <YStack>
+            <XStack justify='space-between' items='center'>
+              <Label>Revelations</Label>
+              {isKeyboardVisible && (
+                <Button
+                  size='$2'
+                  bg={Colors[scheme].primary as any}
+                  onPress={() => Keyboard.dismiss()}
+                >
+                  <KeyboardOff size={18} pointerEvents='none' />
+                </Button>
+              )}
+            </XStack>
+            <TextArea
+              value={revelations}
+              onChangeText={setRevelations}
+              placeholder='How will we change the world?'
+              size='$4'
+            />
+          </YStack>
+          <YStack gap='$2'>
+            {activeSesh?.is_airplane ? (
+              <ListItem
+                title={
+                  activeSesh?.flight_number
+                    ? `Flight ${activeSesh.flight_number}`
+                    : 'Add flight details'
+                }
+                subTitle={
+                  activeSesh?.airline
+                    ? `${activeSesh.airline} • ${formatFlightRoute(
+                        activeSesh.departure_airport,
+                        activeSesh.arrival_airport
+                      )}`
+                    : undefined
+                }
+                icon={Plane}
+                iconAfter={ChevronRight}
+                onPress={() => setFlightInfoOpen(true)}
+              />
+            ) : (
+              <>
+                {isConnected === true && (
+                  <ListItem
+                    title={
+                      activeSesh?.place?.name ||
+                      activeSesh?.custom_place_name ||
+                      'Name your toilet'
+                    }
+                    icon={Toilet}
+                    iconAfter={ChevronRight}
+                    onPress={() => setPlaceViewOpen(true)}
+                  />
+                )}
+                {activeSesh?.place && (
+                  <XStack items='center' justify='space-between'>
+                    <Label htmlFor='rate-your-toilet'>Rate your toilet</Label>
+                    <XStack id='rate-your-toilet' gap='$2'>
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <Pressable
+                          key={index}
+                          onPress={() => {
+                            handleRating(index + 1);
+                          }}
+                        >
+                          <Icon
+                            name='star'
+                            size={18}
+                            color={
+                              index < (toiletRating?.rating || 0)
+                                ? (Colors[scheme].primary as string)
+                                : (Colors[scheme].border as string)
+                            }
+                          />
+                        </Pressable>
+                      ))}
+                    </XStack>
+                  </XStack>
+                )}
+              </>
+            )}
+          </YStack>
+          <XStack items='center' justify='space-between'>
+            <Label htmlFor='is-airplane'>Airplane?</Label>
+            <LogSwitch
+              id='is-airplane'
+              key='is-airplane'
+              size='$3'
+              checked={activeSesh?.is_airplane}
+              defaultChecked={activeSesh?.is_airplane}
+              onCheckedChange={(value) =>
+                updateActiveSesh({ is_airplane: value })
+              }
+            />
+          </XStack>
+          <XStack items='center' justify='space-between'>
+            <Label htmlFor='company-time'>On company time?</Label>
+            <LogSwitch
+              id='company-time'
+              key='company-time'
+              size='$3'
+              checked={activeSesh?.company_time}
+              defaultChecked={activeSesh?.company_time}
+              onCheckedChange={(value) =>
+                updateActiveSesh({ company_time: value })
+              }
+            />
+          </XStack>
+          <YStack gap='$2'>
+            <XStack items='center' gap='$2'>
+              <Text>Bristol Score:</Text>
+              <Button
+                chromeless
+                size='$3'
+                icon={CircleHelp}
+                onPress={() => router.push('/bristol')}
+              />
+            </XStack>
+            <XStack gap='$2' flexWrap='wrap'>
+              {BRISTOL_SCORE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() =>
+                    setBristolScore({
+                      value: option.value,
+                      label: option.label,
+                      image: option.image,
+                    })
+                  }
+                  style={{
+                    borderWidth: 1,
+                    padding: 5,
+                    borderRadius: 10,
+                    backgroundColor:
+                      bristolScore.value === option.value
+                        ? (Colors[scheme].primary as string)
+                        : 'transparent',
+                  }}
+                >
+                  <Image
+                    source={option.image}
+                    style={{
+                      width: 50,
+                      height: 35,
+                    }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </XStack>
+          </YStack>
         </YStack>
-        <Button mt='$4' theme='accent' onPress={handleEndSesh}>
+      </ScrollView>
+      <YStack gap='$2' mt='$2' pb='$2'>
+        <Button theme='accent' onPress={handleEndSesh}>
           Pinch it off
         </Button>
-        <Button mt='$2' theme='red' onPress={handleDeleteSesh}>
+        <Button theme='red' onPress={handleDeleteSesh}>
           Cancel
         </Button>
       </YStack>
@@ -471,11 +480,6 @@ const PlaceView = ({
     return () => clearTimeout(debouncedSearch);
   }, [toiletName, userLocation]);
 
-  const screenWidth = Dimensions.get('window').width;
-  // Account for container padding (approximately 32px total) and margins between items
-  const itemWidth = (screenWidth - 40) / 3 - 2;
-  const fullWidth = screenWidth - 40 - 2; // Full width minus container padding and margins
-
   const locationTypes = [
     { name: 'House' },
     { name: 'Office' },
@@ -517,51 +521,47 @@ const PlaceView = ({
           </Pressable>
           {(toiletName || selectedPlace) && (
             <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
-              <Text style={{ color: foreground as string }}>Save</Text>
+              <Text maxFontSizeMultiplier={1.3} style={{ color: foreground as string }}>Save</Text>
             </Pressable>
           )}
         </XStack>
-        <FlatList
-          data={locationTypes}
-          renderItem={({ item, index }) => {
-            // Check if this is the last item and it's alone in its row
-            // If length % 3 === 1, the last row has exactly 1 item
-            const isLastItem = index === locationTypes.length - 1;
-            const isAloneInRow = isLastItem && locationTypes.length % 3 === 1;
-            const width = isAloneInRow ? fullWidth : itemWidth;
-
-            return (
-              <Pressable
-                style={{
-                  width: width,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: 1,
-                  borderWidth: 1,
-                  padding: 5,
-                  borderRadius: 10,
-                  borderColor:
-                    locationType === item.name.toLowerCase()
-                      ? (Colors[scheme].primary as string)
-                      : (Colors[scheme].border as string),
-                  backgroundColor: Colors[scheme].card as string,
-                }}
-                onPress={() => setLocationType(item.name.toLowerCase() as any)}
-              >
-                <Text numberOfLines={2} adjustsFontSizeToFit>
-                  {item.name}
-                </Text>
-              </Pressable>
-            );
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 4,
+            paddingBottom: 16,
           }}
-          keyExtractor={(item) => item.name}
-          ItemSeparatorComponent={() => (
-            <View style={{ height: 2, width: 2 }} />
-          )}
-          numColumns={3}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 16 }}
-        />
+        >
+          {locationTypes.map((item) => (
+            <Pressable
+              key={item.name}
+              style={{
+                flexBasis: '30%',
+                flexGrow: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                paddingVertical: 8,
+                paddingHorizontal: 4,
+                borderRadius: 10,
+                borderColor:
+                  locationType === item.name.toLowerCase()
+                    ? (Colors[scheme].primary as string)
+                    : (Colors[scheme].border as string),
+                backgroundColor: Colors[scheme].card as string,
+              }}
+              onPress={() => setLocationType(item.name.toLowerCase() as any)}
+            >
+              <Text
+                maxFontSizeMultiplier={1.3}
+                style={{ textAlign: 'center' }}
+              >
+                {item.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <YStack gap='$2'>
           <XStack
             justify='space-between'
@@ -572,7 +572,7 @@ const PlaceView = ({
             <YStack flex={1} shrink={1} minW={0} pr='$2'>
               <Label htmlFor='toilet-name'>Toilet Name</Label>
               {!Boolean(selectedPlace) && (
-                <Text color={Colors[scheme].textSecondary as any}>
+                <Text maxFontSizeMultiplier={1.3} color={Colors[scheme].textSecondary as any}>
                   If you don&apos;t select a place, we&apos;ll use this name for
                   your toilet
                 </Text>
@@ -597,7 +597,7 @@ const PlaceView = ({
             onChangeText={setToiletName}
           />
         </YStack>
-        <View style={{ height: 300 }}>
+        <View style={{ maxHeight: 300, minHeight: 50 }}>
           <FlatList
             data={toiletResults}
             ListEmptyComponent={
