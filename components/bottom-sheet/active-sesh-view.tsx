@@ -4,7 +4,6 @@ import { useSesh } from '@/context/seshContext';
 import { toast } from 'burnt';
 import { memo, useEffect, useState } from 'react';
 import {
-  Dimensions,
   FlatList,
   Keyboard,
   Platform,
@@ -471,11 +470,6 @@ const PlaceView = ({
     return () => clearTimeout(debouncedSearch);
   }, [toiletName, userLocation]);
 
-  const screenWidth = Dimensions.get('window').width;
-  // Account for container padding (approximately 32px total) and margins between items
-  const itemWidth = (screenWidth - 40) / 3 - 2;
-  const fullWidth = screenWidth - 40 - 2; // Full width minus container padding and margins
-
   const locationTypes = [
     { name: 'House' },
     { name: 'Office' },
@@ -517,51 +511,47 @@ const PlaceView = ({
           </Pressable>
           {(toiletName || selectedPlace) && (
             <Pressable onPress={() => handlePlaceSelect(selectedPlace)}>
-              <Text style={{ color: foreground as string }}>Save</Text>
+              <Text maxFontSizeMultiplier={1.3} style={{ color: foreground as string }}>Save</Text>
             </Pressable>
           )}
         </XStack>
-        <FlatList
-          data={locationTypes}
-          renderItem={({ item, index }) => {
-            // Check if this is the last item and it's alone in its row
-            // If length % 3 === 1, the last row has exactly 1 item
-            const isLastItem = index === locationTypes.length - 1;
-            const isAloneInRow = isLastItem && locationTypes.length % 3 === 1;
-            const width = isAloneInRow ? fullWidth : itemWidth;
-
-            return (
-              <Pressable
-                style={{
-                  width: width,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: 1,
-                  borderWidth: 1,
-                  padding: 5,
-                  borderRadius: 10,
-                  borderColor:
-                    locationType === item.name.toLowerCase()
-                      ? (Colors[scheme].primary as string)
-                      : (Colors[scheme].border as string),
-                  backgroundColor: Colors[scheme].card as string,
-                }}
-                onPress={() => setLocationType(item.name.toLowerCase() as any)}
-              >
-                <Text numberOfLines={2} adjustsFontSizeToFit>
-                  {item.name}
-                </Text>
-              </Pressable>
-            );
+        <View
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 4,
+            paddingBottom: 16,
           }}
-          keyExtractor={(item) => item.name}
-          ItemSeparatorComponent={() => (
-            <View style={{ height: 2, width: 2 }} />
-          )}
-          numColumns={3}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 16 }}
-        />
+        >
+          {locationTypes.map((item) => (
+            <Pressable
+              key={item.name}
+              style={{
+                flexBasis: '30%',
+                flexGrow: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                paddingVertical: 8,
+                paddingHorizontal: 4,
+                borderRadius: 10,
+                borderColor:
+                  locationType === item.name.toLowerCase()
+                    ? (Colors[scheme].primary as string)
+                    : (Colors[scheme].border as string),
+                backgroundColor: Colors[scheme].card as string,
+              }}
+              onPress={() => setLocationType(item.name.toLowerCase() as any)}
+            >
+              <Text
+                maxFontSizeMultiplier={1.3}
+                style={{ textAlign: 'center' }}
+              >
+                {item.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <YStack gap='$2'>
           <XStack
             justify='space-between'
@@ -572,7 +562,7 @@ const PlaceView = ({
             <YStack flex={1} shrink={1} minW={0} pr='$2'>
               <Label htmlFor='toilet-name'>Toilet Name</Label>
               {!Boolean(selectedPlace) && (
-                <Text color={Colors[scheme].textSecondary as any}>
+                <Text maxFontSizeMultiplier={1.3} color={Colors[scheme].textSecondary as any}>
                   If you don&apos;t select a place, we&apos;ll use this name for
                   your toilet
                 </Text>
@@ -597,7 +587,7 @@ const PlaceView = ({
             onChangeText={setToiletName}
           />
         </YStack>
-        <View style={{ height: 300 }}>
+        <View style={{ maxHeight: 300, minHeight: 50 }}>
           <FlatList
             data={toiletResults}
             ListEmptyComponent={
