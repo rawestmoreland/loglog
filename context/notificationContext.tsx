@@ -260,23 +260,38 @@ export const NotificationProvider = ({
         updateBadgeCount();
       });
 
+    return () => {
+      subscription.remove();
+      notificationListener.current?.remove();
+    };
+  }, [pooProfile]);
+
+  // Separate effect so the response listener is registered immediately,
+  // before pooProfile is available, to avoid missing cold-start taps.
+  useEffect(() => {
+    // Handle cold-start: app was killed and opened by tapping the notification.
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!response) return;
+      const data = response.notification.request.content.data ?? {};
+      resetBadgeCount();
+      if (data.screen) {
+        router.push(data.screen as any);
+      }
+    });
+
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data ?? {};
-
         resetBadgeCount();
-
         if (data.screen) {
           router.push(data.screen as any);
         }
       });
 
     return () => {
-      subscription.remove();
-      notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, [pooProfile]);
+  }, [router]);
 
   const handleScheduleNotification = async ({
     identifier,

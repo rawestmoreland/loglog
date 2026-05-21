@@ -145,7 +145,7 @@ export const SeshContextProvider = ({
                             identifier: 'poop-sesh-started',
                             sendAt,
                             title: 'Are you ok?',
-                            data: { screen: 'poop-sesh-started' },
+                            data: { screen: '/(protected)' },
                             body: "You've been sitting there for a while. Are you ok?",
                           });
                         } catch (notificationError) {
@@ -211,6 +211,7 @@ export const SeshContextProvider = ({
                         identifier: 'poop-sesh-started',
                         sendAt,
                         title: 'Are you ok?',
+                        data: { screen: '/(protected)' },
                         body: "You've been sitting there for a while. Are you ok?",
                       });
                     } catch (notificationError) {
@@ -289,7 +290,7 @@ export const SeshContextProvider = ({
           sendAt,
           title: 'Are you ok?',
           data: {
-            screen: 'poop-sesh-started',
+            screen: '/(protected)',
           },
           body: "You've been sitting there for a while. Are you ok?",
         });
