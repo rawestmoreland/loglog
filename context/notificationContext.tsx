@@ -185,6 +185,7 @@ export const NotificationProvider = ({
 
   const notificationListener = useRef<Notifications.EventSubscription>(null);
   const responseListener = useRef<Notifications.EventSubscription>(null);
+  const hasHandledColdStart = useRef(false);
 
   // Add this function to check permissions and register if granted
   const checkAndRegisterForNotifications = async () => {
@@ -287,6 +288,20 @@ export const NotificationProvider = ({
           router.push(data.screen as any);
         }
       });
+
+    // Handle the case where the app was launched (cold start) by tapping a
+    // notification, which the response listener above would otherwise miss.
+    if (!hasHandledColdStart.current) {
+      hasHandledColdStart.current = true;
+      Notifications.getLastNotificationResponseAsync().then((response) => {
+        if (!response) return;
+        const data = response.notification.request.content.data ?? {};
+        resetBadgeCount();
+        if (data.screen) {
+          router.push(data.screen as any);
+        }
+      });
+    }
 
     return () => {
       responseListener.current?.remove();
