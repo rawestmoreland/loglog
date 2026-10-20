@@ -1,16 +1,17 @@
-import { useAuth } from '@/context/authContext';
 import { useLocation } from '@/context/locationContext';
 import { useMapViewContext } from '@/context/mapViewContext';
 import { useNetwork } from '@/context/networkContext';
 import { useSesh } from '@/context/seshContext';
 import { useToilet } from '@/context/toiletContext';
-import { useFollowing } from '@/hooks/api/usePoopPalsQueries';
 import {
+  useFriendsPoopSeshHistory,
+  useMyPoopSeshHistory,
   usePalPoopSeshHistory,
   usePublicPoopSeshHistory,
 } from '@/hooks/api/usePoopSeshQueries';
 import { useAverageToiletRatings } from '@/hooks/api/useToiletRatingsQueries';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { Bounds, boundsEqual, snapBounds } from '@/lib/geo-helpers';
 import MapboxGL from '@rnmapbox/maps';
 import { MapPinOff, WifiOff } from '@tamagui/lucide-icons';
 import { isEmpty } from 'lodash';
@@ -25,11 +26,8 @@ export default function ProtectedIndexScreen() {
 
   const primary = useThemeColor({}, 'primary');
 
-  const { pooProfile } = useAuth();
-
   const { poopsToView, palSelected, registerRecenterCallback } =
     useMapViewContext();
-  const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
   const { setSelectedSesh } = useSesh();
   const { setSelectedToilet } = useToilet();
@@ -42,64 +40,49 @@ export default function ProtectedIndexScreen() {
   } | null>(null);
   const [cameraZoom, setCameraZoom] = useState<number | null>(null);
 
-  const [viewportBounds, setViewportBounds] = useState<{
-    minLon: number;
-    minLat: number;
-    maxLon: number;
-    maxLat: number;
-  } | null>(null);
+  const [viewportBounds, setViewportBounds] = useState<Bounds | null>(null);
 
   const { userLocation, hasLocation, isPermissionDenied } = useLocation();
-
-  const { data: publicHistory } = usePublicPoopSeshHistory();
 
   const { data: averageToiletRatings } = useAverageToiletRatings({
     enabled: poopsToView === 'toilets',
   });
 
-  const { data: palHistory } = usePalPoopSeshHistory();
+  // Only the active view fetches, and only for the visible (snapped) viewport.
+  const viewingPal = poopsToView === 'friends' && !!palSelected;
+  const queryBounds = viewportBounds ?? undefined;
 
-  const myHistory = useMemo(() => {
-    if (!viewportBounds || !publicHistory || !pooProfile) {
-      return [];
-    }
+  const { data: myHistory } = useMyPoopSeshHistory({
+    enabled: poopsToView === 'yours',
+  });
 
-    return publicHistory.filter((poop) => poop.poo_profile === pooProfile.id);
-  }, [viewportBounds, publicHistory, pooProfile]);
+  const { data: friendsHistory } = useFriendsPoopSeshHistory({
+    enabled: poopsToView === 'friends' && !viewingPal,
+    viewportBounds: queryBounds,
+  });
 
-  const friendsHistory = useMemo(() => {
-    if (isLoadingFollowing || !following?.length || !publicHistory?.length) {
-      return [];
-    }
+  const { data: palHistory } = usePalPoopSeshHistory({
+    enabled: viewingPal,
+    viewportBounds: queryBounds,
+  });
 
-    const followingIds = following.map((friend) => friend.following);
-
-    return publicHistory.filter((poop) =>
-      followingIds.includes(poop.poo_profile!)
-    );
-  }, [isLoadingFollowing, following, publicHistory]);
-
-  const allHistory = useMemo(() => {
-    const combined = [...(myHistory ?? []), ...(publicHistory ?? [])];
-    const uniqueMap = new Map(combined.map((item) => [item.id, item]));
-    return Array.from(uniqueMap.values());
-  }, [myHistory, publicHistory]);
+  const { data: allHistory } = usePublicPoopSeshHistory({
+    enabled: poopsToView === 'all',
+    viewportBounds: queryBounds,
+  });
 
   const historyToMap = useMemo(() => {
     switch (poopsToView) {
       case 'yours':
         return myHistory;
       case 'friends':
-        if (!!palSelected) {
-          return palHistory;
-        }
-        return friendsHistory;
+        return viewingPal ? palHistory : friendsHistory;
       default:
         return allHistory;
     }
   }, [
     poopsToView,
-    palSelected,
+    viewingPal,
     palHistory,
     myHistory,
     friendsHistory,
@@ -157,12 +140,17 @@ export default function ProtectedIndexScreen() {
               setCameraZoom(zoom);
             }
             if (bounds) {
-              setViewportBounds({
+              const next = snapBounds({
                 minLon: Math.min(bounds[0][0], bounds[1][0]),
                 minLat: Math.min(bounds[0][1], bounds[1][1]),
                 maxLon: Math.max(bounds[0][0], bounds[1][0]),
                 maxLat: Math.max(bounds[0][1], bounds[1][1]),
               });
+              // Keep the same reference unless the snapped box changed, so a
+              // small pan doesn't trigger a refetch
+              setViewportBounds((prev) =>
+                boundsEqual(prev, next) ? prev : next
+              );
             }
           }}
           logoEnabled={false}
