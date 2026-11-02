@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { useFollowing } from './usePoopPalsQueries';
 
 import { useAuth } from '@/context/authContext';
 import { useMapViewContext } from '@/context/mapViewContext';
 import { useNetwork } from '@/context/networkContext';
-import { shiftCoords } from '@/lib/geo-helpers';
+import { applyPrivacyShift, Bounds, boundsFilter } from '@/lib/geo-helpers';
 import { getOfflineSessions } from '@/lib/helpers';
 import { usePocketBase } from '@/lib/pocketbaseConfig';
 import { PoopSesh } from '@/lib/types';
@@ -110,46 +110,41 @@ export function useMyPoopSeshHistory(
   });
 }
 
+// Max seshes fetched per viewport query; newest first
+const MAP_PAGE_SIZE = 500;
+
 export function usePublicPoopSeshHistory(
   params: {
     enabled?: boolean;
-    viewportBounds?: {
-      minLon: number;
-      minLat: number;
-      maxLon: number;
-      maxLat: number;
-    };
+    viewportBounds?: Bounds;
   } = { enabled: true, viewportBounds: undefined }
 ) {
   const { pb } = usePocketBase();
+  const { viewportBounds } = params;
 
   return useQuery({
-    queryKey: ['poop-sesh-history', { public: true }],
+    queryKey: ['poop-sesh-history', { public: true, bounds: viewportBounds }],
     queryFn: async (): Promise<PoopSesh[]> => {
-      const filter = `is_public = true && started != null && ended != null`;
+      if (!viewportBounds) {
+        return [];
+      }
+
+      const filter = `is_public = true && started != null && ended != null && ${boundsFilter(viewportBounds)}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
-      const seshes = await pb?.collection('poop_seshes').getFullList<PoopSesh>({
-        filter,
-        sort,
-        expand,
-      });
+      const seshes = await pb
+        ?.collection('poop_seshes')
+        .getList<PoopSesh>(1, MAP_PAGE_SIZE, {
+          filter,
+          sort,
+          expand,
+          skipTotal: true,
+        });
 
-      const transformedSeshes = seshes?.map((sesh) => {
-        if (sesh.expand?.poo_profile) {
-          if (sesh.expand?.poo_profile?.shift_logs && sesh.coords) {
-            const { coords } = sesh;
-            const { latShift, lonShift } = shiftCoords(sesh.coords);
-            coords!.lat += latShift;
-            coords!.lon += lonShift;
-          }
-        }
-        return sesh;
-      });
-
-      return transformedSeshes ?? [];
+      return seshes?.items.map(applyPrivacyShift) ?? [];
     },
-    enabled: params.enabled,
+    enabled: !!pb && !!viewportBounds && params.enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -206,88 +201,93 @@ export function usePoopSesh(
 export function useFriendsPoopSeshHistory(
   params: {
     enabled?: boolean;
-    viewportBounds?: {
-      minLon: number;
-      minLat: number;
-      maxLon: number;
-      maxLat: number;
-    };
+    viewportBounds?: Bounds;
   } = { enabled: true, viewportBounds: undefined }
 ) {
   const { pb } = usePocketBase();
   const { pooProfile } = useAuth();
+  const { viewportBounds } = params;
 
   const { data: following, isLoading: isLoadingFollowing } = useFollowing();
 
   return useQuery({
-    queryKey: ['friends-poop-sesh-history', pooProfile?.id],
+    queryKey: [
+      'friends-poop-sesh-history',
+      { poo_profile: pooProfile?.id, bounds: viewportBounds },
+    ],
     queryFn: async () => {
-      if (!following || following.length === 0) {
+      if (!following || following.length === 0 || !viewportBounds) {
         return [];
       }
 
       const followingIds = following.map((friend) => friend.following);
 
-      if (!params.viewportBounds) {
-        return [];
-      }
-
       const filter = `is_public = true && started != null && ended != null && (${followingIds
         .map((id) => `poo_profile="${id}"`)
-        .join('||')}) && location.coordinates.lat >= ${
-        params.viewportBounds.minLat
-      } && location.coordinates.lat <= ${
-        params.viewportBounds.maxLat
-      } && location.coordinates.lon >= ${
-        params.viewportBounds.minLon
-      } && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+        .join('||')}) && ${boundsFilter(viewportBounds)}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 
       const sesh = await pb
         ?.collection('poop_seshes')
-        .getList(1, params.viewportBounds ? 500 : 10, {
+        .getList(1, MAP_PAGE_SIZE, {
           filter,
           sort,
           expand,
+          skipTotal: true,
         });
-      return sesh?.items ?? [];
+      return sesh?.items.map(applyPrivacyShift) ?? [];
     },
-    enabled: !isLoadingFollowing && !!pooProfile?.id && params.enabled,
+    enabled:
+      !isLoadingFollowing &&
+      !!pb &&
+      !!pooProfile?.id &&
+      !!viewportBounds &&
+      params.enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
 export function usePalPoopSeshHistory(
   params: {
     enabled?: boolean;
-    viewportBounds?: {
-      minLon: number;
-      minLat: number;
-      maxLon: number;
-      maxLat: number;
-    };
+    viewportBounds?: Bounds;
   } = { enabled: true, viewportBounds: undefined }
 ) {
   const { pb } = usePocketBase();
   const { palSelected } = useMapViewContext();
+  const { viewportBounds } = params;
 
   return useQuery({
-    queryKey: ['pal-poop-sesh-history', { palId: palSelected }],
+    queryKey: [
+      'pal-poop-sesh-history',
+      { palId: palSelected, bounds: viewportBounds },
+    ],
     queryFn: async () => {
-      let filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}'`;
-      if (params.viewportBounds) {
-        filter += ` && location.coordinates.lat >= ${params.viewportBounds.minLat} && location.coordinates.lat <= ${params.viewportBounds.maxLat} && location.coordinates.lon >= ${params.viewportBounds.minLon} && location.coordinates.lon <= ${params.viewportBounds.maxLon}`;
+      if (!viewportBounds) {
+        return [];
       }
+
+      const filter = `is_public = true && started != null && ended != null && poo_profile = '${palSelected}' && ${boundsFilter(viewportBounds)}`;
       const sort = `-started`;
       const expand = `user,poo_profile`;
 
-      const sesh = await pb?.collection('poop_seshes').getFullList({
-        filter,
-        sort,
-        expand,
-      });
-      return sesh ?? [];
+      const sesh = await pb
+        ?.collection('poop_seshes')
+        .getList(1, MAP_PAGE_SIZE, {
+          filter,
+          sort,
+          expand,
+          skipTotal: true,
+        });
+      return sesh?.items.map(applyPrivacyShift) ?? [];
     },
-    enabled: !!palSelected && params.enabled,
+    enabled: !!pb && !!palSelected && !!viewportBounds && params.enabled,
+    // Keep pins while the viewport changes, but not when switching pals
+    placeholderData: (previousData, previousQuery) =>
+      (previousQuery?.queryKey[1] as { palId?: string | null } | undefined)
+        ?.palId === palSelected
+        ? previousData
+        : undefined,
   });
 }
